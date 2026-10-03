@@ -528,10 +528,30 @@ const coach = {
       }
 
       const gistData = await response.json();
-      const fileContent = gistData.files['saylor-progress.json']?.content;
+
+      // Try to find the file - be flexible with naming
+      let fileContent = null;
+
+      // First try exact name
+      fileContent = gistData.files['saylor-progress.json']?.content;
+
+      // If not found, try to find any JSON file
+      if (!fileContent) {
+        const fileNames = Object.keys(gistData.files || {});
+        const jsonFile = fileNames.find(name => name.includes('progress') || name.endsWith('.json'));
+        if (jsonFile) {
+          fileContent = gistData.files[jsonFile]?.content;
+        }
+      }
+
+      // If still not found, use first file
+      if (!fileContent) {
+        const firstFile = Object.values(gistData.files || {})[0];
+        fileContent = firstFile?.content;
+      }
 
       if (!fileContent) {
-        throw new Error('saylor-progress.json not found in gist');
+        throw new Error('No JSON files found in gist');
       }
 
       this.data = JSON.parse(fileContent);
