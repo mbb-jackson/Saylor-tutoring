@@ -359,7 +359,6 @@
       </div>
       <button onclick="app.switchTab('prizes')" style="padding: 16px 28px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">🎁 Prize Store</button>
       <button onclick="app.switchTab('analytics')" style="padding: 12px 16px; font-size: 13px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;">📊 Analytics</button>
-      <button onclick="app.switchTab('admin')" style="padding: 12px 16px; font-size: 13px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;">⚙️ Qualifier</button>
     </div>
   </div>
 
@@ -555,32 +554,6 @@
     </div>
   </div>
 
-  <!-- ADMIN PANEL -->
-  <div id="adminScreen" class="screen">
-    <div style="margin-bottom: 2rem;">
-      <h2>Qualifier Settings</h2>
-    </div>
-    <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; padding: 2rem; max-width: 400px;">
-      <div style="margin-bottom: 2rem;">
-        <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Qualifier Multiplier</label>
-        <select id="qualifierSelect" onchange="app.setQualifier(this.value)" style="width: 100%; padding: 12px; border: 0.5px solid var(--border); border-radius: 8px; font-size: 16px;">
-          <option value="0">0 (1.25x coins)</option>
-          <option value="1">1 (1.5x coins)</option>
-          <option value="2">2 (1.75x coins)</option>
-          <option value="3">3 (2x coins)</option>
-        </select>
-      </div>
-    </div>
-    <div style="margin-top: 3rem;">
-      <h3 style="font-size: 18px; margin-bottom: 1rem;">Qualifier History</h3>
-      <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden;">
-        <div id="qualifierLogContainer" style="padding: 2rem; max-height: 400px; overflow-y: auto;">
-          <div style="text-align: center; color: var(--text-secondary);">No qualifier changes yet</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ANALYTICS -->
   <div id="analyticsScreen" class="screen">
     <div style="margin-bottom: 2rem;">
@@ -670,7 +643,6 @@ const app = {
     this.updateCoinDisplay();
     this.showGameSelection();
     this.initEventListeners();
-    this.addAdminButton();
   },
 
   loadState() {
@@ -721,6 +693,7 @@ const app = {
       this.showGameSelection();
     } else if (tab === 'analytics') {
       this.updateAnalyticsDisplay();
+      this.addAdminButton();
     }
   },
 
@@ -2092,22 +2065,26 @@ const app = {
   },
 
   addAdminButton() {
-    const header = document.querySelector('.header');
-    if (!header) return;
+    const analyticsHeader = document.querySelector('#analyticsScreen > div:first-child');
+    if (!analyticsHeader) return;
+
+    // Remove existing button if present
+    const existing = analyticsHeader.querySelector('[data-admin-btn]');
+    if (existing) existing.remove();
 
     const adminBtn = document.createElement('button');
+    adminBtn.setAttribute('data-admin-btn', 'true');
     adminBtn.innerHTML = '⚙️';
     adminBtn.style.cssText = `
       padding: 8px 12px;
       font-size: 18px;
-      background: var(--surface-1);
-      border: 0.5px solid var(--border);
-      border-radius: 6px;
+      background: transparent;
+      border: none;
       cursor: pointer;
-      margin-left: 8px;
+      margin-left: 12px;
     `;
     adminBtn.onclick = () => this.toggleAdminPanel();
-    header.appendChild(adminBtn);
+    analyticsHeader.appendChild(adminBtn);
   },
 
   toggleAdminPanel() {
