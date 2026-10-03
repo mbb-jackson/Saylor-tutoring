@@ -47,15 +47,16 @@
 
 ### 3. Set Up Your Coach Dashboard (Your Phone/Computer)
 
-1. Open the coach dashboard: https://saylor-tutoring.netlify.app/coach-private.html
-2. Paste the same Gist ID
+1. Open the coach dashboard: https://timely-tiramisu-444edd.netlify.app/coach-private.html
+2. Paste the same Gist ID (76279152086bf980a3fd75733623eee6)
 3. Click "✓ Connect"
 
 Now you can:
-- See real-time practice time breakdown by game
-- Track progress against the 12-week plan
-- View recent practice sessions
-- Get alerts about engagement milestones
+- **Overview tab**: Summary of total practice time, sessions, coins, and practice breakdown by skill category
+- **By Lesson tab**: Detailed breakdown showing time invested in each specific skill/lesson aligned to the 12-week plan (e.g., "Multiplication Facts 0-5", "2-Digit × 1-Digit", etc.)
+- **Progress bars**: See which skills are getting the most practice and track progress toward Phase goals
+- **Sessions tab**: View recent practice sessions with dates and durations
+- **Alerts**: Get notified about engagement milestones and light practice weeks
 
 The dashboard auto-refreshes every 30 seconds while you have it open.
 
@@ -78,13 +79,42 @@ reads from Gist every 30s
 The system automatically tracks:
 - **Game sessions**: Each game start/stop records duration
 - **Game type**: Which game was played (turdTimes, fastCash, bubbleBuster)
-- **Phase correlation**: Time is grouped by game type to map to 12-week plan phases
+- **Skill mapping**: Games are automatically mapped to specific skills/lessons in the 12-week plan
 
 Games auto-track when:
 - ⏱️ Fast Cash game started → `trackSessionStart('fastCash')`
 - ⏱️ Fast Cash game ended → `trackSessionEnd('fastCash')`
 - 💩 Turd Times started → `trackSessionStart('turdTimes')`
 - 🫧 Bubble Buster started → `trackSessionStart('bubbleBuster')`
+
+### Skill-to-Game Mapping
+The coach dashboard automatically groups practice time by specific skills aligned to the 12-week plan:
+
+**Phase 1: Single-Digit Fluency (Weeks 1-3)**
+- Multiplication Facts 0-5 (Week 1)
+- Multiplication Facts 6-9 (Week 2)
+- Division Facts 0-9 (Week 2)
+- Full Fluency Review (Week 3)
+→ Games: turdTimes, fastCash
+
+**Phase 2: Multi-Digit Operations (Weeks 4-6)**
+- 2-Digit × 1-Digit (Week 4)
+- 3-Digit × 1-Digit (Week 5)
+- 2-Digit × 2-Digit (Week 6)
+- Division by 1-Digit (Week 6)
+→ Games: turdTimes, bubbleBuster
+
+**Phase 3: Fraction Foundations (Weeks 7-9)**
+- Fractions & Equivalents (Week 7)
+- Simplify & Compare Fractions (Week 8)
+- Factors, GCF, LCM (Week 9)
+→ Games: bubbleBuster
+
+**Phase 4: Fraction Operations (Weeks 10-12)**
+- Add & Subtract Fractions (Week 10)
+- Multiply Fractions (Week 11)
+- Divide Fractions (Week 12)
+→ Games: bubbleBuster
 
 ### Data Sync
 - **Automatic**: When WiFi is available, saves sync to Gist via GitHub API

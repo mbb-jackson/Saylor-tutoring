@@ -191,6 +191,75 @@
     font-size: 18px;
   }
 
+  .skill-card {
+    background: var(--surface-0);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .skill-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .skill-week {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .skill-time {
+    text-align: right;
+  }
+
+  .skill-time-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--fill-accent);
+  }
+
+  .skill-time-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .skill-bar-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 13px;
+  }
+
+  .skill-progress {
+    background: var(--surface-1);
+    border-radius: 8px;
+    height: 20px;
+    overflow: hidden;
+  }
+
+  .skill-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
   .phase-bar {
     margin-bottom: 1.5rem;
   }
@@ -352,6 +421,9 @@
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 </style>
 </head>
 <body>
@@ -398,13 +470,13 @@
   <div id="dashboardScreen" class="screen">
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="coach.switchTab('overview')">📊 Overview</button>
-      <button class="nav-tab" onclick="coach.switchTab('timeline')">📅 By Phase</button>
+      <button class="nav-tab" onclick="coach.switchTab('skills')">📚 By Lesson</button>
       <button class="nav-tab" onclick="coach.switchTab('sessions')">⏱️ Sessions</button>
       <button class="nav-tab" onclick="coach.switchTab('settings')">⚙️ Settings</button>
     </div>
 
     <!-- Overview Tab -->
-    <div id="overviewTab" class="tab-content">
+    <div id="overviewTab" class="tab-content active">
       <div id="alerts"></div>
 
       <div class="summary-grid">
@@ -424,26 +496,31 @@
           <div class="unit">total coins</div>
         </div>
         <div class="summary-card">
-          <div class="label">Most Used Game</div>
+          <div class="label">Current Focus</div>
           <div class="value" id="favoriteGame" style="font-size: 24px;">-</div>
           <div class="unit" id="favoriteGameName">No data yet</div>
         </div>
       </div>
 
       <div class="time-breakdown" id="timeByPhase">
-        <h3>⏱️ Time by Phase</h3>
-        <div id="phaseBreakdown"></div>
+        <h3>📊 Practice Time by Skill Category</h3>
+        <div id="skillCategoryBreakdown"></div>
+      </div>
+
+      <div class="time-breakdown">
+        <h3>🎯 Progress by 12-Week Phase</h3>
+        <div id="phaseTimeline"></div>
       </div>
     </div>
 
-    <!-- Timeline Tab -->
-    <div id="timelineTab" class="tab-content">
+    <!-- By Lesson Tab -->
+    <div id="skillsTab" class="tab-content">
       <div class="time-breakdown">
-        <h3>📅 Progress Against 12-Week Plan</h3>
+        <h3>📚 Breakdown by Skill/Lesson</h3>
         <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-          Shows how much practice time is being invested in each phase of the plan.
+          Detailed view of practice time invested in each skill from the 12-week plan.
         </p>
-        <div id="phaseTimeline"></div>
+        <div id="skillsBreakdown"></div>
       </div>
     </div>
 
@@ -482,6 +559,48 @@
 </div>
 
 <script>
+// 12-Week Plan Skills Mapping
+const SKILLS_MAP = {
+  'phase1': {
+    name: 'Phase 1: Single-Digit Fluency (Weeks 1-3)',
+    color: '#ff6b6b',
+    skills: [
+      { id: 'mult-0-5', name: 'Multiplication Facts 0-5', week: 1, games: ['turdTimes', 'fastCash'] },
+      { id: 'mult-6-9', name: 'Multiplication Facts 6-9', week: 2, games: ['turdTimes', 'fastCash'] },
+      { id: 'div-facts', name: 'Division Facts (0-9)', week: 2, games: ['turdTimes', 'fastCash'] },
+      { id: 'fluency-review', name: 'Full Fluency Review', week: 3, games: ['turdTimes', 'fastCash'] }
+    ]
+  },
+  'phase2': {
+    name: 'Phase 2: Multi-Digit Operations (Weeks 4-6)',
+    color: '#4ecdc4',
+    skills: [
+      { id: '2digit-mult-1digit', name: '2-Digit × 1-Digit', week: 4, games: ['turdTimes', 'bubbleBuster'] },
+      { id: '3digit-mult-1digit', name: '3-Digit × 1-Digit', week: 5, games: ['turdTimes', 'bubbleBuster'] },
+      { id: '2digit-mult-2digit', name: '2-Digit × 2-Digit', week: 6, games: ['turdTimes', 'bubbleBuster'] },
+      { id: 'div-1digit', name: 'Division by 1-Digit', week: 6, games: ['turdTimes', 'bubbleBuster'] }
+    ]
+  },
+  'phase3': {
+    name: 'Phase 3: Fraction Foundations (Weeks 7-9)',
+    color: '#45b7d1',
+    skills: [
+      { id: 'frac-equiv', name: 'Fractions & Equivalents', week: 7, games: ['bubbleBuster'] },
+      { id: 'frac-simplify', name: 'Simplify & Compare Fractions', week: 8, games: ['bubbleBuster'] },
+      { id: 'gcf-lcm', name: 'Factors, GCF, LCM', week: 9, games: ['bubbleBuster'] }
+    ]
+  },
+  'phase4': {
+    name: 'Phase 4: Fraction Operations (Weeks 10-12)',
+    color: '#96ceb4',
+    skills: [
+      { id: 'frac-add-sub', name: 'Add & Subtract Fractions', week: 10, games: ['bubbleBuster'] },
+      { id: 'frac-mult', name: 'Multiply Fractions', week: 11, games: ['bubbleBuster'] },
+      { id: 'frac-div', name: 'Divide Fractions', week: 12, games: ['bubbleBuster'] }
+    ]
+  }
+};
+
 const coach = {
   data: null,
   gistId: localStorage.getItem('coachGistId') || '',
@@ -513,7 +632,9 @@ const coach = {
 
     this.gistId = gistId;
     localStorage.setItem('coachGistId', gistId);
-    document.getElementById('gistIdInput').value = gistId;
+    if (document.getElementById('gistIdInput')) {
+      document.getElementById('gistIdInput').value = gistId;
+    }
     document.getElementById('gistIdSetting').value = gistId;
 
     const statusBadge = document.getElementById('statusBadge');
@@ -604,17 +725,20 @@ const coach = {
         'bubbleBuster': '🫧 Bubble Buster'
       };
       document.getElementById('favoriteGame').textContent = gameNames[favoriteGame[0]] || favoriteGame[0];
-      document.getElementById('favoriteGameName').textContent = `${favoriteGame[1]} sessions`;
+      document.getElementById('favoriteGameName').textContent = `(${favoriteGame[1]} sessions)`;
     }
 
     // Generate alerts
     this.generateAlerts(totalMinutes, thisWeekSessions, fastGameHistory.length);
 
-    // Render time by phase
-    this.renderTimeByPhase(timeSessions);
+    // Render skill category breakdown
+    this.renderSkillCategoryBreakdown(timeSessions);
 
-    // Render timeline
-    this.renderTimeline(timeSessions);
+    // Render detailed skills breakdown
+    this.renderSkillsBreakdown(timeSessions);
+
+    // Render phase timeline
+    this.renderPhaseTimeline(timeSessions);
 
     // Render recent sessions
     this.renderSessions(timeSessions);
@@ -644,40 +768,40 @@ const coach = {
     alertsContainer.innerHTML = html;
   },
 
-  renderTimeByPhase(timeSessions) {
-    const phases = {
-      'turdTimes': { name: '📊 Single-Digit Multiplication', color: '#ff6b6b' },
-      'fastCash': { name: '⚡ Timed Flash Cards', color: '#4ecdc4' },
-      'bubbleBuster': { name: '🫧 Bubble Buster Game', color: '#45b7d1' }
+  renderSkillCategoryBreakdown(timeSessions) {
+    const categories = {
+      'turdTimes': { name: '💩 Turd Times (All Skills)', color: '#ff6b6b' },
+      'fastCash': { name: '⚡ Fast Cash (Timed Facts)', color: '#4ecdc4' },
+      'bubbleBuster': { name: '🫧 Bubble Buster', color: '#45b7d1' }
     };
 
     let totalTime = 0;
-    const phaseTime = {};
+    const categoryTime = {};
 
     timeSessions.forEach(s => {
       const seconds = s.durationSec || 0;
       totalTime += seconds;
-      phaseTime[s.gameMode] = (phaseTime[s.gameMode] || 0) + seconds;
+      categoryTime[s.gameMode] = (categoryTime[s.gameMode] || 0) + seconds;
     });
 
-    const phaseDiv = document.getElementById('phaseBreakdown');
+    const categoryDiv = document.getElementById('skillCategoryBreakdown');
     let html = '';
 
-    Object.entries(phaseTime)
+    Object.entries(categoryTime)
       .sort((a, b) => b[1] - a[1])
       .forEach(([game, seconds]) => {
         const minutes = Math.round(seconds / 60);
         const percent = totalTime > 0 ? Math.round((seconds / totalTime) * 100) : 0;
-        const phase = phases[game] || { name: game, color: '#999' };
+        const category = categories[game] || { name: game, color: '#999' };
 
         html += `
           <div class="phase-bar">
             <div class="phase-label">
-              <span class="phase-name">${phase.name}</span>
+              <span class="phase-name">${category.name}</span>
               <span class="phase-time">${minutes} min (${percent}%)</span>
             </div>
             <div class="phase-progress">
-              <div class="phase-fill" style="width: ${percent}%; background-color: ${phase.color};">
+              <div class="phase-fill" style="width: ${percent}%; background-color: ${category.color};">
                 ${percent > 10 ? percent + '%' : ''}
               </div>
             </div>
@@ -685,39 +809,123 @@ const coach = {
         `;
       });
 
-    phaseDiv.innerHTML = html || '<p style="color: var(--text-secondary);">No time data yet</p>';
+    categoryDiv.innerHTML = html || '<p style="color: var(--text-secondary);">No time data yet</p>';
   },
 
-  renderTimeline(timeSessions) {
-    const twelveWeekPlan = {
-      'Week 1-3': 'Single-digit facts (2-9)',
-      'Week 4-6': 'Fluency building',
-      'Week 7-9': 'Multi-digit multiplication',
-      'Week 10-12': 'Division & fractions'
+  renderSkillsBreakdown(timeSessions) {
+    const skillsDiv = document.getElementById('skillsBreakdown');
+    let html = '';
+
+    // Calculate time per skill
+    const skillTime = {};
+    timeSessions.forEach(session => {
+      const gameMode = session.gameMode;
+      const seconds = session.durationSec || 0;
+
+      // Find all skills that use this game
+      Object.values(SKILLS_MAP).forEach(phase => {
+        phase.skills.forEach(skill => {
+          if (skill.games.includes(gameMode)) {
+            if (!skillTime[skill.id]) {
+              skillTime[skill.id] = { name: skill.name, week: skill.week, phase: phase.name, color: phase.color, seconds: 0 };
+            }
+            skillTime[skill.id].seconds += seconds;
+          }
+        });
+      });
+    });
+
+    // Group by phase
+    Object.entries(SKILLS_MAP).forEach(([phaseKey, phaseData]) => {
+      const phaseSkills = phaseData.skills
+        .map(skill => ({ ...skill, time: skillTime[skill.id] }))
+        .filter(skill => skill.time && skill.time.seconds > 0)
+        .sort((a, b) => b.time.seconds - a.time.seconds);
+
+      if (phaseSkills.length > 0) {
+        html += `<h4 style="margin: 2rem 0 1rem 0; color: var(--text-primary); font-size: 16px;">${phaseData.name}</h4>`;
+
+        phaseSkills.forEach(skill => {
+          const minutes = Math.round(skill.time.seconds / 60);
+          const seconds = skill.time.seconds;
+          const totalSeconds = Object.values(skillTime).reduce((sum, s) => sum + s.seconds, 0);
+          const percent = totalSeconds > 0 ? Math.round((seconds / totalSeconds) * 100) : 0;
+
+          html += `
+            <div class="skill-card">
+              <div class="skill-header">
+                <div>
+                  <div class="skill-title">${skill.name}</div>
+                  <div class="skill-week">Week ${skill.week}</div>
+                </div>
+                <div class="skill-time">
+                  <div class="skill-time-value">${minutes}m</div>
+                  <div class="skill-time-label">${percent}% of total</div>
+                </div>
+              </div>
+              <div class="skill-bar-label">
+                <span style="font-size: 12px; color: var(--text-secondary);">Practice time</span>
+                <span style="font-size: 12px; color: var(--text-secondary);">${percent}%</span>
+              </div>
+              <div class="skill-progress">
+                <div class="skill-fill" style="width: ${percent}%; background-color: ${phaseData.color};">
+                  ${percent > 5 ? percent + '%' : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+    });
+
+    if (html.length === 0) {
+      html = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No skill data yet. Saylor\'s sessions will appear here.</p>';
+    }
+
+    skillsDiv.innerHTML = html;
+  },
+
+  renderPhaseTimeline(timeSessions) {
+    const phaseGoals = {
+      'phase1': 180,  // 3 hours for Phase 1
+      'phase2': 240,  // 4 hours for Phase 2
+      'phase3': 240,  // 4 hours for Phase 3
+      'phase4': 240   // 4 hours for Phase 4
     };
 
-    let html = '';
-    Object.entries(twelveWeekPlan).forEach(([week, desc]) => {
-      const weekSessions = timeSessions.filter(s => {
-        // Simple assignment: turdTimes → Week 1-3
-        if (week === 'Week 1-3') return s.gameMode === 'turdTimes';
-        if (week === 'Week 4-6') return s.gameMode === 'turdTimes' || s.gameMode === 'fastCash';
-        return true;
-      });
+    const phaseTime = {};
+    Object.keys(phaseGoals).forEach(phase => phaseTime[phase] = 0);
 
-      const totalSec = weekSessions.reduce((sum, s) => sum + (s.durationSec || 0), 0);
-      const minutes = Math.round(totalSec / 60);
-      const goalMinutes = week.includes('1-3') ? 120 : week.includes('4-6') ? 180 : 120;
-      const percent = Math.min(100, Math.round((minutes / goalMinutes) * 100));
+    // Map sessions to phases based on game mode and rough week estimation
+    timeSessions.forEach(session => {
+      const gameMode = session.gameMode;
+
+      // Simple mapping: turdTimes/fastCash → phases 1-2, bubbleBuster → phases 3-4
+      if (gameMode === 'turdTimes' || gameMode === 'fastCash') {
+        // Could be phase 1 or 2, distribute proportionally
+        phaseTime['phase1'] += (session.durationSec || 0) * 0.6;
+        phaseTime['phase2'] += (session.durationSec || 0) * 0.4;
+      } else if (gameMode === 'bubbleBuster') {
+        phaseTime['phase3'] += (session.durationSec || 0) * 0.5;
+        phaseTime['phase4'] += (session.durationSec || 0) * 0.5;
+      }
+    });
+
+    let html = '';
+    Object.entries(SKILLS_MAP).forEach(([phaseKey, phaseData]) => {
+      const seconds = Math.round(phaseTime[phaseKey] || 0);
+      const minutes = Math.round(seconds / 60);
+      const goalMinutes = phaseGoals[phaseKey];
+      const percent = Math.min(100, goalMinutes > 0 ? Math.round((minutes / goalMinutes) * 100) : 0);
 
       html += `
         <div class="phase-bar">
           <div class="phase-label">
-            <span class="phase-name"><strong>${week}</strong> - ${desc}</span>
+            <span class="phase-name"><strong>${phaseData.name.split('(')[0].trim()}</strong></span>
             <span class="phase-time">${minutes}/${goalMinutes} min</span>
           </div>
           <div class="phase-progress">
-            <div class="phase-fill" style="width: ${percent}%;">
+            <div class="phase-fill" style="width: ${percent}%; background-color: ${phaseData.color};">
               ${percent > 10 ? percent + '%' : ''}
             </div>
           </div>
@@ -763,18 +971,18 @@ const coach = {
 
   switchTab(tab) {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
 
     event.target.classList.add('active');
 
     if (tab === 'overview') {
-      document.getElementById('overviewTab').style.display = 'block';
-    } else if (tab === 'timeline') {
-      document.getElementById('timelineTab').style.display = 'block';
+      document.getElementById('overviewTab').classList.add('active');
+    } else if (tab === 'skills') {
+      document.getElementById('skillsTab').classList.add('active');
     } else if (tab === 'sessions') {
-      document.getElementById('sessionsTab').style.display = 'block';
+      document.getElementById('sessionsTab').classList.add('active');
     } else if (tab === 'settings') {
-      document.getElementById('settingsTab').style.display = 'block';
+      document.getElementById('settingsTab').classList.add('active');
     }
   },
 
