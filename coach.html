@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saylor's Math Coach</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --surface-0: #faf9f5;
+      --surface-1: #f5f3f0;
+      --surface-2: #ede9e3;
+      --border: #e5ddd2;
+      --text-primary: #141413;
+      --text-secondary: #6b6b6b;
+      --fill-accent: #0066cc;
+      --fill-success: #22c55e;
+      --fill-warning: #f59e0b;
+      --fill-error: #ef4444;
+    }
+
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--surface-0);
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    h1, h2, h3 { margin: 0 0 1rem 0; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 20px; }
+    h3 { font-size: 16px; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .status { font-size: 14px; color: var(--text-secondary); }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .tab {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .tab.active {
+      color: var(--fill-accent);
+      border-bottom-color: var(--fill-accent);
+    }
+
+    .tab:hover { color: var(--text-primary); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Dashboard Section */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .stat-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+    .stat-value { font-size: 32px; font-weight: 600; color: var(--fill-accent); }
+    .stat-detail { font-size: 12px; color: var(--text-secondary); margin-top: 0.5rem; }
+
+    /* Timeline/Gantt */
+    .timeline {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .phase {
+      margin-bottom: 1.5rem;
+    }
+
+    .phase-label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .phase-bar {
+      display: flex;
+      height: 32px;
+      background: var(--surface-0);
+      border: 0.5px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .phase-progress {
+      height: 100%;
+      background: linear-gradient(90deg, var(--fill-success), var(--fill-accent));
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .recommendation {
+      background: linear-gradient(135deg, var(--fill-warning) 0%, #fbbf24 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .recommendation h3 { margin-top: 0; }
+    .recommendation-text { font-size: 15px; line-height: 1.6; }
+
+    /* Data Import */
+    .import-section {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .import-section h3 { margin-top: 0; }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 12px;
+      border: 0.5px solid var(--border);
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: var(--fill-accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Chat */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 500px;
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      max-width: 85%;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      background: var(--fill-accent);
+      color: white;
+      align-self: flex-end;
+    }
+
+    .message.coach {
+      background: var(--surface-0);
+      border: 0.5px solid var(--border);
+      align-self: flex-start;
+    }
+
+    .chat-input {
+      display: flex;
+      gap: 8px;
+      padding: 1rem;
+      border-top: 0.5px solid var(--border);
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 0.5px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .chat-input button {
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+
+    /* Game Ideas */
+    .ideas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .idea-card {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .idea-card h3 { margin-top: 0; color: var(--fill-accent); }
+    .idea-card p { font-size: 14px; margin: 0.5rem 0; }
+
+    .coin-badge {
+      display: inline-block;
+      background: #fbbf24;
+      color: #78350f;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    .error { color: var(--fill-error); }
+    .success { color: var(--fill-success); }
+
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .message {
+        max-width: 100%;
+      }
+
+      .phase-bar { height: 24px; }
+      .phase-progress { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>🎓 Saylor's Math Coach</h1>
+        <div class="status" id="dataStatus">Waiting for data...</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab" onclick="switchTab('timeline')">Timeline</button>
+      <button class="tab" onclick="switchTab('chat')">Chat</button>
+      <button class="tab" onclick="switchTab('ideas')">Game Ideas</button>
+      <button class="tab" onclick="switchTab('settings')">Data</button>
+    </div>
+
+    <!-- DASHBOARD TAB -->
+    <div id="dashboard" class="tab-content active">
+      <div id="recommendation" style="display:none;"></div>
+
+      <div class="dashboard-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-label">Current Phase</div>
+          <div class="stat-value" id="currentPhase">-</div>
+          <div class="stat-detail" id="phaseDetail"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Coins Earned</div>
+          <div class="stat-value" id="coinsEarned">-</div>
+          <div class="stat-detail">Keep grinding! 💰</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Answer Time</div>
+          <div class="stat-value" id="avgTime">-</div>
+          <div class="stat-detail">seconds</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Overall Accuracy</div>
+          <div class="stat-value" id="accuracy">-</div>
+          <div class="stat-detail">%</div>
+        </div>
+      </div>
+
+      <h2>Table Progress</h2>
+      <div id="tableProgress" style="display: grid; gap: 12px;"></div>
+    </div>
+
+    <!-- TIMELINE TAB -->
+    <div id="timeline" class="tab-content">
+      <h2>12-Week Catch-Up Plan</h2>
+      <div class="timeline" id="timelineDisplay"></div>
+      <p style="color: var(--text-secondary); font-size: 14px;">
+        📌 <strong>Your current position:</strong> <span id="timelineStatus">Loading...</span>
+      </p>
+    </div>
+
+    <!-- CHAT TAB -->
+    <div id="chat" class="tab-content">
+      <h2>Ask Me Anything</h2>
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="message coach">
+            Hi! I'm Saylor's math coach. Ask me about her progress, next steps, or game ideas. How can I help?
+          </div>
+        </div>
+        <div class="chat-input">
+          <input type="text" id="chatInput" placeholder="Ask me a question..." onkeypress="if(event.key==='Enter') sendChat()">
+          <button onclick="sendChat()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME IDEAS TAB -->
+    <div id="ideas" class="tab-content">
+      <h2>Game & Quizzlet Ideas</h2>
+      <p style="color: var(--text-secondary);">Tell me what skill to focus on and I'll suggest prize-based games:</p>
+      <div class="import-section" style="background: var(--surface-1); border: 1px dashed var(--border);">
+        <input type="text" id="skillInput" placeholder="e.g., 'multi-digit multiplication' or 'division facts'" style="width: 100%; padding: 12px; border: 0.5px solid var(--border); border-radius: 6px; margin-bottom: 1rem;">
+        <button onclick="generateGameIdeas()" style="width: 100%;">Suggest Games</button>
+      </div>
+      <div class="ideas-grid" id="ideasGrid" style="margin-top: 2rem;"></div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div id="settings" class="tab-content">
+      <h2>Manage Data</h2>
+
+      <div class="import-section">
+        <h3>📱 Import from iPad</h3>
+        <p style="color: var(--text-secondary); font-size: 14px;">
+          1. Open the games app on Saylor's iPad<br>
+          2. Go to Analytics → Export<br>
+          3. Paste the JSON below:<br>
+        </p>
+        <textarea id="jsonInput" placeholder="Paste the exported JSON data here..."></textarea>
+        <button onclick="importData()" style="width: 100%;">Load Data</button>
+      </div>
+
+      <div class="import-section">
+        <h3>💾 Or Use LocalStorage</h3>
+        <p style="color: var(--text-secondary); font-size: 14px;">
+          If this page is open in the same browser as the games app, data syncs automatically.
+        </p>
+        <button onclick="loadFromLocalStorage()" style="width: 100%;">Load from Browser</button>
+      </div>
+
+      <div id="dataInfo" style="margin-top: 2rem;"></div>
+    </div>
+  </div>
+
+  <script>
+    let gameData = null;
+    const plan = {
+      phases: [
+        { phase: 1, weeks: '1-3', focus: 'Single-digit × and ÷ fluency', outcome: 'Automatic recall of all facts 0–9', accuracy: 90 },
+        { phase: 2, weeks: '4-6', focus: 'Multi-digit multiplication & division', outcome: 'Confident 2-digit × 2-digit and ÷ 1-digit', accuracy: 90 },
+        { phase: 3, weeks: '7-9', focus: 'Fraction foundations', outcome: 'Equivalents, simplify, compare, GCF/LCM', accuracy: 90 },
+        { phase: 4, weeks: '10-12', focus: 'Fraction operations', outcome: 'Add, subtract, multiply & divide fractions', accuracy: 90 }
+      ]
+    };
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function loadFromLocalStorage() {
+      const data = localStorage.getItem('saylorsGames');
+      if (!data) {
+        alert('No data found in browser storage. Export from the iPad app first.');
+        return;
+      }
+      try {
+        gameData = JSON.parse(data);
+        updateDashboard();
+        document.getElementById('dataStatus').textContent = '✓ Data loaded from browser';
+      } catch (e) {
+        alert('Error parsing data: ' + e.message);
+      }
+    }
+
+    function importData() {
+      const json = document.getElementById('jsonInput').value.trim();
+      if (!json) {
+        alert('Please paste the JSON data first');
+        return;
+      }
+      try {
+        gameData = JSON.parse(json);
+        updateDashboard();
+        document.getElementById('dataStatus').innerHTML = '✓ Data imported from iPad <small style="color: var(--text-secondary);">Last updated: ' + new Date(gameData.exportedAt || Date.now()).toLocaleString() + '</small>';
+      } catch (e) {
+        document.getElementById('dataStatus').innerHTML = '<span class="error">❌ Invalid JSON: ' + e.message + '</span>';
+      }
+    }
+
+    function updateDashboard() {
+      if (!gameData) return;
+
+      const turdData = gameData.turdTimes || {};
+      const coins = gameData.coins || 0;
+      const fastHistory = gameData.fastGameHistory || [];
+
+      // Calculate phase
+      let totalCompleted = Object.values(turdData).reduce((sum, t) => sum + (t.completions || 0), 0);
+      let currentPhase = 1;
+      if (totalCompleted >= 27) currentPhase = 4;
+      else if (totalCompleted >= 18) currentPhase = 3;
+      else if (totalCompleted >= 9) currentPhase = 2;
+
+      document.getElementById('currentPhase').textContent = `Phase ${currentPhase}`;
+      document.getElementById('phaseDetail').textContent = plan.phases[currentPhase - 1].focus;
+      document.getElementById('coinsEarned').textContent = coins.toFixed(2);
+
+      // Calculate stats from fastHistory
+      if (fastHistory.length > 0) {
+        const avgTime = (fastHistory.reduce((sum, h) => sum + h.timeTaken, 0) / fastHistory.length).toFixed(1);
+        const correct = fastHistory.filter(h => h.isCorrect).length;
+        const accuracy = ((correct / fastHistory.length) * 100).toFixed(0);
+
+        document.getElementById('avgTime').textContent = avgTime;
+        document.getElementById('accuracy').textContent = accuracy;
+      }
+
+      // Render table progress
+      const tableHtml = [2, 3, 4, 5, 6, 7, 8, 9].map(num => {
+        const completions = turdData[num]?.completions || 0;
+        const progress = (completions / 5) * 100;
+        return `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-2); border-radius: 8px; border: 0.5px solid var(--border);">
+            <div style="font-weight: 600;">Table ${num}</div>
+            <div style="flex: 1; margin: 0 1rem; height: 8px; background: var(--surface-0); border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; background: linear-gradient(90deg, var(--fill-success), var(--fill-accent)); width: ${progress}%;"></div>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary);">${completions}/5</div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('tableProgress').innerHTML = tableHtml;
+
+      // Recommendation
+      if (totalCompleted >= 27 && totalCompleted < 36) {
+        showRecommendation('🎯 Ready for Multi-Digit!', 'Saylor has strong single-digit fluency. Time to move to 2-digit × 1-digit multiplication. Create a game with 8-10 problems per round, 2.5 coins per completion.');
+      } else if (totalCompleted >= 36) {
+        showRecommendation('📚 Start Fractions', 'Great progress! She\'s ready for fraction foundations. Begin with visual models (fraction pizzas, bars) and GCF/LCM.');
+      } else if (totalCompleted >= 9) {
+        showRecommendation('⚡ Keep Momentum', `She's ${totalCompleted}/27 through single-digit facts. Focus on her slower tables and keep the prize motivation high.`);
+      }
+    }
+
+    function showRecommendation(title, text) {
+      document.getElementById('recommendation').innerHTML = `
+        <div class="recommendation">
+          <h3>${title}</h3>
+          <div class="recommendation-text">${text}</div>
+        </div>
+      `;
+      document.getElementById('recommendation').style.display = 'block';
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      if (!message) return;
+
+      const messagesDiv = document.getElementById('chatMessages');
+
+      // Add user message
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      userMsg.textContent = message;
+      messagesDiv.appendChild(userMsg);
+
+      input.value = '';
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      // Send to Claude via sendPrompt
+      setTimeout(() => {
+        if (window.sendPrompt) {
+          window.sendPrompt(`Coach question about Saylor's math: "${message}". Current data: Phase ${document.getElementById('currentPhase').textContent}, Coins: ${document.getElementById('coinsEarned').textContent}, Accuracy: ${document.getElementById('accuracy').textContent}%`);
+        } else {
+          const coachMsg = document.createElement('div');
+          coachMsg.className = 'message coach';
+          coachMsg.textContent = 'I\'m ready to help! This message will be sent to Claude for analysis. Make sure you\'re using this in the Claude interface for real-time coaching.';
+          messagesDiv.appendChild(coachMsg);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+      }, 100);
+    }
+
+    function generateGameIdeas() {
+      const skill = document.getElementById('skillInput').value.trim();
+      if (!skill) {
+        alert('Tell me what skill to focus on!');
+        return;
+      }
+
+      if (window.sendPrompt) {
+        window.sendPrompt(`Design game ideas for this skill: "${skill}". Make 3 prize-based game variations. Saylor is highly motivated by coins and prizes. Each game should have 5-10 problems per round with clear coin rewards.`);
+      } else {
+        document.getElementById('ideasGrid').innerHTML = `
+          <div style="padding: 2rem; background: var(--surface-2); border-radius: 12px; text-align: center;">
+            <p class="error">Waiting for Claude...</p>
+            <p style="font-size: 14px; color: var(--text-secondary);">This dashboard works best in Claude with the sendPrompt function enabled.</p>
+          </div>
+        `;
+      }
+    }
+
+    function updateTimeline() {
+      if (!gameData) {
+        document.getElementById('timelineDisplay').innerHTML = '<p class="error">Load data first to see timeline</p>';
+        return;
+      }
+
+      const turdData = gameData.turdTimes || {};
+      let totalCompleted = Object.values(turdData).reduce((sum, t) => sum + (t.completions || 0), 0);
+
+      const html = plan.phases.map(phase => {
+        const phaseProgress = totalCompleted > (phase.phase - 1) * 9 ? Math.min(100, ((totalCompleted - (phase.phase - 1) * 9) / 9) * 100) : 0;
+        return `
+          <div class="phase">
+            <div class="phase-label">Week ${phase.weeks} – Phase ${phase.phase}: ${phase.focus}</div>
+            <div class="phase-bar">
+              <div class="phase-progress" style="width: ${phaseProgress}%;">
+                ${phaseProgress > 15 ? phaseProgress.toFixed(0) + '%' : ''}
+              </div>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 0.5rem;">Goal: ${phase.outcome}</div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('timelineDisplay').innerHTML = html;
+
+      // Status
+      let status = `${totalCompleted}/36 facts completed`;
+      if (totalCompleted >= 27) status += ' — Ready for multi-digit!';
+      else if (totalCompleted >= 18) status += ' — Phase 2 in progress';
+      else if (totalCompleted >= 9) status += ' — Phase 2 coming soon';
+
+      document.getElementById('timelineStatus').textContent = status;
+    }
+
+    // Auto-load on page load
+    window.addEventListener('load', () => {
+      loadFromLocalStorage();
+      updateTimeline();
+    });
+
+    // Override updateDashboard to also update timeline
+    const origUpdate = updateDashboard;
+    updateDashboard = function() {
+      origUpdate();
+      updateTimeline();
+    };
+  </script>
+</body>
+</html>
