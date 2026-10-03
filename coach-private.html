@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏆 Saylor's Coach Dashboard (Private)</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --surface-0: #ffffff;
+    --surface-1: #f8f7f4;
+    --surface-2: #efefeb;
+    --text-primary: #141413;
+    --text-secondary: #706d66;
+    --border: #e1dfd8;
+    --fill-accent: #6366f1;
+    --fill-success: #22c55e;
+    --fill-error: #ef4444;
+    --fill-warning: #f59e0b;
+  }
+
+  body {
+    margin: 0;
+    padding: 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--surface-0);
+    color: var(--text-primary);
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  h1 { margin: 0; font-size: 28px; }
+
+  .status {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .status-synced {
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+
+  .status-offline {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .nav-tab {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .nav-tab:hover { color: var(--text-primary); }
+  .nav-tab.active {
+    color: var(--fill-accent);
+    border-bottom-color: var(--fill-accent);
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Setup Screen */
+  .setup-screen {
+    max-width: 500px;
+    margin: 3rem auto;
+  }
+
+  .setup-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .setup-card h2 {
+    margin-top: 0;
+    font-size: 22px;
+    margin-bottom: 1rem;
+  }
+
+  .setup-card p {
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+  }
+
+  .setup-card input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 1rem;
+  }
+
+  .setup-card button {
+    width: 100%;
+    padding: 12px;
+    background: var(--fill-accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .setup-card button:hover {
+    opacity: 0.9;
+  }
+
+  /* Summary Cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .summary-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .summary-card .label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .summary-card .value {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--fill-accent);
+  }
+
+  .summary-card .unit {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  /* Time Breakdown */
+  .time-breakdown {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .time-breakdown h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 18px;
+  }
+
+  .phase-bar {
+    margin-bottom: 1.5rem;
+  }
+
+  .phase-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 14px;
+  }
+
+  .phase-name {
+    font-weight: 500;
+  }
+
+  .phase-time {
+    color: var(--text-secondary);
+  }
+
+  .phase-progress {
+    background: var(--surface-1);
+    border-radius: 8px;
+    height: 24px;
+    overflow: hidden;
+  }
+
+  .phase-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* Session Log */
+  .session-log {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .session-log h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 18px;
+  }
+
+  .session-item {
+    padding: 1rem;
+    background: var(--surface-0);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .session-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .session-game {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .session-name {
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .session-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .session-duration {
+    font-weight: 600;
+    color: var(--fill-accent);
+    text-align: right;
+  }
+
+  /* Alerts */
+  .alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .alert-info {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #0284c7;
+  }
+
+  .alert-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+  }
+
+  .alert-success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #22c55e;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    background: var(--fill-accent);
+    color: white;
+    font-weight: 500;
+  }
+
+  .button:hover {
+    opacity: 0.9;
+  }
+
+  .button-secondary {
+    background: var(--surface-2);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--border);
+    border-radius: 50%;
+    border-top-color: var(--fill-accent);
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🏆 Saylor's Coach Dashboard (Private)</h1>
+    <div class="status">
+      <span id="statusBadge" class="status-badge status-offline">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Setup Screen -->
+  <div id="setupScreen" class="screen active">
+    <div class="setup-screen">
+      <div class="setup-card">
+        <h2>🔗 Connect to Saylor's Data</h2>
+        <p>Enter the GitHub Gist ID where Saylor's progress is stored. You can create a private Gist and paste its ID here.</p>
+
+        <input
+          type="text"
+          id="gistIdInput"
+          placeholder="e.g., abc123def456..."
+          maxlength="50"
+        >
+
+        <button onclick="coach.loadGistData()">✓ Connect</button>
+
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); text-align: left;">
+          <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
+            <strong>How to get the Gist ID:</strong><br>
+            1. Go to <a href="https://gist.github.com" target="_blank">gist.github.com</a><br>
+            2. Create a new gist named "saylor-progress.json"<br>
+            3. The URL will look like: gist.github.com/your-username/<strong>abc123def456</strong><br>
+            4. Copy the ID (abc123def456) and paste it above<br>
+            5. On Saylor's iPad, open the games app → Analytics → scroll down and enter this ID
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Screen -->
+  <div id="dashboardScreen" class="screen">
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="coach.switchTab('overview')">📊 Overview</button>
+      <button class="nav-tab" onclick="coach.switchTab('timeline')">📅 By Phase</button>
+      <button class="nav-tab" onclick="coach.switchTab('sessions')">⏱️ Sessions</button>
+      <button class="nav-tab" onclick="coach.switchTab('settings')">⚙️ Settings</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div id="overviewTab" class="tab-content">
+      <div id="alerts"></div>
+
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="label">Total Practice Time</div>
+          <div class="value" id="totalTime">0</div>
+          <div class="unit">minutes</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Sessions This Week</div>
+          <div class="value" id="sessionsCount">0</div>
+          <div class="unit">practice sessions</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Coins Earned</div>
+          <div class="value" id="coinsEarned">0</div>
+          <div class="unit">total coins</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Most Used Game</div>
+          <div class="value" id="favoriteGame" style="font-size: 24px;">-</div>
+          <div class="unit" id="favoriteGameName">No data yet</div>
+        </div>
+      </div>
+
+      <div class="time-breakdown" id="timeByPhase">
+        <h3>⏱️ Time by Phase</h3>
+        <div id="phaseBreakdown"></div>
+      </div>
+    </div>
+
+    <!-- Timeline Tab -->
+    <div id="timelineTab" class="tab-content">
+      <div class="time-breakdown">
+        <h3>📅 Progress Against 12-Week Plan</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Shows how much practice time is being invested in each phase of the plan.
+        </p>
+        <div id="phaseTimeline"></div>
+      </div>
+    </div>
+
+    <!-- Sessions Tab -->
+    <div id="sessionsTab" class="tab-content">
+      <div class="session-log">
+        <h3>⏱️ Recent Sessions</h3>
+        <div id="sessionsList"></div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settingsTab" class="tab-content">
+      <div class="setup-card" style="max-width: 600px; text-align: left;">
+        <h3 style="margin-top: 0;">Settings</h3>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Gist ID:</label>
+          <input type="text" id="gistIdSetting" placeholder="Current Gist ID" readonly style="background: var(--surface-1);">
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <button class="button" onclick="coach.reloadData()">🔄 Reload Data</button>
+          <button class="button button-secondary" onclick="coach.changeGistId()" style="margin-left: 0.5rem;">✏️ Change Gist</button>
+        </div>
+
+        <div style="padding: 1rem; background: var(--surface-1); border-radius: 8px;">
+          <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">
+            <strong>Last synced:</strong> <span id="lastSyncTime">Never</span><br>
+            <strong>Data updated:</strong> <span id="dataUpdateTime">-</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const coach = {
+  data: null,
+  gistId: localStorage.getItem('coachGistId') || '',
+  autoRefreshInterval: null,
+
+  init() {
+    if (this.gistId) {
+      this.loadGistData();
+      // Auto-refresh every 30 seconds
+      this.autoRefreshInterval = setInterval(() => this.loadGistData(), 30000);
+    } else {
+      this.showSetup();
+    }
+  },
+
+  showSetup() {
+    document.getElementById('setupScreen').classList.add('active');
+    document.getElementById('dashboardScreen').classList.remove('active');
+  },
+
+  showDashboard() {
+    document.getElementById('setupScreen').classList.remove('active');
+    document.getElementById('dashboardScreen').classList.add('active');
+  },
+
+  async loadGistData() {
+    const gistId = document.getElementById('gistIdInput')?.value?.trim() || this.gistId;
+    if (!gistId) return;
+
+    this.gistId = gistId;
+    localStorage.setItem('coachGistId', gistId);
+    document.getElementById('gistIdInput').value = gistId;
+    document.getElementById('gistIdSetting').value = gistId;
+
+    const statusBadge = document.getElementById('statusBadge');
+    statusBadge.textContent = 'Syncing...';
+    statusBadge.className = 'status-badge status-offline';
+
+    try {
+      const response = await fetch(`https://api.github.com/gists/${gistId}`);
+
+      if (!response.ok) {
+        throw new Error('Gist not found or not accessible');
+      }
+
+      const gistData = await response.json();
+      const fileContent = gistData.files['saylor-progress.json']?.content;
+
+      if (!fileContent) {
+        throw new Error('saylor-progress.json not found in gist');
+      }
+
+      this.data = JSON.parse(fileContent);
+      document.getElementById('lastSyncTime').textContent = new Date().toLocaleTimeString();
+
+      this.showDashboard();
+      this.updateDashboard();
+
+      statusBadge.textContent = '✓ Synced';
+      statusBadge.className = 'status-badge status-synced';
+    } catch (err) {
+      statusBadge.textContent = '✗ Offline';
+      statusBadge.className = 'status-badge status-offline';
+      console.error('Failed to load Gist:', err);
+      alert('Error: ' + err.message);
+    }
+  },
+
+  updateDashboard() {
+    if (!this.data) return;
+
+    const timeSessions = this.data.timeSessions || [];
+    const fastGameHistory = this.data.fastGameHistory || [];
+
+    // Calculate metrics
+    const totalSeconds = timeSessions.reduce((sum, s) => sum + (s.durationSec || 0), 0);
+    const totalMinutes = Math.round(totalSeconds / 60);
+    const thisWeekSessions = timeSessions.filter(s => {
+      const date = new Date(s.startTime);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return date >= weekAgo;
+    }).length;
+
+    const gameCount = {};
+    timeSessions.forEach(s => {
+      gameCount[s.gameMode] = (gameCount[s.gameMode] || 0) + 1;
+    });
+    const favoriteGame = Object.entries(gameCount).sort((a, b) => b[1] - a[1])[0];
+
+    // Update summary cards
+    document.getElementById('totalTime').textContent = totalMinutes;
+    document.getElementById('sessionsCount').textContent = thisWeekSessions;
+    document.getElementById('coinsEarned').textContent = Math.round(this.data.coins || 0);
+
+    if (favoriteGame) {
+      const gameNames = {
+        'turdTimes': '💩 Turd Times',
+        'fastCash': '⚡ Fast Cash',
+        'bubbleBuster': '🫧 Bubble Buster'
+      };
+      document.getElementById('favoriteGame').textContent = gameNames[favoriteGame[0]] || favoriteGame[0];
+      document.getElementById('favoriteGameName').textContent = `${favoriteGame[1]} sessions`;
+    }
+
+    // Generate alerts
+    this.generateAlerts(totalMinutes, thisWeekSessions, fastGameHistory.length);
+
+    // Render time by phase
+    this.renderTimeByPhase(timeSessions);
+
+    // Render timeline
+    this.renderTimeline(timeSessions);
+
+    // Render recent sessions
+    this.renderSessions(timeSessions);
+
+    if (this.data.lastSync) {
+      document.getElementById('dataUpdateTime').textContent =
+        new Date(this.data.lastSync).toLocaleTimeString();
+    }
+  },
+
+  generateAlerts(totalMinutes, sessionsThisWeek, totalProblems) {
+    const alertsContainer = document.getElementById('alerts');
+    let html = '';
+
+    if (totalProblems === 0) {
+      html += `<div class="alert alert-info">📊 No practice data yet. Has Saylor set up the Gist ID in the games app?</div>`;
+    } else if (totalMinutes < 30) {
+      html += `<div class="alert alert-warning">⏱️ Light practice week - only ${totalMinutes} minutes. Consider encouraging more sessions.</div>`;
+    } else if (totalMinutes > 120) {
+      html += `<div class="alert alert-success">🎉 Excellent effort! ${totalMinutes} minutes of practice this week!</div>`;
+    }
+
+    if (totalProblems > 500) {
+      html += `<div class="alert alert-success">✨ Saylor has solved over ${totalProblems} problems - amazing progress!</div>`;
+    }
+
+    alertsContainer.innerHTML = html;
+  },
+
+  renderTimeByPhase(timeSessions) {
+    const phases = {
+      'turdTimes': { name: '📊 Single-Digit Multiplication', color: '#ff6b6b' },
+      'fastCash': { name: '⚡ Timed Flash Cards', color: '#4ecdc4' },
+      'bubbleBuster': { name: '🫧 Bubble Buster Game', color: '#45b7d1' }
+    };
+
+    let totalTime = 0;
+    const phaseTime = {};
+
+    timeSessions.forEach(s => {
+      const seconds = s.durationSec || 0;
+      totalTime += seconds;
+      phaseTime[s.gameMode] = (phaseTime[s.gameMode] || 0) + seconds;
+    });
+
+    const phaseDiv = document.getElementById('phaseBreakdown');
+    let html = '';
+
+    Object.entries(phaseTime)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([game, seconds]) => {
+        const minutes = Math.round(seconds / 60);
+        const percent = totalTime > 0 ? Math.round((seconds / totalTime) * 100) : 0;
+        const phase = phases[game] || { name: game, color: '#999' };
+
+        html += `
+          <div class="phase-bar">
+            <div class="phase-label">
+              <span class="phase-name">${phase.name}</span>
+              <span class="phase-time">${minutes} min (${percent}%)</span>
+            </div>
+            <div class="phase-progress">
+              <div class="phase-fill" style="width: ${percent}%; background-color: ${phase.color};">
+                ${percent > 10 ? percent + '%' : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+    phaseDiv.innerHTML = html || '<p style="color: var(--text-secondary);">No time data yet</p>';
+  },
+
+  renderTimeline(timeSessions) {
+    const twelveWeekPlan = {
+      'Week 1-3': 'Single-digit facts (2-9)',
+      'Week 4-6': 'Fluency building',
+      'Week 7-9': 'Multi-digit multiplication',
+      'Week 10-12': 'Division & fractions'
+    };
+
+    let html = '';
+    Object.entries(twelveWeekPlan).forEach(([week, desc]) => {
+      const weekSessions = timeSessions.filter(s => {
+        // Simple assignment: turdTimes → Week 1-3
+        if (week === 'Week 1-3') return s.gameMode === 'turdTimes';
+        if (week === 'Week 4-6') return s.gameMode === 'turdTimes' || s.gameMode === 'fastCash';
+        return true;
+      });
+
+      const totalSec = weekSessions.reduce((sum, s) => sum + (s.durationSec || 0), 0);
+      const minutes = Math.round(totalSec / 60);
+      const goalMinutes = week.includes('1-3') ? 120 : week.includes('4-6') ? 180 : 120;
+      const percent = Math.min(100, Math.round((minutes / goalMinutes) * 100));
+
+      html += `
+        <div class="phase-bar">
+          <div class="phase-label">
+            <span class="phase-name"><strong>${week}</strong> - ${desc}</span>
+            <span class="phase-time">${minutes}/${goalMinutes} min</span>
+          </div>
+          <div class="phase-progress">
+            <div class="phase-fill" style="width: ${percent}%;">
+              ${percent > 10 ? percent + '%' : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    document.getElementById('phaseTimeline').innerHTML = html;
+  },
+
+  renderSessions(timeSessions) {
+    const gameNames = {
+      'turdTimes': '💩 Turd Times',
+      'fastCash': '⚡ Fast Cash',
+      'bubbleBuster': '🫧 Bubble Buster'
+    };
+
+    let html = '';
+    const recent = timeSessions.slice(-20).reverse();
+
+    if (recent.length === 0) {
+      html = '<p style="color: var(--text-secondary);">No sessions yet</p>';
+    } else {
+      recent.forEach(session => {
+        const date = new Date(session.startTime);
+        const gameName = gameNames[session.gameMode] || session.gameMode;
+        const minutes = Math.round(session.durationSec / 60);
+
+        html += `
+          <div class="session-item">
+            <div class="session-game">
+              <div class="session-name">${gameName}</div>
+              <div class="session-time">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
+            </div>
+            <div class="session-duration">${minutes}m</div>
+          </div>
+        `;
+      });
+    }
+
+    document.getElementById('sessionsList').innerHTML = html;
+  },
+
+  switchTab(tab) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+
+    event.target.classList.add('active');
+
+    if (tab === 'overview') {
+      document.getElementById('overviewTab').style.display = 'block';
+    } else if (tab === 'timeline') {
+      document.getElementById('timelineTab').style.display = 'block';
+    } else if (tab === 'sessions') {
+      document.getElementById('sessionsTab').style.display = 'block';
+    } else if (tab === 'settings') {
+      document.getElementById('settingsTab').style.display = 'block';
+    }
+  },
+
+  reloadData() {
+    this.loadGistData();
+  },
+
+  changeGistId() {
+    localStorage.removeItem('coachGistId');
+    this.gistId = '';
+    this.showSetup();
+  }
+};
+
+// Initialize on page load
+window.addEventListener('load', () => coach.init());
+</script>
+
+</body>
+</html>

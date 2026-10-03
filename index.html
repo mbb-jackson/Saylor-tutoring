@@ -649,7 +649,7 @@ const app = {
 
   loadState() {
     const saved = localStorage.getItem('saylorsGames');
-    const defaultData = {"turdTimes":{"2":{"completions":3},"3":{"completions":0},"4":{"completions":0},"5":{"completions":0},"6":{"completions":0},"7":{"completions":5},"8":{"completions":5},"9":{"completions":4}},"coins":27.25,"prizes":[{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":1},{"claimed":0}],"fastGameHistory":[{"timestamp":1791038353582,"problem":"5×3","expected":15,"userAnswer":-1,"timeTaken":5.01,"isCorrect":false},{"timestamp":1791038353844,"problem":"5×3","expected":15,"userAnswer":15,"timeTaken":5.088,"isCorrect":true},{"timestamp":1791038359666,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.01,"isCorrect":false},{"timestamp":1791038365683,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.016,"isCorrect":false},{"timestamp":1791038371686,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.002,"isCorrect":false},{"timestamp":1791038377704,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.006,"isCorrect":false},{"timestamp":1791038383710,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.005,"isCorrect":false},{"timestamp":1791038390645,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5,"isCorrect":false},{"timestamp":1791038396648,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.002,"isCorrect":false},{"timestamp":1791038403646,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038409647,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5,"isCorrect":false},{"timestamp":1791038416646,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038422648,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038429645,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038468578,"problem":"9×9","expected":81,"userAnswer":81,"timeTaken":3.971,"isCorrect":true},{"timestamp":1791038475063,"problem":"4×6","expected":24,"userAnswer":24,"timeTaken":5.661,"isCorrect":true},{"timestamp":1791038481538,"problem":"8×6","expected":48,"userAnswer":48,"timeTaken":5.65,"isCorrect":true},{"timestamp":1791038488489,"problem":"7×3","expected":21,"userAnswer":21,"timeTaken":6.13,"isCorrect":true},{"timestamp":1791038503656,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":14.349,"isCorrect":true},{"timestamp":1791038517935,"problem":"8×8","expected":64,"userAnswer":64,"timeTaken":13.463,"isCorrect":true},{"timestamp":1791038522245,"problem":"8×7","expected":56,"userAnswer":56,"timeTaken":3.508,"isCorrect":true},{"timestamp":1791038526464,"problem":"5×2","expected":10,"userAnswer":10,"timeTaken":3.408,"isCorrect":true},{"timestamp":1791038531429,"problem":"5×8","expected":40,"userAnswer":40,"timeTaken":4.162,"isCorrect":true},{"timestamp":1791038548901,"problem":"4×6","expected":24,"userAnswer":24,"timeTaken":16.66,"isCorrect":true},{"timestamp":1791038553214,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":3.509,"isCorrect":true},{"timestamp":1791038557589,"problem":"3×3","expected":9,"userAnswer":9,"timeTaken":3.562,"isCorrect":true},{"timestamp":1791038572296,"problem":"4×2","expected":8,"userAnswer":8,"timeTaken":13.895,"isCorrect":true},{"timestamp":1791038584743,"problem":"7×4","expected":28,"userAnswer":28,"timeTaken":11.636,"isCorrect":true},{"timestamp":1791038595924,"problem":"6×3","expected":18,"userAnswer":18,"timeTaken":10.37,"isCorrect":true},{"timestamp":1791038606014,"problem":"7×5","expected":35,"userAnswer":35,"timeTaken":9.278,"isCorrect":true},{"timestamp":1791038609187,"problem":"3×3","expected":9,"userAnswer":9,"timeTaken":2.372,"isCorrect":true},{"timestamp":1791038616787,"problem":"9×8","expected":72,"userAnswer":72,"timeTaken":6.787,"isCorrect":true},{"timestamp":1791038625752,"problem":"7×6","expected":42,"userAnswer":42,"timeTaken":8.155,"isCorrect":true},{"timestamp":1791038651597,"problem":"9×5","expected":45,"userAnswer":45,"timeTaken":25.033,"isCorrect":true},{"timestamp":1791038655452,"problem":"2×2","expected":4,"userAnswer":4,"timeTaken":3.053,"isCorrect":true},{"timestamp":1791038660025,"problem":"7×2","expected":14,"userAnswer":14,"timeTaken":3.762,"isCorrect":true},{"timestamp":1791038666392,"problem":"3×7","expected":21,"userAnswer":21,"timeTaken":5.558,"isCorrect":true},{"timestamp":1791038672005,"problem":"7×2","expected":14,"userAnswer":14,"timeTaken":4.802,"isCorrect":true},{"timestamp":1791038682964,"problem":"4×3","expected":12,"userAnswer":12,"timeTaken":10.147,"isCorrect":true},{"timestamp":1791038691250,"problem":"7×2","expected":14,"userAnswer":14,"timeTaken":7.476,"isCorrect":true},{"timestamp":1791038696523,"problem":"3×5","expected":15,"userAnswer":15,"timeTaken":4.462,"isCorrect":true},{"timestamp":1791038701318,"problem":"3×6","expected":18,"userAnswer":36,"timeTaken":3.993,"isCorrect":false},{"timestamp":1791038718388,"problem":"3×6","expected":18,"userAnswer":18,"timeTaken":21.055,"isCorrect":true},{"timestamp":1791038727500,"problem":"6×9","expected":54,"userAnswer":54,"timeTaken":8.3,"isCorrect":true},{"timestamp":1791038738127,"problem":"3×9","expected":27,"userAnswer":27,"timeTaken":9.817,"isCorrect":true},{"timestamp":1791038741412,"problem":"3×2","expected":6,"userAnswer":6,"timeTaken":2.482,"isCorrect":true},{"timestamp":1791038772596,"problem":"6×4","expected":24,"userAnswer":24,"timeTaken":30.372,"isCorrect":true},{"timestamp":1791038784768,"problem":"4×6","expected":24,"userAnswer":24,"timeTaken":11.361,"isCorrect":true},{"timestamp":1791038791839,"problem":"4×7","expected":28,"userAnswer":28,"timeTaken":6.26,"isCorrect":true},{"timestamp":1791038801427,"problem":"8×6","expected":48,"userAnswer":48,"timeTaken":8.775,"isCorrect":true},{"timestamp":1791038809838,"problem":"2×5","expected":10,"userAnswer":10,"timeTaken":7.6,"isCorrect":true},{"timestamp":1791038825166,"problem":"8×9","expected":72,"userAnswer":56,"timeTaken":14.516,"isCorrect":false},{"timestamp":1791038828419,"problem":"8×9","expected":72,"userAnswer":54,"timeTaken":17.779,"isCorrect":false},{"timestamp":1791038832669,"problem":"8×9","expected":72,"userAnswer":72,"timeTaken":22.021,"isCorrect":true},{"timestamp":1791038839941,"problem":"5×2","expected":10,"userAnswer":10,"timeTaken":6.459,"isCorrect":true},{"timestamp":1791038858907,"problem":"8×4","expected":32,"userAnswer":32,"timeTaken":18.155,"isCorrect":true},{"timestamp":1791038862994,"problem":"2×2","expected":4,"userAnswer":4,"timeTaken":3.28,"isCorrect":true},{"timestamp":1791038867673,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":3.869,"isCorrect":true},{"timestamp":1791038883371,"problem":"5×8","expected":40,"userAnswer":40,"timeTaken":14.886,"isCorrect":true},{"timestamp":1791038889419,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":5.224,"isCorrect":true},{"timestamp":1791038897285,"problem":"9×7","expected":63,"userAnswer":63,"timeTaken":7.055,"isCorrect":true},{"timestamp":1791038903247,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":5.152,"isCorrect":true},{"timestamp":1791038926427,"problem":"2×4","expected":8,"userAnswer":8,"timeTaken":22.365,"isCorrect":true},{"timestamp":1791038930937,"problem":"4×3","expected":12,"userAnswer":12,"timeTaken":3.709,"isCorrect":true},{"timestamp":1791038941256,"problem":"6×3","expected":18,"userAnswer":18,"timeTaken":9.506,"isCorrect":true},{"timestamp":1791038951106,"problem":"9×5","expected":45,"userAnswer":45,"timeTaken":9.038,"isCorrect":true},{"timestamp":1791038964679,"problem":"5×9","expected":45,"userAnswer":45,"timeTaken":12.752,"isCorrect":true},{"timestamp":1791040865981,"problem":"5×5","expected":25,"userAnswer":25,"timeTaken":5.332,"isCorrect":true},{"timestamp":1791041555522,"problem":"7×5","expected":35,"userAnswer":35,"timeTaken":14.442,"isCorrect":true},{"timestamp":1791041576539,"problem":"4×3","expected":12,"userAnswer":12,"timeTaken":5.486,"isCorrect":true},{"timestamp":1791041589092,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":11.735,"isCorrect":true},{"timestamp":1791041599989,"problem":"6×5","expected":30,"userAnswer":30,"timeTaken":10.081,"isCorrect":true},{"timestamp":1791041701045,"problem":"8×4","expected":32,"userAnswer":32,"timeTaken":100.076,"isCorrect":true},{"timestamp":1791041717000,"problem":"6×2","expected":12,"userAnswer":12,"timeTaken":15.146,"isCorrect":true},{"timestamp":1791041727048,"problem":"8×3","expected":24,"userAnswer":24,"timeTaken":9.237,"isCorrect":true},{"timestamp":1791041733097,"problem":"7×7","expected":49,"userAnswer":48,"timeTaken":5.233,"isCorrect":false},{"timestamp":1791041738795,"problem":"7×7","expected":49,"userAnswer":49,"timeTaken":10.931,"isCorrect":true},{"timestamp":1791041797797,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":58.002,"isCorrect":true},{"timestamp":1791041802036,"problem":"8×5","expected":40,"userAnswer":40,"timeTaken":3.434,"isCorrect":true},{"timestamp":1791041809133,"problem":"5×6","expected":30,"userAnswer":30,"timeTaken":6.283,"isCorrect":true},{"timestamp":1791041816096,"problem":"5×7","expected":35,"userAnswer":35,"timeTaken":6.151,"isCorrect":true},{"timestamp":1791041833470,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":16.563,"isCorrect":true},{"timestamp":1791041844066,"problem":"6×9","expected":54,"userAnswer":54,"timeTaken":9.782,"isCorrect":true},{"timestamp":1791041850096,"problem":"7×3","expected":21,"userAnswer":21,"timeTaken":5.217,"isCorrect":true},{"timestamp":1791041857339,"problem":"4×7","expected":28,"userAnswer":28,"timeTaken":6.431,"isCorrect":true},{"timestamp":1791041877227,"problem":"9×7","expected":63,"userAnswer":63,"timeTaken":19.079,"isCorrect":true},{"timestamp":1791041880252,"problem":"6×9","expected":54,"userAnswer":54,"timeTaken":2.223,"isCorrect":true},{"timestamp":1791041905117,"problem":"4×7","expected":28,"userAnswer":28,"timeTaken":24.054,"isCorrect":true},{"timestamp":1791042046254,"problem":"8×6","expected":48,"userAnswer":48,"timeTaken":140.154,"isCorrect":true},{"timestamp":1791042103549,"problem":"3×7","expected":21,"userAnswer":28,"timeTaken":56.312,"isCorrect":false},{"timestamp":1791042117474,"problem":"3×7","expected":21,"userAnswer":21,"timeTaken":70.406,"isCorrect":true}],"qualifierMultiplier":0,"qualifierLog":[]};
+    const defaultData = {"turdTimes":{"2":{"completions":3},"3":{"completions":0},"4":{"completions":0},"5":{"completions":0},"6":{"completions":0},"7":{"completions":5},"8":{"completions":5},"9":{"completions":4}},"coins":27.25,"prizes":[{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":1},{"claimed":0}],"fastGameHistory":[{"timestamp":1791038353582,"problem":"5×3","expected":15,"userAnswer":-1,"timeTaken":5.01,"isCorrect":false},{"timestamp":1791038353844,"problem":"5×3","expected":15,"userAnswer":15,"timeTaken":5.088,"isCorrect":true},{"timestamp":1791038359666,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.01,"isCorrect":false},{"timestamp":1791038365683,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.016,"isCorrect":false},{"timestamp":1791038371686,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.002,"isCorrect":false},{"timestamp":1791038377704,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.006,"isCorrect":false},{"timestamp":1791038383710,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.005,"isCorrect":false},{"timestamp":1791038390645,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5,"isCorrect":false},{"timestamp":1791038396648,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.002,"isCorrect":false},{"timestamp":1791038403646,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038409647,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5,"isCorrect":false},{"timestamp":1791038416646,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038422648,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038429645,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038468578,"problem":"9×9","expected":81,"userAnswer":81,"timeTaken":3.971,"isCorrect":true},{"timestamp":1791038475063,"problem":"4×6","expected":24,"userAnswer":24,"timeTaken":5.661,"isCorrect":true},{"timestamp":1791038481538,"problem":"8×6","expected":48,"userAnswer":48,"timeTaken":5.65,"isCorrect":true},{"timestamp":1791038488489,"problem":"7×3","expected":21,"userAnswer":21,"timeTaken":6.13,"isCorrect":true},{"timestamp":1791038503656,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":14.349,"isCorrect":true},{"timestamp":1791038517935,"problem":"8×8","expected":64,"userAnswer":64,"timeTaken":13.463,"isCorrect":true},{"timestamp":1791038522245,"problem":"8×7","expected":56,"userAnswer":56,"timeTaken":3.508,"isCorrect":true},{"timestamp":1791038526464,"problem":"5×2","expected":10,"userAnswer":10,"timeTaken":3.408,"isCorrect":true},{"timestamp":1791038531429,"problem":"5×8","expected":40,"userAnswer":40,"timeTaken":4.162,"isCorrect":true},{"timestamp":1791038548901,"problem":"4×6","expected":24,"userAnswer":24,"timeTaken":16.66,"isCorrect":true},{"timestamp":1791038553214,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":3.509,"isCorrect":true},{"timestamp":1791038557589,"problem":"3×3","expected":9,"userAnswer":9,"timeTaken":3.562,"isCorrect":true},{"timestamp":1791038572296,"problem":"4×2","expected":8,"userAnswer":8,"timeTaken":13.895,"isCorrect":true},{"timestamp":1791038584743,"problem":"7×4","expected":28,"userAnswer":28,"timeTaken":11.636,"isCorrect":true},{"timestamp":1791038595924,"problem":"6×3","expected":18,"userAnswer":18,"timeTaken":10.37,"isCorrect":true},{"timestamp":1791038606014,"problem":"7×5","expected":35,"userAnswer":35,"timeTaken":9.278,"isCorrect":true},{"timestamp":1791038609187,"problem":"3×3","expected":9,"userAnswer":9,"timeTaken":2.372,"isCorrect":true},{"timestamp":1791038616787,"problem":"9×8","expected":72,"userAnswer":72,"timeTaken":6.787,"isCorrect":true},{"timestamp":1791038625752,"problem":"7×6","expected":42,"userAnswer":42,"timeTaken":8.155,"isCorrect":true},{"timestamp":1791038651597,"problem":"9×5","expected":45,"userAnswer":45,"timeTaken":25.033,"isCorrect":true},{"timestamp":1791038655452,"problem":"2×2","expected":4,"userAnswer":4,"timeTaken":3.053,"isCorrect":true},{"timestamp":1791038660025,"problem":"7×2","expected":14,"userAnswer":14,"timeTaken":3.762,"isCorrect":true},{"timestamp":1791038666392,"problem":"3×7","expected":21,"userAnswer":21,"timeTaken":5.558,"isCorrect":true},{"timestamp":1791038672005,"problem":"7×2","expected":14,"userAnswer":14,"timeTaken":4.802,"isCorrect":true},{"timestamp":1791038682964,"problem":"4×3","expected":12,"userAnswer":12,"timeTaken":10.147,"isCorrect":true},{"timestamp":1791038691250,"problem":"7×2","expected":14,"userAnswer":14,"timeTaken":7.476,"isCorrect":true},{"timestamp":1791038696523,"problem":"3×5","expected":15,"userAnswer":15,"timeTaken":4.462,"isCorrect":true},{"timestamp":1791038701318,"problem":"3×6","expected":18,"userAnswer":36,"timeTaken":3.993,"isCorrect":false},{"timestamp":1791038718388,"problem":"3×6","expected":18,"userAnswer":18,"timeTaken":21.055,"isCorrect":true},{"timestamp":1791038727500,"problem":"6×9","expected":54,"userAnswer":54,"timeTaken":8.3,"isCorrect":true},{"timestamp":1791038738127,"problem":"3×9","expected":27,"userAnswer":27,"timeTaken":9.817,"isCorrect":true},{"timestamp":1791038741412,"problem":"3×2","expected":6,"userAnswer":6,"timeTaken":2.482,"isCorrect":true},{"timestamp":1791038772596,"problem":"6×4","expected":24,"userAnswer":24,"timeTaken":30.372,"isCorrect":true},{"timestamp":1791038784768,"problem":"4×6","expected":24,"userAnswer":24,"timeTaken":11.361,"isCorrect":true},{"timestamp":1791038791839,"problem":"4×7","expected":28,"userAnswer":28,"timeTaken":6.26,"isCorrect":true},{"timestamp":1791038801427,"problem":"8×6","expected":48,"userAnswer":48,"timeTaken":8.775,"isCorrect":true},{"timestamp":1791038809838,"problem":"2×5","expected":10,"userAnswer":10,"timeTaken":7.6,"isCorrect":true},{"timestamp":1791038825166,"problem":"8×9","expected":72,"userAnswer":56,"timeTaken":14.516,"isCorrect":false},{"timestamp":1791038828419,"problem":"8×9","expected":72,"userAnswer":54,"timeTaken":17.779,"isCorrect":false},{"timestamp":1791038832669,"problem":"8×9","expected":72,"userAnswer":72,"timeTaken":22.021,"isCorrect":true},{"timestamp":1791038839941,"problem":"5×2","expected":10,"userAnswer":10,"timeTaken":6.459,"isCorrect":true},{"timestamp":1791038858907,"problem":"8×4","expected":32,"userAnswer":32,"timeTaken":18.155,"isCorrect":true},{"timestamp":1791038862994,"problem":"2×2","expected":4,"userAnswer":4,"timeTaken":3.28,"isCorrect":true},{"timestamp":1791038867673,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":3.869,"isCorrect":true},{"timestamp":1791038883371,"problem":"5×8","expected":40,"userAnswer":40,"timeTaken":14.886,"isCorrect":true},{"timestamp":1791038889419,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":5.224,"isCorrect":true},{"timestamp":1791038897285,"problem":"9×7","expected":63,"userAnswer":63,"timeTaken":7.055,"isCorrect":true},{"timestamp":1791038903247,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":5.152,"isCorrect":true},{"timestamp":1791038926427,"problem":"2×4","expected":8,"userAnswer":8,"timeTaken":22.365,"isCorrect":true},{"timestamp":1791038930937,"problem":"4×3","expected":12,"userAnswer":12,"timeTaken":3.709,"isCorrect":true},{"timestamp":1791038941256,"problem":"6×3","expected":18,"userAnswer":18,"timeTaken":9.506,"isCorrect":true},{"timestamp":1791038951106,"problem":"9×5","expected":45,"userAnswer":45,"timeTaken":9.038,"isCorrect":true},{"timestamp":1791038964679,"problem":"5×9","expected":45,"userAnswer":45,"timeTaken":12.752,"isCorrect":true},{"timestamp":1791040865981,"problem":"5×5","expected":25,"userAnswer":25,"timeTaken":5.332,"isCorrect":true},{"timestamp":1791041555522,"problem":"7×5","expected":35,"userAnswer":35,"timeTaken":14.442,"isCorrect":true},{"timestamp":1791041576539,"problem":"4×3","expected":12,"userAnswer":12,"timeTaken":5.486,"isCorrect":true},{"timestamp":1791041589092,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":11.735,"isCorrect":true},{"timestamp":1791041599989,"problem":"6×5","expected":30,"userAnswer":30,"timeTaken":10.081,"isCorrect":true},{"timestamp":1791041701045,"problem":"8×4","expected":32,"userAnswer":32,"timeTaken":100.076,"isCorrect":true},{"timestamp":1791041717000,"problem":"6×2","expected":12,"userAnswer":12,"timeTaken":15.146,"isCorrect":true},{"timestamp":1791041727048,"problem":"8×3","expected":24,"userAnswer":24,"timeTaken":9.237,"isCorrect":true},{"timestamp":1791041733097,"problem":"7×7","expected":49,"userAnswer":48,"timeTaken":5.233,"isCorrect":false},{"timestamp":1791041738795,"problem":"7×7","expected":49,"userAnswer":49,"timeTaken":10.931,"isCorrect":true},{"timestamp":1791041797797,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":58.002,"isCorrect":true},{"timestamp":1791041802036,"problem":"8×5","expected":40,"userAnswer":40,"timeTaken":3.434,"isCorrect":true},{"timestamp":1791041809133,"problem":"5×6","expected":30,"userAnswer":30,"timeTaken":6.283,"isCorrect":true},{"timestamp":1791041816096,"problem":"5×7","expected":35,"userAnswer":35,"timeTaken":6.151,"isCorrect":true},{"timestamp":1791041833470,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":16.563,"isCorrect":true},{"timestamp":1791041844066,"problem":"6×9","expected":54,"userAnswer":54,"timeTaken":9.782,"isCorrect":true},{"timestamp":1791041850096,"problem":"7×3","expected":21,"userAnswer":21,"timeTaken":5.217,"isCorrect":true},{"timestamp":1791041857339,"problem":"4×7","expected":28,"userAnswer":28,"timeTaken":6.431,"isCorrect":true},{"timestamp":1791041877227,"problem":"9×7","expected":63,"userAnswer":63,"timeTaken":19.079,"isCorrect":true},{"timestamp":1791041880252,"problem":"6×9","expected":54,"userAnswer":54,"timeTaken":2.223,"isCorrect":true},{"timestamp":1791041905117,"problem":"4×7","expected":28,"userAnswer":28,"timeTaken":24.054,"isCorrect":true},{"timestamp":1791042046254,"problem":"8×6","expected":48,"userAnswer":48,"timeTaken":140.154,"isCorrect":true},{"timestamp":1791042103549,"problem":"3×7","expected":21,"userAnswer":28,"timeTaken":56.312,"isCorrect":false},{"timestamp":1791042117474,"problem":"3×7","expected":21,"userAnswer":21,"timeTaken":70.406,"isCorrect":true}],"qualifierMultiplier":0,"qualifierLog":[],"timeSessions":[],"gistId":""};
     const data = saved ? JSON.parse(saved) : defaultData;
 
     this.state = data.turdTimes || {};
@@ -657,6 +657,10 @@ const app = {
     this.fastGameHistory = data.fastGameHistory || [];
     this.qualifierMultiplier = data.qualifierMultiplier || 0;
     this.qualifierLog = data.qualifierLog || [];
+    this.timeSessions = data.timeSessions || [];
+    this.gistId = data.gistId || '';
+    this.sessionStartTime = Date.now();
+    this.currentGameMode = null;
 
     this.numbers.forEach(n => {
       if (!this.state[n]) {
@@ -678,8 +682,12 @@ const app = {
       prizes: this.prizes.map(p => ({ claimed: p.claimed })),
       fastGameHistory: this.fastGameHistory,
       qualifierMultiplier: this.qualifierMultiplier,
-      qualifierLog: this.qualifierLog
+      qualifierLog: this.qualifierLog,
+      timeSessions: this.timeSessions,
+      gistId: this.gistId
     }));
+    // Auto-sync to GitHub Gist if we have a gist ID and WiFi is available
+    this.attemptGistSync();
   },
 
   exportProgress() {
@@ -690,6 +698,7 @@ const app = {
       fastGameHistory: this.fastGameHistory,
       qualifierMultiplier: this.qualifierMultiplier,
       qualifierLog: this.qualifierLog,
+      timeSessions: this.timeSessions,
       exportedAt: new Date().toISOString()
     };
 
@@ -703,6 +712,88 @@ const app = {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  },
+
+  trackSessionStart(gameMode) {
+    this.currentGameMode = gameMode;
+    this.sessionStartTime = Date.now();
+  },
+
+  trackSessionEnd(gameMode) {
+    if (!this.currentGameMode || this.currentGameMode !== gameMode) return;
+
+    const now = Date.now();
+    const durationMs = now - this.sessionStartTime;
+    const durationSec = Math.round(durationMs / 1000);
+
+    this.timeSessions.push({
+      gameMode: gameMode,
+      startTime: this.sessionStartTime,
+      endTime: now,
+      durationSec: durationSec
+    });
+
+    this.currentGameMode = null;
+    this.saveState();
+  },
+
+  async attemptGistSync() {
+    if (!this.gistId || this.timeSessions.length === 0) return;
+
+    // Check if we have connectivity (try a simple fetch)
+    try {
+      const response = await fetch('https://api.github.com/gists/' + this.gistId, {
+        method: 'HEAD',
+        mode: 'no-cors'
+      });
+      // If HEAD request succeeds, we have connectivity - sync the data
+      this.syncToGist();
+    } catch (err) {
+      // No connectivity, data stays in localStorage until next attempt
+      console.log('Offline: data will sync when WiFi returns');
+    }
+  },
+
+  async syncToGist() {
+    if (!this.gistId) return;
+
+    const gistData = {
+      turdTimes: this.state,
+      coins: this.coins,
+      prizes: this.prizes.map(p => ({ claimed: p.claimed })),
+      fastGameHistory: this.fastGameHistory,
+      qualifierMultiplier: this.qualifierMultiplier,
+      qualifierLog: this.qualifierLog,
+      timeSessions: this.timeSessions,
+      lastSync: new Date().toISOString()
+    };
+
+    try {
+      const response = await fetch(`https://api.github.com/gists/${this.gistId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          files: {
+            'saylor-progress.json': {
+              content: JSON.stringify(gistData, null, 2)
+            }
+          }
+        })
+      });
+
+      if (response.ok) {
+        console.log('✓ Synced to GitHub Gist');
+      } else {
+        console.error('Gist sync failed:', response.status);
+      }
+    } catch (err) {
+      console.error('Gist sync error:', err.message);
+    }
+  },
+
+  setGistId(id) {
+    this.gistId = id;
+    this.saveState();
   },
 
   switchTab(tab) {
@@ -732,6 +823,7 @@ const app = {
   },
 
   startTurdTimesGame() {
+    this.trackSessionStart('turdTimes');
     document.getElementById('gameSelectionScreen').style.display = 'none';
     document.getElementById('turdTimesGame').style.display = 'block';
     this.renderTurdMain();
@@ -745,6 +837,11 @@ const app = {
   },
 
   backToGameSelection() {
+    // Track session end for whichever game was active
+    if (this.currentGameMode) {
+      this.trackSessionEnd(this.currentGameMode);
+    }
+
     // Clear any active game state
     if (this.fastGameSession) {
       clearTimeout(this.fastGameSession.problemTimeout);
@@ -760,6 +857,8 @@ const app = {
   },
 
   startFastGameTimer() {
+    this.trackSessionStart('fastCash');
+
     // Initialize Fast Cash game session (no time limit)
     this.fastGameSession = {
       correct: 0,
@@ -865,6 +964,7 @@ const app = {
   },
 
   endFastGame() {
+    this.trackSessionEnd('fastCash');
     clearTimeout(this.fastGameSession.problemTimeout);
 
     // Award coins: 1.25 per correct answer (with qualifier multiplier)
@@ -908,6 +1008,7 @@ const app = {
   },
 
   startBubbleBusterGame() {
+    this.trackSessionStart('bubbleBuster');
     console.log('🎮 STARTING BUBBLE BUSTER GAME');
     document.getElementById('gameSelectionScreen').style.display = 'none';
     document.getElementById('bubbleBusterGame').style.display = 'block';
@@ -1383,6 +1484,7 @@ const app = {
   endBubbleGame() {
     if (!this.bubbleGameSession) return;
 
+    this.trackSessionEnd('bubbleBuster');
     this.bubbleGameSession.gameRunning = false;
 
     const canvas = document.getElementById('bubbleCanvas');
