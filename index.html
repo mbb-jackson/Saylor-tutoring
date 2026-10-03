@@ -1016,6 +1016,50 @@ const app = {
         console.error('❌ ERROR in handleBubbleMouseUp:', err);
       }
     };
+
+    // Touch event handlers for iPad/mobile
+    canvas.ontouchstart = (e) => {
+      e.preventDefault();
+      console.log('👆 TOUCH START');
+      try {
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousedown', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        self.handleBubbleMouseDown(mouseEvent);
+      } catch (err) {
+        console.error('❌ ERROR in ontouchstart:', err);
+      }
+    };
+    canvas.ontouchmove = (e) => {
+      e.preventDefault();
+      try {
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousemove', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        self.handleBubbleMouseMove(mouseEvent);
+      } catch (err) {
+        console.error('❌ ERROR in ontouchmove:', err);
+      }
+    };
+    canvas.ontouchend = (e) => {
+      e.preventDefault();
+      console.log('👆 TOUCH END');
+      try {
+        const touch = e.changedTouches[0];
+        const mouseEvent = new MouseEvent('mouseup', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        self.handleBubbleMouseUp(mouseEvent);
+      } catch (err) {
+        console.error('❌ ERROR in ontouchend:', err);
+      }
+    };
+
     console.log('✅ Event listeners ready');
 
     this.updateBubbleGame();
