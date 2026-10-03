@@ -559,7 +559,7 @@
     <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
       <button onclick="app.switchTab('turd')" style="padding: 8px 12px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 14px;">← Back</button>
       <h2 style="margin: 0; flex: 1; text-align: center;">Your Learning Dashboard 📊</h2>
-      <div style="width: 80px;"></div>
+      <button onclick="app.exportProgress()" style="padding: 8px 12px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 14px;">📋 Export</button>
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 2rem;">
@@ -680,6 +680,29 @@ const app = {
       qualifierMultiplier: this.qualifierMultiplier,
       qualifierLog: this.qualifierLog
     }));
+  },
+
+  exportProgress() {
+    const data = {
+      turdTimes: this.state,
+      coins: this.coins,
+      prizes: this.prizes.map(p => ({ claimed: p.claimed })),
+      fastGameHistory: this.fastGameHistory,
+      qualifierMultiplier: this.qualifierMultiplier,
+      qualifierLog: this.qualifierLog,
+      exportedAt: new Date().toISOString()
+    };
+
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `saylor-progress-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   },
 
   switchTab(tab) {
