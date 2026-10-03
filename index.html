@@ -1,0 +1,2011 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--surface-0);
+    color: var(--text-primary);
+  }
+
+  .container { max-width: 900px; margin: 0 auto; }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  h1 { font-size: 28px; margin: 0; }
+
+  .coin-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface-2);
+    border: 0.5px solid var(--border);
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .coin-icon { font-size: 32px; }
+
+  .nav-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .nav-tab {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .nav-tab:hover { color: var(--text-primary); }
+
+  .nav-tab.active {
+    color: var(--fill-accent);
+    border-bottom-color: var(--fill-accent);
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Home Screen */
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 2rem;
+  }
+
+  .game-card {
+    background: var(--surface-2);
+    border: 0.5px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .game-card:hover {
+    background: var(--surface-1);
+    border-color: var(--border-strong);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
+
+  .game-card.turd { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: white; }
+  .game-card.division { background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; }
+  .game-card.fractions { background: linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333; }
+  .game-card.decimals { background: linear-gradient(135deg, #6BCB77 0%, #8FE399 100%); color: white; }
+
+  .game-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  .game-progress { font-size: 14px; opacity: 0.9; }
+
+  /* Prize Store */
+  .prizes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    margin-top: 2rem;
+  }
+
+  .prize-card {
+    background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface-1) 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .prize-card:hover {
+    border-color: var(--fill-accent);
+    transform: translateY(-8px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+
+  .prize-card.locked {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .prize-icon {
+    font-size: 64px;
+    display: block;
+  }
+  .prize-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+  .prize-cost {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--fill-accent);
+  }
+  .prize-claimed {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .prize-button {
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .prize-button.buy {
+    background: linear-gradient(135deg, var(--fill-accent) 0%, var(--fill-accent) 100%);
+    color: var(--on-accent);
+  }
+  .prize-button.buy:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .prize-button.buy:active {
+    transform: scale(0.98);
+  }
+  .prize-button.locked {
+    background: var(--surface-0);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+
+  /* Game Practice Screen */
+  .main-screen .stacks {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 2rem;
+  }
+
+  .stack-card {
+    background: var(--surface-2);
+    border: 0.5px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .stack-card:hover {
+    background: var(--surface-1);
+    border-color: var(--border-strong);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
+
+  .stack-card[data-number="2"] { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: white; }
+  .stack-card[data-number="3"] { background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; }
+  .stack-card[data-number="4"] { background: linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333; }
+  .stack-card[data-number="5"] { background: linear-gradient(135deg, #6BCB77 0%, #8FE399 100%); color: white; }
+  .stack-card[data-number="6"] { background: linear-gradient(135deg, #9D84B7 0%, #B89FD9 100%); color: white; }
+  .stack-card[data-number="7"] { background: linear-gradient(135deg, #FF9F43 0%, #FDB750 100%); color: white; }
+  .stack-card[data-number="8"] { background: linear-gradient(135deg, #FF6348 0%, #FF7F50 100%); color: white; }
+  .stack-card[data-number="9"] { background: linear-gradient(135deg, #5F27CD 0%, #8E44AD 100%); color: white; }
+
+  .stack-number { font-size: 36px; font-weight: 500; margin-bottom: 8px; }
+  .stack-progress { font-size: 13px; opacity: 0.9; margin-bottom: 12px; }
+  .stack-reward { font-size: 22px; font-weight: 600; color: var(--fill-accent); margin-top: 8px; }
+
+  .practice-screen { display: none; }
+  .practice-screen.active { display: block; }
+
+  .back-btn { margin-bottom: 1.5rem; }
+  .back-btn button { padding: 8px 16px; font-size: 13px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 6px; cursor: pointer; }
+  .back-btn button:hover { background: var(--surface-0); }
+
+  .practice-container {
+    background: var(--surface-2);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .attempt-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+  .problem { font-size: 48px; font-weight: 500; margin: 2rem 0; }
+
+  .input-group { display: flex; gap: 8px; margin: 1.5rem 0; }
+  input { flex: 1; padding: 14px; font-size: 18px; border: 0.5px solid var(--border); border-radius: 8px; text-align: center; }
+  input:focus { outline: none; border-color: var(--border-strong); background: var(--surface-1); }
+
+  button.submit { padding: 14px 32px; font-size: 16px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
+  button.submit:hover { opacity: 0.9; }
+  button.submit:active { transform: scale(0.98); }
+
+  .feedback {
+    font-size: 24px;
+    min-height: 40px;
+    margin: 1.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+  }
+
+  .feedback.correct { color: var(--text-success); }
+  .feedback.wrong { color: #ff4444; font-weight: 700; font-size: 32px; }
+
+  .coin-earn {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 80px;
+    z-index: 100;
+    pointer-events: none;
+    animation: floatUp 1.5s ease-out forwards;
+  }
+
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -150%) scale(0.5); }
+  }
+
+  .celebration {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 120px;
+    z-index: 100;
+    pointer-events: none;
+    animation: celebrate 1.2s ease-out forwards;
+  }
+
+  @keyframes celebrate {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+    100% { opacity: 0; transform: translate(-50%, -180%) scale(0.4) rotate(25deg); }
+  }
+
+  .dancing-cat {
+    position: fixed;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 140px;
+    z-index: 100;
+    pointer-events: none;
+    animation: dance 1.6s ease-out forwards;
+  }
+
+  @keyframes dance {
+    0% { opacity: 0; transform: translateX(-50%) translateY(100px) scale(0.5); }
+    10% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1) rotate(-5deg); }
+    25% { transform: translateX(-50%) translateY(-20px) scale(1) rotate(5deg); }
+    40% { transform: translateX(-50%) translateY(0) scale(1) rotate(-5deg); }
+    55% { transform: translateX(-50%) translateY(-20px) scale(1) rotate(5deg); }
+    70% { transform: translateX(-50%) translateY(0) scale(1) rotate(-3deg); }
+    85% { opacity: 1; transform: translateX(-50%) translateY(-10px) scale(1); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(100px) scale(0.5); }
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--fill-accent);
+    transition: width 0.3s ease;
+  }
+
+  .stats {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 0.5px solid var(--border);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Turd Daddy University</h1>
+    <div style="display: flex; gap: 16px; align-items: center;">
+      <div class="coin-display">
+        <span class="coin-icon">🪙</span>
+        <span id="totalCoins">0</span>
+      </div>
+      <button onclick="app.switchTab('prizes')" style="padding: 16px 28px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">🎁 Prize Store</button>
+      <button onclick="app.resetCoins()" style="padding: 8px 12px; font-size: 12px; background: #ff6b6b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Reset to 100</button>
+      <button onclick="app.resetCoinsToOne()" style="padding: 8px 12px; font-size: 12px; background: #666; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Reset to 1</button>
+      <button onclick="app.switchTab('analytics')" style="padding: 12px 16px; font-size: 13px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;">📊 Analytics</button>
+    </div>
+  </div>
+
+  <!-- HOME SCREEN (Default) -->
+  <div id="homeScreen" class="screen active" style="text-align: center; padding: 4rem 2rem;">
+    <div style="font-size: 120px; margin-bottom: 2rem;">🐱</div>
+    <div style="font-size: 18px; color: var(--text-secondary); margin-bottom: 1rem;">
+      You have <span style="font-size: 40px; font-weight: 600; color: var(--fill-accent);" id="homeCoins">0</span> coins
+    </div>
+    <h2 style="font-size: 32px; margin-bottom: 2rem;">Ready to earn more?</h2>
+    <p style="font-size: 16px; color: var(--text-secondary); line-height: 1.6;">
+      Pick a game from the menu to start! 🎮
+    </p>
+  </div>
+
+  <!-- MULTIPLICATION GAMES -->
+  <div id="turdScreen" class="screen">
+    <!-- Game Selection Menu -->
+    <div class="game-selection-screen" id="gameSelectionScreen">
+      <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 2rem; text-align: center;">You have <span style="font-weight: 600; color: var(--fill-accent);" id="homeCoinsLabel">0</span> coins, ready to earn more?</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 600px;">
+        <div onclick="app.startTurdTimesGame()" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+          <div style="font-size: 48px; margin-bottom: 1rem;">🐢</div>
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Turd Times a Charm</div>
+          <div style="font-size: 14px; opacity: 0.9;">Master the tables — 5 rounds each</div>
+        </div>
+        <div onclick="app.startFastGameMenu()" style="background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+          <div style="font-size: 48px; margin-bottom: 1rem;">💰</div>
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Fast Cash</div>
+          <div style="font-size: 14px; opacity: 0.9;">Answer at your pace, earn coins</div>
+        </div>
+        <div onclick="app.startBubbleBusterGame()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+          <div style="font-size: 48px; margin-bottom: 1rem;">🫧</div>
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Bubble Buster</div>
+          <div style="font-size: 14px; opacity: 0.9;">Shoot the right answer</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TURD TIMES A CHARM GAME -->
+    <div class="turd-times-game" id="turdTimesGame" style="display: none;">
+      <div class="back-btn">
+        <button onclick="app.backToGameSelection()">← Back</button>
+      </div>
+      <h2 style="margin-bottom: 2rem; font-size: 24px;">Turd Times a Charm</h2>
+      <div class="main-screen" id="mainScreen">
+        <div class="stacks" id="stacksContainer"></div>
+        <div class="stats">
+          <div id="overallProgress"></div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="overallFill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="practice-screen" id="practiceScreen">
+        <div class="back-btn">
+          <button onclick="app.backToGameSelection()">← Back</button>
+        </div>
+
+        <div class="practice-container">
+          <div class="attempt-label">
+            <span id="numberLabel"></span> — completion <span id="attemptNum"></span>/5
+          </div>
+
+          <div class="problem" id="problem"></div>
+
+          <div class="feedback" id="feedback"></div>
+
+          <div class="input-group">
+            <input type="number" id="answer" placeholder="?" inputmode="numeric">
+            <button class="submit" onclick="app.submit()">Check</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUBBLE BUSTER GAME -->
+    <div class="bubble-buster-game" id="bubbleBusterGame" style="display: none;">
+      <div class="back-btn">
+        <button onclick="app.backToGameSelection()">← Back</button>
+      </div>
+      <h2 style="margin-bottom: 1rem; font-size: 24px;">Bubble Buster</h2>
+
+      <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; text-align: center;">
+        <div style="font-size: 28px; font-weight: 600; margin-bottom: 0.5rem;" id="bubbleProblem"></div>
+        <div style="font-size: 14px; color: var(--text-secondary);">Shoot the correct answer bubble!</div>
+      </div>
+
+      <canvas id="bubbleCanvas" style="width: 100%; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; border: 2px solid var(--border); display: block; margin-bottom: 2rem; cursor: crosshair;"></canvas>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div style="font-size: 16px; color: var(--text-secondary);">
+          Correct: <span id="bubbleCorrect" style="font-weight: 600; color: var(--fill-accent);">0</span>
+        </div>
+        <button onclick="app.endBubbleGame()" style="padding: 12px 24px; font-size: 16px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Finish Game</button>
+      </div>
+
+      <div id="bubbleMessage" style="text-align: center; font-size: 18px; min-height: 40px; font-weight: 500;"></div>
+    </div>
+
+    <!-- FAST CASH GAME -->
+    <div class="fast-cat-game" id="fastCatGame" style="display: none;">
+      <div class="back-btn">
+        <button onclick="app.backToGameSelection()">← Back</button>
+      </div>
+      <h2 style="margin-bottom: 2rem; font-size: 24px;">Fast Cash</h2>
+
+      <div id="fastGameMenu" style="text-align: center;">
+        <div style="background: var(--surface-2); padding: 3rem; border-radius: 16px; max-width: 400px; margin: 0 auto;">
+          <div style="font-size: 80px; margin-bottom: 1rem;">💰</div>
+          <h3 style="font-size: 24px; margin-bottom: 1rem;">Speed Test</h3>
+          <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.6;">
+            Answer as many multiplication problems as you can in 60 seconds!<br><br>
+            Each correct answer = 1 coin<br>
+            5 seconds per problem
+          </p>
+          <button onclick="app.startFastGameTimer()" style="padding: 16px 32px; font-size: 18px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Start Timer</button>
+        </div>
+      </div>
+
+      <div id="fastGameTimer" style="display: none; text-align: center;">
+        <div style="font-size: 48px; font-weight: 500; margin: 2rem 0; background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 3rem 2rem; border-radius: 20px;" id="fastProblem"></div>
+        <div style="font-size: 24px; min-height: 40px; margin: 1.5rem 0; color: var(--text-secondary);" id="fastFeedback"></div>
+        <div style="display: flex; gap: 8px; margin: 1.5rem 0; justify-content: center;">
+          <input type="number" id="fastAnswer" placeholder="?" inputmode="numeric" style="width: 100px; padding: 14px; font-size: 18px; border: 0.5px solid var(--border); border-radius: 8px; text-align: center;">
+          <button class="submit" onclick="app.fastSubmit()" style="padding: 14px 32px; font-size: 16px;">Check</button>
+          <button onclick="app.skipProblem()" style="padding: 14px 32px; font-size: 16px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 600;">Skip</button>
+        </div>
+        <div style="margin-top: 2rem; font-size: 18px; color: var(--text-secondary); margin-bottom: 2rem;">
+          Correct: <span id="fastCorrect">0</span>
+        </div>
+        <button onclick="app.endFastGame()" style="padding: 14px 28px; font-size: 16px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Stop & Claim Coins</button>
+      </div>
+
+      <div id="fastGameResults" style="display: none; text-align: center;">
+        <div style="background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 3rem; border-radius: 16px; max-width: 400px; margin: 0 auto;">
+          <div style="font-size: 80px; margin-bottom: 1rem;">🎉</div>
+          <h3 style="font-size: 28px; margin-bottom: 2rem;">Great Job!</h3>
+          <div style="font-size: 72px; font-weight: 600; margin-bottom: 0.5rem;">
+            +<span id="coinsEarned">0</span> 🪙
+          </div>
+          <div style="font-size: 16px; margin-bottom: 2rem; opacity: 0.85;">
+            <span id="finalCorrect">0</span> correct
+          </div>
+          <button onclick="app.backToGameSelection()" style="padding: 16px 32px; font-size: 16px; background: white; color: #4ECDC4; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Play Again</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIVISION -->
+  <div id="divisionScreen" class="screen">
+    <div style="text-align: center; padding: 3rem;">
+      <h2>Division</h2>
+      <p style="color: var(--text-secondary); font-size: 18px;">Coming soon! 🚀</p>
+    </div>
+  </div>
+
+  <!-- FRACTIONS -->
+  <div id="fractionsScreen" class="screen">
+    <div style="text-align: center; padding: 3rem;">
+      <h2>Fractions</h2>
+      <p style="color: var(--text-secondary); font-size: 18px;">Coming soon! 🚀</p>
+    </div>
+  </div>
+
+  <!-- DECIMALS -->
+  <div id="decimalsScreen" class="screen">
+    <div style="text-align: center; padding: 3rem;">
+      <h2>Decimals</h2>
+      <p style="color: var(--text-secondary); font-size: 18px;">Coming soon! 🚀</p>
+    </div>
+  </div>
+
+  <!-- PRIZES -->
+  <div id="prizesScreen" class="screen">
+    <div class="back-btn">
+      <button onclick="app.switchTab('turd')">← Back to Games</button>
+    </div>
+    <div style="margin-bottom: 2rem;">
+      <h2>Claim Your Prizes!</h2>
+    </div>
+    <div class="prizes-grid" id="prizesGrid"></div>
+
+    <div style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border);">
+      <h3 style="font-size: 20px; margin-bottom: 1.5rem;">🎁 Your Purchases</h3>
+      <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden;">
+        <div id="receiptsContainer" style="padding: 2rem;">
+          <div style="text-align: center; color: var(--text-secondary);">No purchases yet — keep earning!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="analyticsScreen" class="screen">
+    <div style="margin-bottom: 2rem;">
+      <h2>Your Learning Dashboard 📊</h2>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 2rem;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; text-align: center;">
+        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 0.5rem;">Avg Answer Time</div>
+        <div style="font-size: 36px; font-weight: 600;" id="avgTime">-</div>
+        <div style="font-size: 12px; opacity: 0.8; margin-top: 0.5rem;">seconds</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 2rem; border-radius: 12px; text-align: center;">
+        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 0.5rem;">Total Problems</div>
+        <div style="font-size: 36px; font-weight: 600;" id="totalProblems">0</div>
+        <div style="font-size: 12px; opacity: 0.8; margin-top: 0.5rem;">attempted</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 2rem; border-radius: 12px; text-align: center;">
+        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 0.5rem;">Accuracy</div>
+        <div style="font-size: 36px; font-weight: 600;" id="accuracy">-</div>
+        <div style="font-size: 12px; opacity: 0.8; margin-top: 0.5rem;">% correct</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+      <h3 style="font-size: 18px; margin-bottom: 1rem;">Slowest Problems (taking longest to answer)</h3>
+      <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border); background: var(--surface-1);">
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-secondary);">Problem</th>
+              <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--text-secondary);">Times</th>
+              <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-secondary);">Avg Time</th>
+            </tr>
+          </thead>
+          <tbody id="slowestProblemsBody">
+            <tr><td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No data yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+      <h3 style="font-size: 18px; margin-bottom: 1rem;">Most Frequently Missed</h3>
+      <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border); background: var(--surface-1);">
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-secondary);">Problem</th>
+              <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--text-secondary);">Attempts</th>
+              <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-secondary);">Missed</th>
+            </tr>
+          </thead>
+          <tbody id="missedProblemsBody">
+            <tr><td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No data yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const app = {
+  state: {},
+  numbers: [2, 3, 4, 5, 6, 7, 8, 9],
+  currentSession: null,
+  coins: 0,
+  fastGameHistory: [],
+
+  prizes: [
+    { name: 'Double Ice Cream', icon: '🍦', cost: 100, claimed: 0 },
+    { name: 'Gift for a Cat', icon: '🐱', cost: 300, claimed: 0 },
+    { name: 'Yes Day', icon: '✅', cost: 1500, claimed: 0 },
+    { name: 'No Math Today', icon: '🎓', cost: 400, claimed: 0 },
+    { name: '$10 to Spend on Anything', icon: '💰', cost: 400, claimed: 0 },
+    { name: 'Souvenir', icon: '🗺️', cost: 200, claimed: 0 },
+    { name: 'Art Supply', icon: '🎨', cost: 200, claimed: 0 },
+    { name: 'Remote Control Boat', icon: '🚤', cost: 1500, claimed: 0 }
+  ],
+
+  init() {
+    this.loadState();
+    this.renderPrizes();
+    this.updateCoinDisplay();
+    this.showGameSelection();
+    this.initEventListeners();
+  },
+
+  loadState() {
+    const saved = localStorage.getItem('saylorsGames');
+    const defaultData = {
+      turdTimes: { 2: { completions: 3 }, 3: { completions: 0 }, 4: { completions: 0 }, 5: { completions: 0 }, 6: { completions: 0 }, 7: { completions: 5 }, 8: { completions: 5 }, 9: { completions: 4 } },
+      coins: 27.25,
+      prizes: [{ claimed: 0 }, { claimed: 0 }, { claimed: 0 }, { claimed: 0 }, { claimed: 0 }, { claimed: 0 }, { claimed: 1 }, { claimed: 0 }],
+      fastGameHistory: []
+    };
+    const data = saved ? JSON.parse(saved) : defaultData;
+
+    this.state = data.turdTimes || {};
+    this.coins = data.coins || 100;
+    this.fastGameHistory = data.fastGameHistory || [];
+
+    this.numbers.forEach(n => {
+      if (!this.state[n]) {
+        this.state[n] = { completions: 0 };
+      }
+    });
+
+    if (data.prizes && data.prizes.length > 0) {
+      data.prizes.forEach((p, i) => {
+        if (this.prizes[i]) this.prizes[i].claimed = p.claimed || 0;
+      });
+    }
+  },
+
+  saveState() {
+    localStorage.setItem('saylorsGames', JSON.stringify({
+      turdTimes: this.state,
+      coins: this.coins,
+      prizes: this.prizes.map(p => ({ claimed: p.claimed })),
+      fastGameHistory: this.fastGameHistory
+    }));
+  },
+
+  switchTab(tab) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+    document.getElementById(tab + 'Screen').classList.add('active');
+    if (event && event.target) {
+      event.target.classList.add('active');
+    }
+
+    if (tab === 'turd') {
+      this.showGameSelection();
+    } else if (tab === 'analytics') {
+      this.updateAnalyticsDisplay();
+    }
+  },
+
+  showGameSelection() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('turdScreen').classList.add('active');
+    document.getElementById('gameSelectionScreen').style.display = 'block';
+    document.getElementById('turdTimesGame').style.display = 'none';
+    document.getElementById('fastCatGame').style.display = 'none';
+    document.getElementById('bubbleBusterGame').style.display = 'none';
+  },
+
+  startTurdTimesGame() {
+    document.getElementById('gameSelectionScreen').style.display = 'none';
+    document.getElementById('turdTimesGame').style.display = 'block';
+    this.renderTurdMain();
+  },
+
+  startFastGameMenu() {
+    document.getElementById('gameSelectionScreen').style.display = 'none';
+    document.getElementById('fastCatGame').style.display = 'block';
+    // Skip the menu and go straight to the game
+    this.startFastGameTimer();
+  },
+
+  backToGameSelection() {
+    // Clear any active game state
+    if (this.fastGameSession) {
+      clearTimeout(this.fastGameSession.problemTimeout);
+      this.fastGameSession = null;
+    }
+
+    if (this.bubbleGameSession) {
+      this.bubbleGameSession.gameRunning = false;
+      this.bubbleGameSession = null;
+    }
+
+    this.showGameSelection();
+  },
+
+  startFastGameTimer() {
+    // Initialize Fast Cash game session (no time limit)
+    this.fastGameSession = {
+      correct: 0,
+      total: 0,
+      problemTimeout: null,
+      currentProblem: null,
+      problemStartTime: null,
+      missedProblems: [],
+      currentRetries: 0
+    };
+
+    document.getElementById('fastGameMenu').style.display = 'none';
+    document.getElementById('fastGameTimer').style.display = 'block';
+    document.getElementById('fastGameResults').style.display = 'none';
+
+    // Generate and display first problem
+    this.generateFastProblem();
+
+    // Start auto-advance timer for first problem (5 seconds)
+    this.startProblemTimer();
+  },
+
+  generateFastProblem() {
+    // Use missed problem if available, otherwise generate new
+    let problem;
+
+    if (this.fastGameSession.missedProblems.length > 0) {
+      problem = this.fastGameSession.missedProblems.shift();
+    } else {
+      const a = Math.floor(Math.random() * 8) + 2; // 2-9
+      const b = Math.floor(Math.random() * 8) + 2; // 2-9
+      problem = { a, b, product: a * b };
+    }
+
+    this.fastGameSession.currentProblem = problem;
+    this.fastGameSession.problemStartTime = Date.now();
+    document.getElementById('fastProblem').textContent = `${problem.a} × ${problem.b} = ?`;
+    document.getElementById('fastAnswer').value = '';
+    document.getElementById('fastAnswer').focus();
+    document.getElementById('fastFeedback').textContent = '';
+  },
+
+  startProblemTimer() {
+    // No auto-advance - user must submit or skip
+    if (this.fastGameSession.problemTimeout) {
+      clearTimeout(this.fastGameSession.problemTimeout);
+    }
+    this.fastGameSession.problemTimeout = null;
+  },
+
+  fastSubmit() {
+    if (!this.fastGameSession) return;
+
+    const input = document.getElementById('fastAnswer').value.trim();
+    if (!input) return;
+
+    const problem = this.fastGameSession.currentProblem;
+    const userAnswer = parseInt(input);
+    const timeTaken = (Date.now() - this.fastGameSession.problemStartTime) / 1000;
+
+    // Clear the problem timer since user answered
+    clearTimeout(this.fastGameSession.problemTimeout);
+
+    const isCorrect = userAnswer === problem.product;
+
+    if (isCorrect) {
+      // Correct answer
+      this.fastGameSession.correct++;
+      document.getElementById('fastCorrect').textContent = this.fastGameSession.correct;
+      document.getElementById('fastFeedback').textContent = '✅';
+      this.playCorrectSound();
+      this.recordProblemAttempt(problem.a, problem.b, problem.product, userAnswer, timeTaken, true);
+      this.fastGameSession.currentRetries = 0;
+
+      // Move to next problem after brief delay
+      setTimeout(() => {
+        if (this.fastGameSession) {
+          this.generateFastProblem();
+          this.startProblemTimer();
+        }
+      }, 800);
+    } else {
+      // Wrong answer - let them try again
+      this.fastGameSession.currentRetries++;
+      document.getElementById('fastFeedback').textContent = `✗ Try again`;
+      this.playWrongSound();
+
+      // After 3 retries, offer to move on
+      if (this.fastGameSession.currentRetries >= 3) {
+        document.getElementById('fastFeedback').textContent = `✗ ${problem.product} — Use Skip to move on`;
+        this.fastGameSession.missedProblems.push(problem);
+      }
+
+      // Record the attempt
+      this.recordProblemAttempt(problem.a, problem.b, problem.product, userAnswer, timeTaken, false);
+
+      // Clear input for retry
+      document.getElementById('fastAnswer').value = '';
+      document.getElementById('fastAnswer').focus();
+    }
+
+    this.fastGameSession.total++;
+  },
+
+  endFastGame() {
+    clearTimeout(this.fastGameSession.problemTimeout);
+
+    // Award coins: 1.25 per correct answer
+    const coinsEarned = this.fastGameSession.correct * 1.25;
+    this.coins += coinsEarned;
+    this.saveState();
+    this.updateCoinDisplay();
+
+    // Check for newly unlocked prizes
+    this.checkForUnlockedPrizes();
+
+    // Show results
+    document.getElementById('finalCorrect').textContent = this.fastGameSession.correct;
+    document.getElementById('coinsEarned').textContent = coinsEarned;
+
+    document.getElementById('fastGameTimer').style.display = 'none';
+    document.getElementById('fastGameResults').style.display = 'block';
+
+    this.playCoinSound();
+  },
+
+  skipProblem() {
+    if (!this.fastGameSession) return;
+
+    const problem = this.fastGameSession.currentProblem;
+
+    // Record as skipped (time taken but not answered)
+    const timeTaken = (Date.now() - this.fastGameSession.problemStartTime) / 1000;
+    this.recordProblemAttempt(problem.a, problem.b, problem.product, -1, timeTaken, false);
+
+    // Add to missed problems for later
+    this.fastGameSession.missedProblems.push(problem);
+    this.fastGameSession.total++;
+    this.fastGameSession.currentRetries = 0;
+
+    // Move to next problem
+    this.generateFastProblem();
+    this.startProblemTimer();
+  },
+
+  startBubbleBusterGame() {
+    console.log('🎮 STARTING BUBBLE BUSTER GAME');
+    document.getElementById('gameSelectionScreen').style.display = 'none';
+    document.getElementById('bubbleBusterGame').style.display = 'block';
+
+    this.bubbleGameSession = {
+      correct: 0,
+      total: 0,
+      currentProblem: null,
+      bubbles: [],
+      gameRunning: true,
+      projectileX: 0,
+      projectileY: 0,
+      isDragging: false,
+      dragStartX: 0,
+      dragStartY: 0,
+      gameStartTime: Date.now()
+    };
+
+    console.log('✅ Game session created. gameRunning =', this.bubbleGameSession.gameRunning);
+    this.generateBubbleProblem();
+    this.initBubbleGame();
+  },
+
+  generateBubbleProblem() {
+    const num1 = Math.floor(Math.random() * 8) + 2; // 2-9
+    const num2 = Math.floor(Math.random() * 8) + 2; // 2-9
+    this.bubbleGameSession.currentProblem = {
+      a: num1,
+      b: num2,
+      product: num1 * num2
+    };
+
+    // Display the problem
+    document.getElementById('bubbleProblem').textContent = `${num1} × ${num2} = ?`;
+
+    this.createBubbles();
+  },
+
+  createBubbles() {
+    if (!this.bubbleGameSession || !this.bubbleGameSession.gameRunning) return;
+
+    const canvas = document.getElementById('bubbleCanvas');
+    if (!canvas) return;
+
+    const correctAnswer = this.bubbleGameSession.currentProblem.product;
+    const wrongAnswers = this.generateWrongAnswers(correctAnswer);
+
+    const allNumbers = [correctAnswer, ...wrongAnswers].sort(() => Math.random() - 0.5);
+
+    // Clear old bubbles
+    this.bubbleGameSession.bubbles = [];
+
+    // Create bubble objects - spread across entire canvas area above slingshot
+    const bubbleRadius = 30;
+    const slinghotHeight = 60; // Leave space for slingshot at bottom
+
+    allNumbers.forEach((num) => {
+      // Random positions across full width and most of height
+      const x = Math.random() * (canvas.width - bubbleRadius * 2) + bubbleRadius;
+      const y = Math.random() * (canvas.height - slinghotHeight - bubbleRadius * 4) + bubbleRadius;
+
+      const bubble = {
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 1.2, // Moderate horizontal movement
+        vy: (Math.random() - 0.5) * 0.8, // Moderate vertical movement
+        number: num,
+        radius: bubbleRadius,
+        isCorrect: num === correctAnswer,
+        popped: false,
+        popTime: null
+      };
+      this.bubbleGameSession.bubbles.push(bubble);
+    });
+  },
+
+  generateWrongAnswers(correct) {
+    const answers = [];
+    const offsets = [1, 2, -1, -2, 3];
+
+    while (answers.length < 4) {
+      const offset = offsets[answers.length];
+      const wrong = correct + offset;
+      if (wrong > 0 && wrong !== correct && !answers.includes(wrong)) {
+        answers.push(wrong);
+      }
+    }
+
+    return answers;
+  },
+
+  initBubbleGame() {
+    console.log('🎮 Bubble Buster game initializing...');
+    const canvas = document.getElementById('bubbleCanvas');
+    console.log('Canvas found:', !!canvas);
+    if (!canvas) return;
+
+    // Set canvas resolution - use reasonable defaults
+    canvas.width = 800;
+    canvas.height = 400;
+    console.log('Canvas size:', canvas.width, 'x', canvas.height);
+
+    // Reset projectile to bottom center (slingshot base)
+    this.bubbleGameSession.projectileX = canvas.width / 2;
+    this.bubbleGameSession.projectileY = canvas.height - 40;
+
+    // Store reference for event handlers
+    const self = this;
+
+    // Attach event listeners directly
+    canvas.onmousedown = (e) => {
+      console.log('🖱️ DOWN - about to call handleBubbleMouseDown');
+      try {
+        self.handleBubbleMouseDown(e);
+      } catch (err) {
+        console.error('❌ ERROR in handleBubbleMouseDown:', err);
+      }
+    };
+    canvas.onmousemove = (e) => {
+      try {
+        self.handleBubbleMouseMove(e);
+      } catch (err) {
+        console.error('❌ ERROR in handleBubbleMouseMove:', err);
+      }
+    };
+    canvas.onmouseup = (e) => {
+      console.log('🖱️ UP - about to call handleBubbleMouseUp');
+      try {
+        self.handleBubbleMouseUp(e);
+      } catch (err) {
+        console.error('❌ ERROR in handleBubbleMouseUp:', err);
+      }
+    };
+    console.log('✅ Event listeners ready');
+
+    this.updateBubbleGame();
+  },
+
+  handleBubbleMouseDown(e) {
+    console.log('🖱️🖱️🖱️ MOUSEDOWN HANDLER CALLED - THIS SHOULD PRINT 🖱️🖱️🖱️');
+    console.log('  - this:', typeof this, this?.constructor?.name);
+    console.log('  - Session exists?', !!this.bubbleGameSession);
+    console.log('  - gameRunning value:', this.bubbleGameSession?.gameRunning);
+
+    if (!this.bubbleGameSession) {
+      console.log('  ❌ NO SESSION - RETURNING EARLY');
+      return;
+    }
+
+    if (!this.bubbleGameSession.gameRunning) {
+      console.log('  ❌ gameRunning is FALSE - RETURNING EARLY');
+      return;
+    }
+
+    console.log('  ✅ PASSED ALL CHECKS - Setting isDragging = true');
+    const canvas = document.getElementById('bubbleCanvas');
+    const rect = canvas.getBoundingClientRect();
+
+    this.bubbleGameSession.isDragging = true;
+    this.bubbleGameSession.dragStartX = e.clientX - rect.left;
+    this.bubbleGameSession.dragStartY = e.clientY - rect.top;
+    console.log('  ✅ isDragging set to true at x=' + this.bubbleGameSession.dragStartX + ' y=' + this.bubbleGameSession.dragStartY);
+  },
+
+  handleBubbleMouseMove(e) {
+    if (!this.bubbleGameSession || !this.bubbleGameSession.isDragging) return;
+
+    const canvas = document.getElementById('bubbleCanvas');
+    const rect = canvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+
+    const dx = currentX - this.bubbleGameSession.projectileX;
+    const dy = currentY - this.bubbleGameSession.projectileY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Redraw everything
+    this.drawBubbleGame();
+
+    if (distance > 0) {
+      const ctx = canvas.getContext('2d');
+      const slingshotX = this.bubbleGameSession.projectileX;
+      const slingshotY = this.bubbleGameSession.projectileY;
+
+      // Draw elastic bands from slingshot to pulled position
+      ctx.strokeStyle = 'rgba(200, 100, 150, 0.8)';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+
+      // Left elastic band
+      ctx.beginPath();
+      ctx.moveTo(slingshotX - 15, slingshotY - 20);
+      ctx.lineTo(currentX, currentY);
+      ctx.stroke();
+
+      // Right elastic band
+      ctx.beginPath();
+      ctx.moveTo(slingshotX + 15, slingshotY - 20);
+      ctx.lineTo(currentX, currentY);
+      ctx.stroke();
+
+      // Draw ball being pulled back
+      ctx.fillStyle = '#ff6b6b';
+      ctx.beginPath();
+      ctx.arc(currentX, currentY, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#cc5555';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Show aim trajectory with dotted line
+      ctx.strokeStyle = 'rgba(255, 200, 200, 0.6)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(currentX, currentY);
+      // Project line forward
+      const length = distance * 3;
+      const angle = Math.atan2(currentY - slingshotY, currentX - slingshotX);
+      ctx.lineTo(
+        currentX + Math.cos(angle) * length,
+        currentY + Math.sin(angle) * length
+      );
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  },
+
+  handleBubbleMouseUp(e) {
+    if (!this.bubbleGameSession || !this.bubbleGameSession.isDragging) return;
+
+    const canvas = document.getElementById('bubbleCanvas');
+    const rect = canvas.getBoundingClientRect();
+    const releaseX = e.clientX - rect.left;
+    const releaseY = e.clientY - rect.top;
+
+    const dx = this.bubbleGameSession.projectileX - releaseX;
+    const dy = this.bubbleGameSession.projectileY - releaseY;
+
+    // Fire projectile with velocity based on drag distance
+    const velocityScale = 0.08;
+    this.bubbleGameSession.projectile = {
+      x: this.bubbleGameSession.projectileX,
+      y: this.bubbleGameSession.projectileY,
+      vx: dx * velocityScale,
+      vy: dy * velocityScale,
+      radius: 6
+    };
+
+    this.bubbleGameSession.isDragging = false;
+  },
+
+  updateBubbleGame() {
+    if (!this.bubbleGameSession) {
+      console.log('❌ updateBubbleGame: NO SESSION');
+      return;
+    }
+    if (!this.bubbleGameSession.gameRunning) {
+      console.log('❌ updateBubbleGame: gameRunning is FALSE');
+      return;
+    }
+
+    const canvas = document.getElementById('bubbleCanvas');
+    if (!canvas) {
+      console.log('❌ updateBubbleGame: Canvas not found');
+      return;
+    }
+
+    // Update bubble positions (slow movement)
+    this.bubbleGameSession.bubbles.forEach(bubble => {
+      bubble.x += bubble.vx;
+      bubble.y += bubble.vy;
+
+      // Bounce off walls (allow movement across entire canvas, but stay above slingshot)
+      if (bubble.x - bubble.radius < 0 || bubble.x + bubble.radius > canvas.width) {
+        bubble.vx *= -1;
+        bubble.x = Math.max(bubble.radius, Math.min(canvas.width - bubble.radius, bubble.x));
+      }
+      if (bubble.y - bubble.radius < 0 || bubble.y + bubble.radius > canvas.height - 50) {
+        bubble.vy *= -1;
+        bubble.y = Math.max(bubble.radius, Math.min(canvas.height - 50 - bubble.radius, bubble.y));
+      }
+    });
+
+    // Update projectile and check collisions
+    if (this.bubbleGameSession.projectile) {
+      const proj = this.bubbleGameSession.projectile;
+      proj.x += proj.vx;
+      proj.y += proj.vy;
+      proj.vy += 0.15; // Gravity
+
+      // Check collision with bubbles
+      this.bubbleGameSession.bubbles.forEach(bubble => {
+        if (!bubble.popped) {
+          const distance = Math.sqrt(
+            Math.pow(proj.x - bubble.x, 2) + Math.pow(proj.y - bubble.y, 2)
+          );
+
+          if (distance < bubble.radius + proj.radius) {
+            bubble.popped = true;
+            bubble.popTime = Date.now();
+
+            // Update message and score
+            if (bubble.isCorrect) {
+              this.bubbleGameSession.correct++;
+              document.getElementById('bubbleCorrect').textContent = this.bubbleGameSession.correct;
+              document.getElementById('bubbleMessage').textContent = '✓ Correct!';
+              document.getElementById('bubbleMessage').style.color = 'var(--fill-success, #22c55e)';
+              this.playCorrectSound();
+
+              // After a short delay, generate next problem
+              setTimeout(() => {
+                if (this.bubbleGameSession && this.bubbleGameSession.gameRunning) {
+                  this.bubbleGameSession.total++;
+                  this.generateBubbleProblem();
+                  this.bubbleGameSession.projectile = null;
+                  document.getElementById('bubbleMessage').textContent = '';
+                }
+              }, 800);
+            } else {
+              document.getElementById('bubbleMessage').textContent = '✗ Wrong bubble!';
+              document.getElementById('bubbleMessage').style.color = 'var(--fill-error, #ef4444)';
+              this.playWrongSound();
+
+              // Reset after showing message
+              setTimeout(() => {
+                if (this.bubbleGameSession && this.bubbleGameSession.gameRunning) {
+                  bubble.popped = false;
+                  bubble.popTime = null;
+                  this.bubbleGameSession.projectile = null;
+                  document.getElementById('bubbleMessage').textContent = '';
+                }
+              }, 1200);
+            }
+          }
+        }
+      });
+
+      // Remove projectile if it goes off screen
+      if (proj.x < -50 || proj.x > canvas.width + 50 || proj.y > canvas.height + 50) {
+        this.bubbleGameSession.projectile = null;
+      }
+    }
+
+    this.drawBubbleGame();
+
+    if (this.bubbleGameSession.gameRunning) {
+      requestAnimationFrame(() => this.updateBubbleGame());
+    }
+  },
+
+  drawBubbleGame() {
+    const canvas = document.getElementById('bubbleCanvas');
+    if (!canvas) {
+      console.log('❌ Canvas not found in drawBubbleGame');
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'var(--surface-0)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw bubbles - all same color (don't reveal which is correct)
+    this.bubbleGameSession.bubbles.forEach(bubble => {
+      if (!bubble.popped) {
+        // All bubbles are light blue
+        ctx.fillStyle = 'rgba(100, 200, 255, 0.7)';
+        ctx.beginPath();
+        ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Add outline
+        ctx.strokeStyle = 'rgba(50, 150, 220, 0.9)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw number
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(bubble.number, bubble.x, bubble.y);
+      }
+    });
+
+    // Draw projectile
+    if (this.bubbleGameSession.projectile) {
+      const proj = this.bubbleGameSession.projectile;
+      ctx.fillStyle = '#ff6b6b';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Draw slingshot with resting ball
+    const slingshotX = this.bubbleGameSession.projectileX;
+    const slingshotY = this.bubbleGameSession.projectileY;
+
+    // Slingshot arms - nice purple/gray
+    ctx.strokeStyle = '#556b7a';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Left arm
+    ctx.beginPath();
+    ctx.moveTo(slingshotX - 18, slingshotY - 22);
+    ctx.lineTo(slingshotX - 3, slingshotY + 2);
+    ctx.stroke();
+
+    // Right arm
+    ctx.beginPath();
+    ctx.moveTo(slingshotX + 18, slingshotY - 22);
+    ctx.lineTo(slingshotX + 3, slingshotY + 2);
+    ctx.stroke();
+
+    // Base/handle
+    ctx.fillStyle = '#4a5568';
+    ctx.fillRect(slingshotX - 8, slingshotY + 2, 16, 10);
+
+    // Resting ball in slingshot
+    ctx.fillStyle = '#ff6b6b';
+    ctx.beginPath();
+    ctx.arc(slingshotX, slingshotY - 2, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#cc5555';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  },
+
+  endBubbleGame() {
+    if (!this.bubbleGameSession) return;
+
+    this.bubbleGameSession.gameRunning = false;
+
+    const canvas = document.getElementById('bubbleCanvas');
+    if (canvas) {
+      canvas.removeEventListener('mousedown', (e) => this.handleBubbleMouseDown(e));
+      canvas.removeEventListener('mousemove', (e) => this.handleBubbleMouseMove(e));
+      canvas.removeEventListener('mouseup', (e) => this.handleBubbleMouseUp(e));
+    }
+
+    // Award coins
+    const coinsEarned = Math.floor(this.bubbleGameSession.correct * 1.25);
+    this.coins += coinsEarned;
+
+    this.checkForUnlockedPrizes();
+    this.saveState();
+
+    this.backToGameSelection();
+  },
+
+  recordProblemAttempt(a, b, expected, userAnswer, timeTaken, isCorrect) {
+    // Store problem attempt data for analytics
+    const problem = `${a}×${b}`;
+    this.fastGameHistory.push({
+      timestamp: Date.now(),
+      problem: problem,
+      expected: expected,
+      userAnswer: userAnswer,
+      timeTaken: timeTaken,
+      isCorrect: isCorrect
+    });
+    this.saveState();
+  },
+
+  calculateAnalytics() {
+    if (this.fastGameHistory.length === 0) {
+      return {
+        avgTime: '-',
+        totalProblems: 0,
+        accuracy: '-',
+        slowestProblems: [],
+        missedProblems: []
+      };
+    }
+
+    // Average time calculation (exclude skipped problems with negative userAnswer)
+    const answered = this.fastGameHistory.filter(p => p.userAnswer !== -1);
+    const avgTime = answered.length > 0
+      ? (answered.reduce((sum, p) => sum + p.timeTaken, 0) / answered.length).toFixed(1)
+      : '-';
+
+    // Total problems
+    const totalProblems = this.fastGameHistory.length;
+
+    // Accuracy
+    const correct = this.fastGameHistory.filter(p => p.isCorrect).length;
+    const accuracy = totalProblems > 0
+      ? Math.round((correct / totalProblems) * 100)
+      : '-';
+
+    // Slowest problems - group by problem type
+    const problemStats = {};
+    this.fastGameHistory.forEach(attempt => {
+      if (!problemStats[attempt.problem]) {
+        problemStats[attempt.problem] = {
+          problem: attempt.problem,
+          count: 0,
+          totalTime: 0
+        };
+      }
+      problemStats[attempt.problem].count++;
+      problemStats[attempt.problem].totalTime += attempt.timeTaken;
+    });
+
+    const slowestProblems = Object.values(problemStats)
+      .map(p => ({
+        problem: p.problem,
+        count: p.count,
+        avgTime: (p.totalTime / p.count).toFixed(1)
+      }))
+      .sort((a, b) => parseFloat(b.avgTime) - parseFloat(a.avgTime))
+      .slice(0, 10);
+
+    // Most frequently missed
+    const missedStats = {};
+    this.fastGameHistory
+      .filter(p => !p.isCorrect)
+      .forEach(attempt => {
+        if (!missedStats[attempt.problem]) {
+          missedStats[attempt.problem] = {
+            problem: attempt.problem,
+            attempts: 0,
+            missed: 0
+          };
+        }
+        missedStats[attempt.problem].attempts++;
+        missedStats[attempt.problem].missed++;
+      });
+
+    // Also count total attempts per problem
+    Object.values(problemStats).forEach(p => {
+      if (!missedStats[p.problem]) {
+        missedStats[p.problem] = {
+          problem: p.problem,
+          attempts: p.count,
+          missed: 0
+        };
+      } else {
+        missedStats[p.problem].attempts = p.count;
+      }
+    });
+
+    const missedProblems = Object.values(missedStats)
+      .filter(p => p.missed > 0)
+      .sort((a, b) => b.missed - a.missed)
+      .slice(0, 10);
+
+    return {
+      avgTime,
+      totalProblems,
+      accuracy,
+      slowestProblems,
+      missedProblems
+    };
+  },
+
+  updateAnalyticsDisplay() {
+    const analytics = this.calculateAnalytics();
+
+    // Update summary stats
+    document.getElementById('avgTime').textContent = analytics.avgTime;
+    document.getElementById('totalProblems').textContent = analytics.totalProblems;
+    document.getElementById('accuracy').textContent = analytics.accuracy;
+
+    // Update slowest problems table
+    const slowestBody = document.getElementById('slowestProblemsBody');
+    if (analytics.slowestProblems.length === 0) {
+      slowestBody.innerHTML = '<tr><td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No data yet</td></tr>';
+    } else {
+      slowestBody.innerHTML = analytics.slowestProblems.map(p => `
+        <tr style="border-bottom: 0.5px solid var(--border);">
+          <td style="padding: 12px; text-align: left;">${p.problem}</td>
+          <td style="padding: 12px; text-align: center; color: var(--text-secondary);">${p.count}</td>
+          <td style="padding: 12px; text-align: right; font-weight: 500;">${p.avgTime}s</td>
+        </tr>
+      `).join('');
+    }
+
+    // Update missed problems table
+    const missedBody = document.getElementById('missedProblemsBody');
+    if (analytics.missedProblems.length === 0) {
+      missedBody.innerHTML = '<tr><td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No data yet</td></tr>';
+    } else {
+      missedBody.innerHTML = analytics.missedProblems.map(p => `
+        <tr style="border-bottom: 0.5px solid var(--border);">
+          <td style="padding: 12px; text-align: left;">${p.problem}</td>
+          <td style="padding: 12px; text-align: center; color: var(--text-secondary);">${p.attempts}</td>
+          <td style="padding: 12px; text-align: right; font-weight: 500; color: #ff6b6b;">${p.missed} missed</td>
+        </tr>
+      `).join('');
+    }
+  },
+
+  updateCoinDisplay() {
+    document.getElementById('totalCoins').textContent = this.coins;
+    document.getElementById('homeCoins').textContent = this.coins;
+    document.getElementById('homeCoinsLabel').textContent = this.coins;
+  },
+
+  checkForUnlockedPrizes() {
+    // Collect all newly unlocked prizes and celebrate them
+    const newlyUnlocked = [];
+
+    this.prizes.forEach(prize => {
+      if (this.coins >= prize.cost && prize.cost > 0) {
+        // Mark this prize as unlocked if not already
+        if (!prize.wasUnlocked) {
+          prize.wasUnlocked = true;
+          newlyUnlocked.push(prize);
+        }
+      }
+    });
+
+    // Show celebration for all newly unlocked prizes
+    if (newlyUnlocked.length > 0) {
+      this.celebratePrizesUnlock(newlyUnlocked);
+    }
+  },
+
+  celebratePrizesUnlock(prizes) {
+    // Create an overlay celebration for newly unlocked prizes
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    `;
+
+    const card = document.createElement('div');
+    card.style.cssText = `
+      background: linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%);
+      color: #333;
+      padding: 3rem;
+      border-radius: 24px;
+      text-align: center;
+      max-width: 500px;
+      animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    `;
+
+    const title = prizes.length === 1 ? 'New Prize Unlocked!' : `${prizes.length} New Prizes Unlocked!`;
+
+    let prizeHTML = `
+      <div style="font-size: 80px; margin-bottom: 1rem; animation: bounce 0.6s ease infinite;">✨</div>
+      <div style="font-size: 28px; font-weight: 600; margin-bottom: 1.5rem;">${title}</div>
+    `;
+
+    // Show all newly unlocked prizes
+    prizes.forEach(prize => {
+      prizeHTML += `
+        <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.3); border-radius: 12px;">
+          <div style="font-size: 60px; margin-bottom: 0.5rem;">${prize.icon}</div>
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.25rem;">${prize.name}</div>
+          <div style="font-size: 14px; opacity: 0.8;">🪙 ${prize.cost}</div>
+        </div>
+      `;
+    });
+
+    prizeHTML += `<button onclick="this.closest('div').parentElement.remove()" style="padding: 12px 24px; font-size: 16px; background: #333; color: #FFD93D; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">Awesome! 🎉</button>`;
+
+    card.innerHTML = prizeHTML;
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    // Add animations to styles if not already present
+    if (!document.querySelector('style[data-prize-animations]')) {
+      const style = document.createElement('style');
+      style.setAttribute('data-prize-animations', 'true');
+      style.textContent = `
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes popIn {
+          0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Play celebratory sound
+    this.playCoinSound();
+
+    // Auto-remove after 6 seconds if not clicked
+    setTimeout(() => {
+      if (overlay.parentElement) {
+        overlay.remove();
+      }
+    }, 6000);
+  },
+
+  getTurdProgress() {
+    return Object.values(this.state).reduce((sum, s) => sum + s.completions, 0);
+  },
+
+  renderTurdMain() {
+    document.getElementById('mainScreen').classList.remove('hidden');
+    document.getElementById('practiceScreen').classList.remove('active');
+
+    const container = document.getElementById('stacksContainer');
+    container.innerHTML = '';
+
+    let totalDone = 0;
+
+    this.numbers.forEach(n => {
+      const done = this.state[n].completions;
+      totalDone += done;
+
+      const card = document.createElement('div');
+      card.className = 'stack-card';
+      card.setAttribute('data-number', n);
+      card.onclick = () => this.startPractice(n);
+
+      let progressText = `${done}/5`;
+      if (done === 5) progressText = '✓';
+
+      card.innerHTML = `
+        <div class="stack-number">${n}</div>
+        <div class="stack-progress">${progressText}</div>
+        <div class="stack-reward">🪙 × 10</div>
+      `;
+
+      container.appendChild(card);
+    });
+
+    const total = this.numbers.length * 5;
+    const percent = Math.round((totalDone / total) * 100);
+    document.getElementById('overallProgress').textContent = `${totalDone}/${total} complete`;
+    document.getElementById('overallFill').style.width = `${percent}%`;
+  },
+
+  startPractice(number) {
+    const state = this.state[number];
+
+    if (state.completions >= 5) {
+      return;
+    }
+
+    const currentCompletion = state.completions + 1;
+
+    this.currentSession = {
+      number: number,
+      problems: this.generateProblems(number),
+      index: 0,
+      correct: 0,
+      completionNumber: currentCompletion,
+      currentProblemRetries: 0
+    };
+
+    this.renderPractice();
+  },
+
+  generateProblems(number) {
+    const problems = [];
+    for (let i = 2; i <= 9; i++) {
+      problems.push({
+        multiplier: i,
+        product: number * i
+      });
+    }
+    return problems.sort(() => Math.random() - 0.5);
+  },
+
+  renderPractice() {
+    document.getElementById('mainScreen').classList.add('hidden');
+    document.getElementById('practiceScreen').classList.add('active');
+
+    const { number, problems, index, completionNumber } = this.currentSession;
+    const problem = problems[index];
+
+    document.getElementById('numberLabel').textContent = `Number ${number}`;
+    document.getElementById('attemptNum').textContent = completionNumber;
+    document.getElementById('problem').textContent = `${number} × ${problem.multiplier} = ?`;
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('answer').value = '';
+    document.getElementById('answer').focus();
+  },
+
+  submit() {
+    const input = document.getElementById('answer').value.trim();
+    if (!input) return;
+
+    const session = this.currentSession;
+    const problem = session.problems[session.index];
+    const userAnswer = parseInt(input);
+    const state = this.state[session.number];
+
+    if (userAnswer === problem.product) {
+      this.showCorrect();
+      this.playCorrectSound();
+
+      if (session.currentProblemRetries > 0) {
+        const remaining = session.problems.slice(session.index + 1);
+        const pos = Math.floor(Math.random() * (remaining.length + 1));
+        remaining.splice(pos, 0, problem);
+        session.problems.splice(session.index + 1, session.problems.length - session.index - 1, ...remaining);
+      }
+
+      session.index++;
+      session.currentProblemRetries = 0;
+
+      if (session.index >= session.problems.length) {
+        state.completions = Math.min(5, state.completions + 1);
+        this.coins += 10;
+        this.saveState();
+        this.updateCoinDisplay();
+        this.checkForUnlockedPrizes();
+        this.createCoinEarn();
+        this.playCoinSound();
+        this.createDancingCat();
+        setTimeout(() => {
+          this.backToMain();
+        }, 1600);
+      } else {
+        setTimeout(() => {
+          this.renderPractice();
+        }, 600);
+      }
+    } else {
+      this.showWrong(problem.product);
+      this.playWrongSound();
+
+      session.currentProblemRetries++;
+
+      if (session.currentProblemRetries >= 3) {
+        const remaining = session.problems.slice(session.index + 1);
+        const pos = Math.floor(Math.random() * (remaining.length + 1));
+        remaining.splice(pos, 0, problem);
+        session.problems.splice(session.index + 1, session.problems.length - session.index - 1, ...remaining);
+
+        session.index++;
+        session.currentProblemRetries = 0;
+
+        if (session.index >= session.problems.length) {
+          state.completions = Math.min(5, state.completions + 1);
+          this.coins += 10;
+          this.saveState();
+          this.updateCoinDisplay();
+          this.checkForUnlockedPrizes();
+          this.createCoinEarn();
+          this.playCoinSound();
+          this.createDancingCat();
+          setTimeout(() => {
+            this.backToMain();
+          }, 1600);
+        } else {
+          setTimeout(() => {
+            this.renderPractice();
+          }, 1500);
+        }
+      } else {
+        setTimeout(() => {
+          this.renderPractice();
+        }, 1500);
+      }
+    }
+  },
+
+  showCorrect() {
+    const emojis = ['👍', '✅', '🎯', '🌟', '💪', '👏', '🚀', '⭐'];
+    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    const fb = document.getElementById('feedback');
+    fb.textContent = randomEmoji;
+    fb.className = 'feedback correct';
+
+    this.createCelebration('🎉');
+    this.createCelebration('✨');
+  },
+
+  showWrong(answer) {
+    const fb = document.getElementById('feedback');
+    fb.innerHTML = `<span style="font-size: 40px;">✗</span> <span style="font-size: 32px;">${answer}</span>`;
+    fb.className = 'feedback wrong';
+  },
+
+  createCelebration(emoji) {
+    const el = document.createElement('div');
+    el.className = 'celebration';
+    el.textContent = emoji;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+  },
+
+  createCoinEarn() {
+    const coin = document.createElement('div');
+    coin.className = 'coin-earn';
+    coin.textContent = '🪙';
+    document.body.appendChild(coin);
+    setTimeout(() => coin.remove(), 1500);
+  },
+
+  createDancingCat() {
+    const cat = document.createElement('div');
+    cat.className = 'dancing-cat';
+    cat.textContent = '🐱';
+    document.body.appendChild(cat);
+    setTimeout(() => cat.remove(), 1600);
+  },
+
+  playCorrectSound() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioContext.currentTime;
+
+      // Two-note chime: pleasant ascending notes
+      const playNote = (freq, startTime, duration) => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0.3, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+
+      playNote(523, now, 0.2);       // C5
+      playNote(659, now + 0.15, 0.25); // E5
+    } catch(e) {
+      // Audio context error - silently fail
+    }
+  },
+
+  playWrongSound() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+
+      osc.frequency.setValueAtTime(400, audioContext.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+      osc.start(audioContext.currentTime);
+      osc.stop(audioContext.currentTime + 0.3);
+    } catch(e) {
+      // Audio context error - silently fail
+    }
+  },
+
+  playCoinSound() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioContext.currentTime;
+
+      // Ta-da fanfare sound (celebratory)
+      const playNote = (freq, startTime, duration) => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0.3, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+
+      playNote(392, now, 0.1);        // G4 - ta
+      playNote(587, now + 0.08, 0.12); // D5 - da
+      playNote(784, now + 0.15, 0.15); // G5 - splash
+
+      // Coin splash effect - descending metallic sound
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.frequency.setValueAtTime(1200, now + 0.28);
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.35);
+      gain.gain.setValueAtTime(0.25, now + 0.28);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.start(now + 0.28);
+      osc.stop(now + 0.35);
+    } catch(e) {
+      // Audio context error - silently fail
+    }
+  },
+
+  backToMain() {
+    this.currentSession = null;
+    this.renderTurdMain();
+  },
+
+  renderPrizes() {
+    const grid = document.getElementById('prizesGrid');
+    grid.innerHTML = '';
+
+    // Create array with original indices, then sort by price
+    const prizesWithIndex = this.prizes.map((prize, originalIndex) => ({ prize, originalIndex }));
+    prizesWithIndex.sort((a, b) => a.prize.cost - b.prize.cost);
+
+    prizesWithIndex.forEach(({ prize, originalIndex }) => {
+      const card = document.createElement('div');
+      card.className = 'prize-card';
+
+      const canClaim = this.coins >= prize.cost;
+      const buttonClass = canClaim ? 'prize-button buy' : 'prize-button locked';
+      const buttonText = canClaim ? '🛒 Buy' : '🔒 Locked';
+
+      card.innerHTML = `
+        <div class="prize-icon">${prize.icon}</div>
+        <div class="prize-name">${prize.name}</div>
+        <div class="prize-cost">🪙 ${prize.cost}</div>
+        <div class="prize-claimed">Claimed: ${prize.claimed}</div>
+        <button class="${buttonClass}" ${canClaim ? `onclick="app.claimPrize(${originalIndex})"` : ''}>${buttonText}</button>
+      `;
+
+      grid.appendChild(card);
+    });
+
+    // Render receipts
+    this.renderReceipts();
+  },
+
+  renderReceipts() {
+    const container = document.getElementById('receiptsContainer');
+
+    // Get all claimed prizes
+    const claimed = this.prizes.filter(p => p.claimed > 0);
+
+    if (claimed.length === 0) {
+      container.innerHTML = '<div style="text-align: center; color: var(--text-secondary);">No purchases yet — keep earning!</div>';
+      return;
+    }
+
+    let html = '<div style="max-width: 600px;">';
+
+    claimed.forEach((prize, index) => {
+      const totalSpent = prize.cost * prize.claimed;
+      html += `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid var(--border); gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+            <div style="font-size: 40px;">${prize.icon}</div>
+            <div>
+              <div style="font-weight: 600; color: var(--text-primary);">${prize.name}</div>
+              <div style="font-size: 13px; color: var(--text-secondary);">
+                ${prize.claimed} ${prize.claimed === 1 ? 'time' : 'times'} · 🪙 ${prize.cost} each
+              </div>
+            </div>
+          </div>
+          <div style="text-align: right; font-weight: 600; font-size: 16px; color: var(--fill-accent);">
+            -🪙 ${totalSpent}
+          </div>
+        </div>
+      `;
+    });
+
+    // Calculate total spent
+    const totalSpent = claimed.reduce((sum, prize) => sum + (prize.cost * prize.claimed), 0);
+    html += `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; font-weight: 600; font-size: 16px; background: var(--surface-1); border-radius: 8px; margin-top: 1rem;">
+        <div>Total Spent:</div>
+        <div style="font-size: 20px; color: var(--fill-accent);">🪙 ${totalSpent}</div>
+      </div>
+    `;
+
+    html += '</div>';
+    container.innerHTML = html;
+  },
+
+  claimPrize(index) {
+    if (this.coins < this.prizes[index].cost) return;
+
+    this.coins -= this.prizes[index].cost;
+    this.prizes[index].claimed++;
+    this.saveState();
+    this.updateCoinDisplay();
+    this.renderPrizes();
+  },
+
+  resetCoins() {
+    this.coins = 100;
+    this.saveState();
+    this.updateCoinDisplay();
+  },
+
+  resetCoinsToOne() {
+    this.coins = 1;
+    this.saveState();
+    this.updateCoinDisplay();
+  },
+
+  initEventListeners() {
+    const self = this;
+
+    // Turd Times a Charm answer input
+    document.getElementById('answer').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        self.submit();
+      }
+    });
+
+    // Fast as a Cat answer input
+    document.getElementById('fastAnswer').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        self.fastSubmit();
+      }
+    });
+  }
+};
+
+app.init();
+</script>
+</body>
+</html>
+
+</body></html>
