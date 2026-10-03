@@ -358,9 +358,8 @@
         <span id="totalCoins">0</span>
       </div>
       <button onclick="app.switchTab('prizes')" style="padding: 16px 28px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">🎁 Prize Store</button>
-      <button onclick="app.resetCoins()" style="padding: 8px 12px; font-size: 12px; background: #ff6b6b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Reset to 100</button>
-      <button onclick="app.resetCoinsToOne()" style="padding: 8px 12px; font-size: 12px; background: #666; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Reset to 1</button>
       <button onclick="app.switchTab('analytics')" style="padding: 12px 16px; font-size: 13px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;">📊 Analytics</button>
+      <button onclick="app.switchTab('admin')" style="padding: 12px 16px; font-size: 13px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;">⚙️ Qualifier</button>
     </div>
   </div>
 
@@ -556,6 +555,32 @@
     </div>
   </div>
 
+  <!-- ADMIN PANEL -->
+  <div id="adminScreen" class="screen">
+    <div style="margin-bottom: 2rem;">
+      <h2>Qualifier Settings</h2>
+    </div>
+    <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; padding: 2rem; max-width: 400px;">
+      <div style="margin-bottom: 2rem;">
+        <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Qualifier Multiplier</label>
+        <select id="qualifierSelect" onchange="app.setQualifier(this.value)" style="width: 100%; padding: 12px; border: 0.5px solid var(--border); border-radius: 8px; font-size: 16px;">
+          <option value="0">0 (1.25x coins)</option>
+          <option value="1">1 (1.5x coins)</option>
+          <option value="2">2 (1.75x coins)</option>
+          <option value="3">3 (2x coins)</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top: 3rem;">
+      <h3 style="font-size: 18px; margin-bottom: 1rem;">Qualifier History</h3>
+      <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden;">
+        <div id="qualifierLogContainer" style="padding: 2rem; max-height: 400px; overflow-y: auto;">
+          <div style="text-align: center; color: var(--text-secondary);">No qualifier changes yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ANALYTICS -->
   <div id="analyticsScreen" class="screen">
     <div style="margin-bottom: 2rem;">
@@ -625,6 +650,8 @@ const app = {
   currentSession: null,
   coins: 0,
   fastGameHistory: [],
+  qualifierMultiplier: 0,
+  qualifierLog: [],
 
   prizes: [
     { name: 'Double Ice Cream', icon: '🍦', cost: 100, claimed: 0 },
@@ -643,6 +670,7 @@ const app = {
     this.updateCoinDisplay();
     this.showGameSelection();
     this.initEventListeners();
+    this.addAdminButton();
   },
 
   loadState() {
@@ -651,13 +679,17 @@ const app = {
       turdTimes: { 2: { completions: 3 }, 3: { completions: 0 }, 4: { completions: 0 }, 5: { completions: 0 }, 6: { completions: 0 }, 7: { completions: 5 }, 8: { completions: 5 }, 9: { completions: 4 } },
       coins: 27.25,
       prizes: [{ claimed: 0 }, { claimed: 0 }, { claimed: 0 }, { claimed: 0 }, { claimed: 0 }, { claimed: 0 }, { claimed: 1 }, { claimed: 0 }],
-      fastGameHistory: []
+      fastGameHistory: [],
+      qualifierMultiplier: 0,
+      qualifierLog: []
     };
     const data = saved ? JSON.parse(saved) : defaultData;
 
     this.state = data.turdTimes || {};
     this.coins = data.coins || 100;
     this.fastGameHistory = data.fastGameHistory || [];
+    this.qualifierMultiplier = data.qualifierMultiplier || 0;
+    this.qualifierLog = data.qualifierLog || [];
 
     this.numbers.forEach(n => {
       if (!this.state[n]) {
@@ -677,7 +709,9 @@ const app = {
       turdTimes: this.state,
       coins: this.coins,
       prizes: this.prizes.map(p => ({ claimed: p.claimed })),
-      fastGameHistory: this.fastGameHistory
+      fastGameHistory: this.fastGameHistory,
+      qualifierMultiplier: this.qualifierMultiplier,
+      qualifierLog: this.qualifierLog
     }));
   },
 
@@ -842,8 +876,10 @@ const app = {
   endFastGame() {
     clearTimeout(this.fastGameSession.problemTimeout);
 
-    // Award coins: 1.25 per correct answer
-    const coinsEarned = this.fastGameSession.correct * 1.25;
+    // Award coins: 1.25 per correct answer (with qualifier multiplier)
+    let coinsEarned = this.fastGameSession.correct * 1.25;
+    const multiplier = 1 + this.qualifierMultiplier;
+    coinsEarned = coinsEarned * multiplier;
     this.coins += coinsEarned;
     this.saveState();
     this.updateCoinDisplay();
@@ -1324,8 +1360,10 @@ const app = {
       canvas.removeEventListener('mouseup', (e) => this.handleBubbleMouseUp(e));
     }
 
-    // Award coins
-    const coinsEarned = Math.floor(this.bubbleGameSession.correct * 1.25);
+    // Award coins (with qualifier multiplier)
+    let coinsEarned = this.bubbleGameSession.correct * 1.25;
+    const multiplier = 1 + this.qualifierMultiplier;
+    coinsEarned = Math.floor(coinsEarned * multiplier);
     this.coins += coinsEarned;
 
     this.checkForUnlockedPrizes();
@@ -1474,6 +1512,64 @@ const app = {
           <td style="padding: 12px; text-align: right; font-weight: 500; color: #ff6b6b;">${p.missed} missed</td>
         </tr>
       `).join('');
+    }
+
+    // Add answer time trend by date
+    this.renderAnswerTimeTrend();
+  },
+
+  renderAnswerTimeTrend() {
+    if (this.fastGameHistory.length === 0) return;
+
+    // Group attempts by date
+    const byDate = {};
+    this.fastGameHistory.forEach(attempt => {
+      const date = new Date(attempt.timestamp).toLocaleDateString();
+      if (!byDate[date]) {
+        byDate[date] = { total: 0, count: 0, fastest: Infinity, slowest: 0 };
+      }
+      if (attempt.userAnswer !== -1) {
+        byDate[date].total += attempt.timeTaken;
+        byDate[date].count++;
+        byDate[date].fastest = Math.min(byDate[date].fastest, attempt.timeTaken);
+        byDate[date].slowest = Math.max(byDate[date].slowest, attempt.timeTaken);
+      }
+    });
+
+    // Create trend section
+    let trendHTML = '<h3 style="font-size: 18px; margin-bottom: 1rem; margin-top: 2rem;">📈 Answer Speed Trend</h3>';
+    trendHTML += '<div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden;">';
+
+    Object.entries(byDate).sort().reverse().forEach(([date, stats]) => {
+      const avg = (stats.total / stats.count).toFixed(1);
+      const speedClass = avg < 3 ? '🚀' : avg < 5 ? '✓' : '🤔';
+      trendHTML += `
+        <div style="padding: 1rem; border-bottom: 0.5px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 500;">${date}</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">${stats.count} answered</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 18px;">${speedClass}</div>
+            <div style="font-size: 14px; font-weight: 500;">${avg}s avg</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">⚡ ${stats.fastest.toFixed(1)}s - ${stats.slowest.toFixed(1)}s</div>
+          </div>
+        </div>
+      `;
+    });
+
+    trendHTML += '</div>';
+
+    // Insert into analytics screen
+    const analyticsScreen = document.getElementById('analyticsScreen');
+    let trendSection = document.getElementById('trendSection');
+    if (trendSection) {
+      trendSection.innerHTML = trendHTML;
+    } else {
+      trendSection = document.createElement('div');
+      trendSection.id = 'trendSection';
+      trendSection.innerHTML = trendHTML;
+      analyticsScreen.appendChild(trendSection);
     }
   },
 
@@ -2000,6 +2096,119 @@ const app = {
         self.fastSubmit();
       }
     });
+  },
+
+  addAdminButton() {
+    const header = document.querySelector('.header');
+    if (!header) return;
+
+    const adminBtn = document.createElement('button');
+    adminBtn.innerHTML = '⚙️';
+    adminBtn.style.cssText = `
+      padding: 8px 12px;
+      font-size: 18px;
+      background: var(--surface-1);
+      border: 0.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 8px;
+    `;
+    adminBtn.onclick = () => this.toggleAdminPanel();
+    header.appendChild(adminBtn);
+  },
+
+  toggleAdminPanel() {
+    let panel = document.getElementById('adminPanel');
+    if (!panel) {
+      this.createAdminPanel();
+      panel = document.getElementById('adminPanel');
+    }
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  },
+
+  createAdminPanel() {
+    const overlay = document.createElement('div');
+    overlay.id = 'adminPanel';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    `;
+
+    const panel = document.createElement('div');
+    panel.style.cssText = `
+      background: var(--surface-0);
+      border: 0.5px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    `;
+
+    panel.innerHTML = `
+      <h2 style="margin-top: 0;">Settings</h2>
+      <div style="margin-bottom: 2rem;">
+        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Qualifier</label>
+        <select id="qualifierSelect" style="width: 100%; padding: 8px; border: 0.5px solid var(--border); border-radius: 6px; font-size: 16px;">
+          <option value="0">None</option>
+          <option value="0.25">1.25x</option>
+          <option value="0.5">1.5x</option>
+          <option value="0.75">1.75x</option>
+          <option value="2">2x</option>
+        </select>
+      </div>
+      <div id="qualifierLogContainer" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 0.5px solid var(--border);"></div>
+      <button onclick="document.getElementById('adminPanel').style.display='none'" style="padding: 8px 16px; background: var(--fill-accent); color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 1rem;">Close</button>
+    `;
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+
+    const select = document.getElementById('qualifierSelect');
+    select.value = this.qualifierMultiplier.toString();
+    select.onchange = (e) => this.setQualifier(parseFloat(e.target.value));
+
+    this.renderQualifierLog();
+  },
+
+  setQualifier(value) {
+    this.qualifierMultiplier = value;
+    const timestamp = new Date().toLocaleString();
+    const labels = { '0': 'None', '0.25': '1.25x', '0.5': '1.5x', '0.75': '1.75x', '2': '2x' };
+    this.qualifierLog.push({ timestamp, value, label: labels[value.toString()] });
+    this.saveState();
+    this.renderQualifierLog();
+  },
+
+  renderQualifierLog() {
+    const container = document.getElementById('qualifierLogContainer');
+    if (!container) return;
+
+    if (this.qualifierLog.length === 0) {
+      container.innerHTML = '<p style="color: var(--text-secondary); font-size: 14px;">No qualifier changes yet</p>';
+      return;
+    }
+
+    const logHTML = this.qualifierLog.slice().reverse().map((entry, idx) => `
+      <div style="padding: 0.75rem; background: var(--surface-2); border-radius: 6px; margin-bottom: 0.5rem; font-size: 13px;">
+        <div style="font-weight: 500;">${entry.label}</div>
+        <div style="color: var(--text-secondary); font-size: 12px;">${entry.timestamp}</div>
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <h3 style="margin-top: 0; font-size: 16px;">Qualifier History</h3>
+      ${logHTML}
+    `;
   }
 };
 
