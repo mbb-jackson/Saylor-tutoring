@@ -364,14 +364,33 @@
   </div>
 
   <!-- HOME SCREEN (Default) -->
-  <div id="homeScreen" class="screen active" style="text-align: center; padding: 4rem 2rem;">
-    <div style="font-size: 120px; margin-bottom: 2rem;">🐱</div>
-    <div style="font-size: 18px; color: var(--text-secondary); margin-bottom: 1rem;">
+  <div id="homeScreen" class="screen active" style="text-align: center; padding: 2rem 1rem;">
+    <div style="font-size: 120px; margin-bottom: 1.5rem;">🐱</div>
+    <div style="font-size: 18px; color: var(--text-secondary); margin-bottom: 0.5rem;">
       You have <span style="font-size: 40px; font-weight: 600; color: var(--fill-accent);" id="homeCoins">0</span> coins
     </div>
-    <h2 style="font-size: 32px; margin-bottom: 2rem;">Ready to earn more?</h2>
-    <p style="font-size: 16px; color: var(--text-secondary); line-height: 1.6;">
-      Pick a game from the menu to start! 🎮
+
+    <!-- CHECK-IN CARD - PROMINENT -->
+    <div onclick="app.switchTab('assessment')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px; padding: 2.5rem 2rem; margin: 2rem 0; cursor: pointer; box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3); transition: all 0.3s ease; border: none;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 40px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 32px rgba(102, 126, 234, 0.3)'">
+      <div style="font-size: 48px; margin-bottom: 1rem;">📝</div>
+      <h3 style="font-size: 24px; margin: 0 0 0.5rem 0; font-weight: 700;">Skills Check-In</h3>
+      <p style="font-size: 14px; margin: 0 0 1.5rem 0; opacity: 0.95;">Show what you know</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div style="background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 1rem;">
+          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 0.25rem;">Questions</div>
+          <div style="font-size: 28px; font-weight: 700;">25</div>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 1rem;">
+          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 0.25rem;">Earn</div>
+          <div style="font-size: 28px; font-weight: 700;">35 🪙</div>
+        </div>
+      </div>
+    </div>
+
+    <h2 style="font-size: 28px; margin: 2rem 0 1rem 0;">Or pick a game:</h2>
+    <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
+      Master the tables · Earn coins · Unlock prizes
     </p>
   </div>
 
