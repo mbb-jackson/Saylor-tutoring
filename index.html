@@ -2182,7 +2182,7 @@ const app = {
       <div style="margin-bottom: 2rem; padding: 1rem; background: var(--surface-2); border-radius: 6px;">
         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 13px;">Adjust</label>
         <div style="display: flex; gap: 0.5rem;">
-          <input type="number" id="coinAdjustInput" placeholder="+5 or -3" style="flex: 1; padding: 8px; border: 0.5px solid var(--border); border-radius: 6px; font-size: 14px;" />
+          <input type="number" id="coinAdjustInput" placeholder="data" style="flex: 1; padding: 8px; border: 0.5px solid var(--border); border-radius: 6px; font-size: 14px;" />
           <button onclick="app.adjustCoins()" style="padding: 8px 16px; background: var(--fill-accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">→</button>
         </div>
       </div>
@@ -2227,9 +2227,9 @@ const app = {
 
     // Clear input and show feedback
     input.value = '';
-    input.placeholder = `✓ ${adjustment > 0 ? '+' : ''}${adjustment}`;
+    input.placeholder = `✓`;
     setTimeout(() => {
-      input.placeholder = '+5 or -3';
+      input.placeholder = 'data';
     }, 1000);
   },
 
