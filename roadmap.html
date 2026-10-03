@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗺️ Your Path to Algebra</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --surface-0: #ffffff;
+    --surface-1: #f8f7f4;
+    --surface-2: #efefeb;
+    --text-primary: #141413;
+    --text-secondary: #706d66;
+    --border: #e1dfd8;
+    --fill-accent: #6366f1;
+    --fill-success: #22c55e;
+  }
+
+  body {
+    margin: 0;
+    padding: 2rem 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--surface-0);
+    color: var(--text-primary);
+  }
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  .header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .header h1 {
+    font-size: 32px;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .header p {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .progress-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 3rem;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+  }
+
+  .progress-stat {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .progress-label {
+    font-size: 16px;
+    opacity: 0.95;
+  }
+
+  /* Roadmap */
+  .roadmap {
+    position: relative;
+    padding: 2rem 0;
+  }
+
+  .roadmap::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    transform: translateX(-50%);
+    border-radius: 2px;
+  }
+
+  .milestone {
+    margin-bottom: 3rem;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+  }
+
+  .milestone.current {
+    opacity: 1;
+  }
+
+  .milestone.completed {
+    opacity: 1;
+  }
+
+  .milestone:nth-child(odd) .content {
+    margin-left: 0;
+    margin-right: auto;
+    padding-right: 2rem;
+    text-align: right;
+    width: 48%;
+  }
+
+  .milestone:nth-child(even) .content {
+    margin-left: auto;
+    margin-right: 0;
+    padding-left: 2rem;
+    text-align: left;
+    width: 48%;
+  }
+
+  .dot {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    background: var(--surface-0);
+    border: 4px solid #ddd;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    transition: all 0.3s ease;
+  }
+
+  .milestone.completed .dot {
+    background: var(--fill-success);
+    border-color: var(--fill-success);
+    width: 28px;
+    height: 28px;
+    top: -4px;
+  }
+
+  .milestone.current .dot {
+    background: var(--fill-accent);
+    border-color: var(--fill-accent);
+    width: 28px;
+    height: 28px;
+    top: -4px;
+    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.1);
+  }
+
+  .content {
+    position: relative;
+  }
+
+  .skill-card {
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .milestone.completed .skill-card {
+    background: #f0fdf4;
+    border-color: var(--fill-success);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
+  }
+
+  .milestone.current .skill-card {
+    background: linear-gradient(135deg, #f0f4ff 0%, #f8f0ff 100%);
+    border-color: var(--fill-accent);
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+  }
+
+  .skill-name {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .skill-status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge-completed {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .badge-current {
+    background: #e0e7ff;
+    color: #3730a3;
+  }
+
+  .badge-locked {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+
+  .skill-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .lock-icon {
+    display: inline-block;
+    font-size: 16px;
+  }
+
+  /* Algebra unlock */
+  .algebra-unlock {
+    text-align: center;
+    margin-top: 4rem;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
+  }
+
+  .algebra-icon {
+    font-size: 72px;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .algebra-text h2 {
+    font-size: 32px;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .algebra-text p {
+    font-size: 16px;
+    margin: 0;
+    opacity: 0.95;
+  }
+
+  @media (max-width: 768px) {
+    .roadmap::before {
+      left: 20px;
+    }
+
+    .milestone:nth-child(odd) .content,
+    .milestone:nth-child(even) .content {
+      width: 100%;
+      margin: 0;
+      padding: 0 0 0 60px;
+      text-align: left;
+    }
+
+    .dot {
+      left: 20px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+    }
+
+    .progress-stat {
+      font-size: 36px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🗺️ Your Path to Algebra</h1>
+    <p>Master each skill to unlock the next. You're so close!</p>
+  </div>
+
+  <div class="progress-summary">
+    <div class="progress-stat" id="skillsCompleted">0</div>
+    <div class="progress-label">Skills Mastered</div>
+  </div>
+
+  <div class="roadmap" id="roadmapContainer"></div>
+
+  <div class="algebra-unlock" id="algebraSection" style="display: none;">
+    <span class="algebra-icon">🎓</span>
+    <div class="algebra-text">
+      <h2>Algebra Unlocked!</h2>
+      <p>You've mastered all the skills you need. Ready to solve for x?</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const roadmapData = [
+  {
+    id: 'single-digit-mult',
+    name: 'Single-Digit Multiplication',
+    description: '0-9 facts, automaticity goal',
+    status: 'current' // current, completed, locked
+  },
+  {
+    id: 'single-digit-div',
+    name: 'Single-Digit Division',
+    description: 'Division facts 0-9',
+    status: 'locked'
+  },
+  {
+    id: 'multi-digit-mult',
+    name: 'Multi-Digit Multiplication',
+    description: '2-digit × 1-digit through 2-digit × 2-digit',
+    status: 'locked'
+  },
+  {
+    id: 'multi-digit-div',
+    name: 'Multi-Digit Division',
+    description: 'Divide by 1-digit and 2-digit numbers',
+    status: 'locked'
+  },
+  {
+    id: 'decimals',
+    name: 'Decimals',
+    description: 'Place value, basic operations with tenths & hundredths',
+    status: 'locked'
+  },
+  {
+    id: 'fractions-intro',
+    name: 'Fraction Foundations',
+    description: 'Equivalents, simplify, compare, GCF/LCM',
+    status: 'locked'
+  },
+  {
+    id: 'fractions-ops',
+    name: 'Fraction Operations',
+    description: 'Add, subtract, multiply, and divide fractions',
+    status: 'locked'
+  }
+];
+
+function renderRoadmap() {
+  const container = document.getElementById('roadmapContainer');
+  let html = '';
+
+  roadmapData.forEach((skill, idx) => {
+    const badge = {
+      completed: '<span class="skill-status-badge badge-completed">✓ Mastered</span>',
+      current: '<span class="skill-status-badge badge-current">📍 Current Skill</span>',
+      locked: '<span class="skill-status-badge badge-locked">🔒 Locked</span>'
+    }[skill.status];
+
+    const icon = {
+      completed: '✓',
+      current: '→',
+      locked: '🔒'
+    }[skill.status];
+
+    html += `
+      <div class="milestone ${skill.status}">
+        <div class="dot"></div>
+        <div class="content">
+          <div class="skill-card">
+            <div class="skill-name">
+              <span style="font-size: 20px;">${icon}</span>
+              ${skill.name}
+            </div>
+            <p class="skill-desc">${skill.description}</p>
+            <div style="margin-top: 0.75rem;">
+              ${badge}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+
+  // Count completed
+  const completed = roadmapData.filter(s => s.status === 'completed').length;
+  document.getElementById('skillsCompleted').textContent = completed;
+
+  // Show algebra if all done
+  const allCompleted = roadmapData.every(s => s.status !== 'locked');
+  if (allCompleted) {
+    document.getElementById('algebraSection').style.display = 'block';
+  }
+}
+
+// Demo: Simulate some progress (for testing)
+function simulateProgress() {
+  roadmapData[0].status = 'completed';
+  roadmapData[1].status = 'current';
+  renderRoadmap();
+}
+
+// Initialize
+renderRoadmap();
+</script>
+
+</body>
+</html>
