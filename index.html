@@ -556,8 +556,10 @@
 
   <!-- ANALYTICS -->
   <div id="analyticsScreen" class="screen">
-    <div style="margin-bottom: 2rem;">
-      <h2>Your Learning Dashboard 📊</h2>
+    <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+      <button onclick="app.switchTab('turd')" style="padding: 8px 12px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 14px;">← Back</button>
+      <h2 style="margin: 0; flex: 1; text-align: center;">Your Learning Dashboard 📊</h2>
+      <div style="width: 80px;"></div>
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 2rem;">
