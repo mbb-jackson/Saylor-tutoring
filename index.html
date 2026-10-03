@@ -2265,18 +2265,7 @@ app.init();
 // Register Service Worker for offline support
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js?v=' + Date.now())
-    .then(reg => {
-      console.log('✅ Service Worker registered for offline play');
-      reg.onupdatefound = () => {
-        const newWorker = reg.installing;
-        newWorker.onstatechange = () => {
-          if (newWorker.state === 'activated') {
-            console.log('✅ Service Worker updated');
-            window.location.reload();
-          }
-        };
-      };
-    })
+    .then(reg => console.log('✅ Service Worker registered for offline play'))
     .catch(err => console.log('Service Worker registration failed:', err));
 }
 </script>
