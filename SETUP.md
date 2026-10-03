@@ -5,8 +5,8 @@
 **Zero-cost, offline-first system** using:
 - GitHub Gist for cloud data sync (free, no auth needed)
 - Browser localStorage for offline data storage
-- Static hosting on Netlify (free tier)
-- No serverless functions (eliminated credit burn)
+- Static hosting on GitHub Pages (free, unlimited, no build limits)
+- No serverless functions (eliminated entirely)
 
 ## Setup Steps
 
@@ -127,14 +127,14 @@ The coach dashboard automatically groups practice time by specific skills aligne
 Changes to the games:
 1. Edit HTML/JS files locally
 2. `git push` to GitHub
-3. Netlify auto-deploys within seconds
+3. GitHub Pages auto-deploys within seconds (no build limits, no costs)
 4. iPad/phone automatically get updated version on next load
 
 ## URLs
 
-- **Games App** (for Saylor): https://saylor-tutoring.netlify.app/index.html
-- **Coach Dashboard** (hidden, for you): https://saylor-tutoring.netlify.app/coach-private.html
-- **Public Dashboard** (if shared with Saylor): https://saylor-tutoring.netlify.app/coach.html
+- **Games App** (for Saylor): https://mbb-jackson.github.io/Saylor-tutoring/
+- **Coach Dashboard** (hidden, for you): https://mbb-jackson.github.io/Saylor-tutoring/coach-private.html
+- **Public Dashboard** (if shared with Saylor): https://mbb-jackson.github.io/Saylor-tutoring/coach.html
 
 ## Troubleshooting
 
@@ -161,15 +161,15 @@ Changes to the games:
 ## Cost Analysis
 
 **Free tier usage:**
-- Netlify: Static hosting (unlimited)
+- GitHub Pages: Static hosting (unlimited, no build limits)
 - GitHub Gist: Free (unlimited)
 - GitHub API calls: <100/day (limit is 60/hour)
-- Total monthly cost: **$0**
+- Total monthly cost: **$0** ✓
 
-**What we eliminated:**
-- Netlify serverless functions (was $0.025 per 100k invocations)
-- You were at 75% of monthly credits before
-- New system uses 0 function invocations = 0 costs
+**What we did:**
+- Eliminated Netlify serverless functions entirely (was bleeding credits)
+- Moved from Netlify to GitHub Pages (truly free, unlimited deploys)
+- Zero build minutes, zero credits, unlimited deployments
 
 ## Next Steps
 
