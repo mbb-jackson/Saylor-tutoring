@@ -448,7 +448,7 @@
         <div style="font-size: 14px; color: var(--text-secondary);">Shoot the correct answer bubble!</div>
       </div>
 
-      <canvas id="bubbleCanvas" style="width: 100%; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; border: 2px solid var(--border); display: block; margin-bottom: 2rem; cursor: crosshair;"></canvas>
+      <canvas id="bubbleCanvas" style="width: 100%; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; border: 2px solid var(--border); display: block; margin-bottom: 2rem; cursor: crosshair; touch-action: none;"></canvas>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <div style="font-size: 16px; color: var(--text-secondary);">
@@ -1019,48 +1019,45 @@ const app = {
       }
     };
 
-    // Touch event handlers for iPad/mobile
-    canvas.ontouchstart = (e) => {
+    // Touch event handlers for iPad/mobile - call handlers directly
+    canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      console.log('👆 TOUCH START');
-      try {
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousedown', {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        self.handleBubbleMouseDown(mouseEvent);
-      } catch (err) {
-        console.error('❌ ERROR in ontouchstart:', err);
-      }
-    };
-    canvas.ontouchmove = (e) => {
+      if (e.touches.length === 0) return;
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const fakeEvent = {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        preventDefault: () => {}
+      };
+      self.handleBubbleMouseDown(fakeEvent);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
-      try {
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousemove', {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        self.handleBubbleMouseMove(mouseEvent);
-      } catch (err) {
-        console.error('❌ ERROR in ontouchmove:', err);
-      }
-    };
-    canvas.ontouchend = (e) => {
+      if (e.touches.length === 0) return;
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const fakeEvent = {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        preventDefault: () => {}
+      };
+      self.handleBubbleMouseMove(fakeEvent);
+    });
+
+    canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
-      console.log('👆 TOUCH END');
-      try {
-        const touch = e.changedTouches[0];
-        const mouseEvent = new MouseEvent('mouseup', {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        self.handleBubbleMouseUp(mouseEvent);
-      } catch (err) {
-        console.error('❌ ERROR in ontouchend:', err);
-      }
-    };
+      if (e.changedTouches.length === 0) return;
+      const touch = e.changedTouches[0];
+      const rect = canvas.getBoundingClientRect();
+      const fakeEvent = {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        preventDefault: () => {}
+      };
+      self.handleBubbleMouseUp(fakeEvent);
+    }, false);
 
     console.log('✅ Event listeners ready');
 
