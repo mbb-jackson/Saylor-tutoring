@@ -835,52 +835,48 @@ const coach = {
       });
     });
 
-    // Group by phase
+    // Calculate total time for percentage
+    const totalSeconds = Object.values(skillTime).reduce((sum, s) => sum + s.seconds, 0);
+
+    // Group by phase and show ALL skills
     Object.entries(SKILLS_MAP).forEach(([phaseKey, phaseData]) => {
-      const phaseSkills = phaseData.skills
-        .map(skill => ({ ...skill, time: skillTime[skill.id] }))
-        .filter(skill => skill.time && skill.time.seconds > 0)
-        .sort((a, b) => b.time.seconds - a.time.seconds);
+      html += `<h4 style="margin: 2rem 0 1rem 0; color: var(--text-primary); font-size: 16px;">${phaseData.name}</h4>`;
 
-      if (phaseSkills.length > 0) {
-        html += `<h4 style="margin: 2rem 0 1rem 0; color: var(--text-primary); font-size: 16px;">${phaseData.name}</h4>`;
+      phaseData.skills.forEach(skill => {
+        const time = skillTime[skill.id];
+        const seconds = time ? time.seconds : 0;
+        const minutes = Math.round(seconds / 60);
+        const percent = totalSeconds > 0 ? Math.round((seconds / totalSeconds) * 100) : 0;
+        const hasData = seconds > 0;
 
-        phaseSkills.forEach(skill => {
-          const minutes = Math.round(skill.time.seconds / 60);
-          const seconds = skill.time.seconds;
-          const totalSeconds = Object.values(skillTime).reduce((sum, s) => sum + s.seconds, 0);
-          const percent = totalSeconds > 0 ? Math.round((seconds / totalSeconds) * 100) : 0;
+        const opacity = hasData ? '1' : '0.5';
+        const cardStyle = hasData ? '' : 'opacity: 0.6;';
 
-          html += `
-            <div class="skill-card">
-              <div class="skill-header">
-                <div>
-                  <div class="skill-title">${skill.name}</div>
-                  <div class="skill-week">Week ${skill.week}</div>
-                </div>
-                <div class="skill-time">
-                  <div class="skill-time-value">${minutes}m</div>
-                  <div class="skill-time-label">${percent}% of total</div>
-                </div>
+        html += `
+          <div class="skill-card" style="${cardStyle}">
+            <div class="skill-header">
+              <div>
+                <div class="skill-title">${skill.name}</div>
+                <div class="skill-week">Week ${skill.week}</div>
               </div>
-              <div class="skill-bar-label">
-                <span style="font-size: 12px; color: var(--text-secondary);">Practice time</span>
-                <span style="font-size: 12px; color: var(--text-secondary);">${percent}%</span>
-              </div>
-              <div class="skill-progress">
-                <div class="skill-fill" style="width: ${percent}%; background-color: ${phaseData.color};">
-                  ${percent > 5 ? percent + '%' : ''}
-                </div>
+              <div class="skill-time">
+                <div class="skill-time-value">${minutes}m</div>
+                <div class="skill-time-label">${hasData ? percent + '% of total' : 'Not started'}</div>
               </div>
             </div>
-          `;
-        });
-      }
+            <div class="skill-bar-label">
+              <span style="font-size: 12px; color: var(--text-secondary);">Practice time</span>
+              <span style="font-size: 12px; color: var(--text-secondary);">${percent}%</span>
+            </div>
+            <div class="skill-progress">
+              <div class="skill-fill" style="width: ${percent}%; background-color: ${phaseData.color};">
+                ${percent > 5 ? percent + '%' : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      });
     });
-
-    if (html.length === 0) {
-      html = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No skill data yet. Saylor\'s sessions will appear here.</p>';
-    }
 
     skillsDiv.innerHTML = html;
   },
