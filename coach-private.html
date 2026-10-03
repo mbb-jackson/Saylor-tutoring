@@ -511,6 +511,14 @@
         <h3>🎯 Progress by 12-Week Phase</h3>
         <div id="phaseTimeline"></div>
       </div>
+
+      <div class="time-breakdown">
+        <h3>🔍 Problem Areas & Patterns</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 14px;">
+          Analysis of which problems Saylor struggles with most to guide adaptive learning.
+        </p>
+        <div id="errorPatterns"></div>
+      </div>
     </div>
 
     <!-- By Lesson Tab -->
@@ -740,6 +748,9 @@ const coach = {
     // Render phase timeline
     this.renderPhaseTimeline(timeSessions);
 
+    // Render error patterns
+    this.renderErrorPatterns(fastGameHistory);
+
     // Render recent sessions
     this.renderSessions(timeSessions);
 
@@ -930,6 +941,125 @@ const coach = {
     });
 
     document.getElementById('phaseTimeline').innerHTML = html;
+  },
+
+  analyzeErrorPatterns(fastGameHistory) {
+    if (!fastGameHistory || fastGameHistory.length === 0) {
+      return null;
+    }
+
+    // Group by factor (2, 3, 4, 5, 6, 7, 8, 9) and specific problem
+    const factorStats = {};
+    const problemStats = {};
+
+    fastGameHistory.forEach(entry => {
+      if (!entry.problem) return;
+
+      // Extract factors from problem like "7×8" or "7x8"
+      const parts = entry.problem.toLowerCase().replace('×', 'x').split('x');
+      if (parts.length !== 2) return;
+
+      const factor1 = parseInt(parts[0].trim());
+      const factor2 = parseInt(parts[1].trim());
+
+      const isCorrect = entry.isCorrect === true;
+      const problem = entry.problem;
+
+      // Track by specific problem
+      if (!problemStats[problem]) {
+        problemStats[problem] = { correct: 0, total: 0, timeTaken: [] };
+      }
+      problemStats[problem].correct += isCorrect ? 1 : 0;
+      problemStats[problem].total += 1;
+      if (entry.timeTaken) problemStats[problem].timeTaken.push(entry.timeTaken);
+
+      // Track by factor
+      [factor1, factor2].forEach(factor => {
+        if (factor >= 2 && factor <= 9) {
+          if (!factorStats[factor]) {
+            factorStats[factor] = { correct: 0, total: 0 };
+          }
+          factorStats[factor].correct += isCorrect ? 1 : 0;
+          factorStats[factor].total += 1;
+        }
+      });
+    });
+
+    // Calculate accuracies and find problem areas
+    const factorAccuracy = {};
+    Object.entries(factorStats).forEach(([factor, stats]) => {
+      factorAccuracy[factor] = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+    });
+
+    // Find most-struggled problems (lowest accuracy)
+    const problemAccuracy = {};
+    Object.entries(problemStats).forEach(([problem, stats]) => {
+      problemAccuracy[problem] = {
+        accuracy: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0,
+        total: stats.total,
+        avgTime: stats.timeTaken.length > 0 ? (stats.timeTaken.reduce((a, b) => a + b) / stats.timeTaken.length).toFixed(1) : 0
+      };
+    });
+
+    const struggledProblems = Object.entries(problemAccuracy)
+      .filter(([_, stats]) => stats.total >= 2) // Only problems done at least 2 times
+      .sort((a, b) => a[1].accuracy - b[1].accuracy)
+      .slice(0, 5);
+
+    return { factorAccuracy, problemAccuracy, struggledProblems };
+  },
+
+  renderErrorPatterns(fastGameHistory) {
+    const patterns = this.analyzeErrorPatterns(fastGameHistory);
+    const container = document.getElementById('errorPatterns');
+
+    if (!patterns) {
+      container.innerHTML = '<p style="color: var(--text-secondary);">No error data yet - Saylor is just getting started!</p>';
+      return;
+    }
+
+    const { factorAccuracy, struggledProblems } = patterns;
+
+    let html = '';
+
+    // Show factor accuracy
+    html += '<div style="margin-bottom: 2rem;"><h4 style="margin: 0 0 1rem 0; font-size: 14px; font-weight: 600;">Accuracy by Factor:</h4>';
+
+    const factorEntries = Object.entries(factorAccuracy)
+      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+
+    factorEntries.forEach(([factor, accuracy]) => {
+      const statusIcon = accuracy >= 90 ? '✓' : accuracy >= 75 ? '→' : '⚠️';
+      const color = accuracy >= 90 ? '#22c55e' : accuracy >= 75 ? '#f59e0b' : '#ef4444';
+
+      html += `
+        <div style="display: inline-block; margin-right: 1rem; margin-bottom: 0.5rem;">
+          <span style="font-weight: 500; color: ${color};">${statusIcon} ${factor}s: ${accuracy}%</span>
+        </div>
+      `;
+    });
+
+    html += '</div>';
+
+    // Show struggled problems
+    if (struggledProblems.length > 0) {
+      html += '<div><h4 style="margin: 0 0 1rem 0; font-size: 14px; font-weight: 600;">Most-Struggled Problems:</h4>';
+
+      struggledProblems.forEach(([problem, stats]) => {
+        html += `
+          <div style="padding: 0.75rem; background: var(--surface-1); border-radius: 8px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 500;">${problem}</span>
+            <span style="color: var(--text-secondary); font-size: 13px;">
+              ${stats.accuracy}% (${stats.total} attempts, avg ${stats.avgTime}s)
+            </span>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+    }
+
+    container.innerHTML = html;
   },
 
   renderSessions(timeSessions) {
