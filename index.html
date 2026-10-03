@@ -1370,11 +1370,10 @@ const app = {
       canvas.removeEventListener('mouseup', (e) => this.handleBubbleMouseUp(e));
     }
 
-    // Award coins (with qualifier multiplier)
-    let coinsEarned = this.bubbleGameSession.correct * 1.25;
-    const multiplier = 1 + this.qualifierMultiplier;
-    coinsEarned = Math.floor(coinsEarned * multiplier);
-    this.coins += coinsEarned;
+    // Award coins disabled for testing - let coinsEarned = this.bubbleGameSession.correct * 1.25;
+    // const multiplier = 1 + this.qualifierMultiplier;
+    // coinsEarned = Math.floor(coinsEarned * multiplier);
+    // this.coins += coinsEarned;
 
     this.checkForUnlockedPrizes();
     this.saveState();
@@ -2180,6 +2179,13 @@ const app = {
           <option value="2">2x</option>
         </select>
       </div>
+      <div style="margin-bottom: 2rem; padding: 1rem; background: var(--surface-2); border-radius: 6px;">
+        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 13px;">Adjust</label>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="number" id="coinAdjustInput" placeholder="+5 or -3" style="flex: 1; padding: 8px; border: 0.5px solid var(--border); border-radius: 6px; font-size: 14px;" />
+          <button onclick="app.adjustCoins()" style="padding: 8px 16px; background: var(--fill-accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">→</button>
+        </div>
+      </div>
       <div id="qualifierLogContainer" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 0.5px solid var(--border);"></div>
       <button onclick="document.getElementById('adminPanel').style.display='none'" style="padding: 8px 16px; background: var(--fill-accent); color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 1rem;">Close</button>
     `;
@@ -2191,6 +2197,11 @@ const app = {
     select.value = this.qualifierMultiplier.toString();
     select.onchange = (e) => this.setQualifier(parseFloat(e.target.value));
 
+    const coinInput = document.getElementById('coinAdjustInput');
+    coinInput.onkeypress = (e) => {
+      if (e.key === 'Enter') this.adjustCoins();
+    };
+
     this.renderQualifierLog();
   },
 
@@ -2201,6 +2212,25 @@ const app = {
     this.qualifierLog.push({ timestamp, value, label: labels[value.toString()] });
     this.saveState();
     this.renderQualifierLog();
+  },
+
+  adjustCoins() {
+    const input = document.getElementById('coinAdjustInput');
+    if (!input || !input.value) return;
+
+    const adjustment = parseFloat(input.value);
+    if (isNaN(adjustment)) return;
+
+    this.coins += adjustment;
+    this.updateCoinDisplay();
+    this.saveState();
+
+    // Clear input and show feedback
+    input.value = '';
+    input.placeholder = `✓ ${adjustment > 0 ? '+' : ''}${adjustment}`;
+    setTimeout(() => {
+      input.placeholder = '+5 or -3';
+    }, 1000);
   },
 
   renderQualifierLog() {
