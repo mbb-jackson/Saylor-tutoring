@@ -384,7 +384,7 @@
     </div>
 
     <!-- CHECK-IN CARD - PROMINENT BONUS ROUND -->
-    <div onclick="app.switchTab('assessment')" style="background: linear-gradient(135deg, #FFD93D 0%, #FF9F43 100%); color: #333; border-radius: 20px; padding: 2rem 2rem; margin: 2rem 0; cursor: pointer; box-shadow: 0 12px 40px rgba(255, 157, 67, 0.4); transition: all 0.3s ease; border: 3px solid rgba(255, 255, 255, 0.5);" onmouseover="this.style.transform='translateY(-6px) scale(1.02)'; this.style.boxShadow='0 16px 48px rgba(255, 157, 67, 0.5)'" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 12px 40px rgba(255, 157, 67, 0.4)'">
+    <div id="bonusRoundCard" onclick="app.switchTab('assessment')" style="display: none; background: linear-gradient(135deg, #FFD93D 0%, #FF9F43 100%); color: #333; border-radius: 20px; padding: 2rem 2rem; margin: 2rem 0; cursor: pointer; box-shadow: 0 12px 40px rgba(255, 157, 67, 0.4); transition: all 0.3s ease; border: 3px solid rgba(255, 255, 255, 0.5);" onmouseover="this.style.transform='translateY(-6px) scale(1.02)'; this.style.boxShadow='0 16px 48px rgba(255, 157, 67, 0.5)'" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 12px 40px rgba(255, 157, 67, 0.4)'">
       <div style="font-size: 14px; font-weight: 700; color: rgba(0, 0, 0, 0.7); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">⭐ BONUS ROUND</div>
       <h3 style="font-size: 32px; margin: 0 0 0.25rem 0; font-weight: 900;">Skills Check-In</h3>
       <p style="font-size: 16px; margin: 0 0 1.5rem 0; font-weight: 600; opacity: 0.9;">It's time! Earn 35 coins with 25 questions</p>
@@ -595,6 +595,7 @@
       <div style="display: flex; gap: 8px; align-items: center;">
         <input type="text" id="gistIdInput" placeholder="Gist ID" style="padding: 8px 12px; font-size: 12px; border: 0.5px solid var(--border); border-radius: 6px; width: 120px;" />
         <button onclick="app.setGistId()" style="padding: 8px 12px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px;">✓</button>
+        <button id="assessmentToggleBtn" onclick="app.toggleAssessmentAvailability()" style="padding: 8px 12px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px;">Enable Check-In</button>
         <button onclick="app.exportProgress()" style="padding: 8px 12px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 14px;">📋 Export</button>
       </div>
     </div>
@@ -786,6 +787,7 @@ const app = {
     this.timeSessions = data.timeSessions || [];
     this.gistId = data.gistId || '';
     this.assessmentHistory = data.assessmentHistory || [];
+    this.assessmentAvailable = data.assessmentAvailable !== undefined ? data.assessmentAvailable : true;
     this.sessionStartTime = Date.now();
     this.currentGameMode = null;
 
@@ -812,10 +814,20 @@ const app = {
       qualifierLog: this.qualifierLog,
       timeSessions: this.timeSessions,
       gistId: this.gistId,
-      assessmentHistory: this.assessmentHistory || []
+      assessmentHistory: this.assessmentHistory || [],
+      assessmentAvailable: this.assessmentAvailable
     }));
     // Auto-sync to GitHub Gist if we have a gist ID and WiFi is available
     this.attemptGistSync();
+  },
+
+  updateBonusRoundVisibility() {
+    const card = document.getElementById('bonusRoundCard');
+    if (this.assessmentAvailable) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
   },
 
   exportProgress() {
@@ -963,6 +975,7 @@ const app = {
     document.getElementById('turdTimesGame').style.display = 'none';
     document.getElementById('fastCatGame').style.display = 'none';
     document.getElementById('bubbleBusterGame').style.display = 'none';
+    this.updateBonusRoundVisibility();
   },
 
   startTurdTimesGame() {
@@ -1783,6 +1796,9 @@ const app = {
     // Award coins - 35 coins for 25 questions
     const coinsEarned = 35;
     this.coins += coinsEarned;
+
+    // Disable check-in until parent enables it again
+    this.assessmentAvailable = false;
     this.saveState();
     this.updateCoinDisplay();
 
@@ -2000,6 +2016,23 @@ const app = {
 
     // Add answer time trend by date
     this.renderAnswerTimeTrend();
+
+    // Update assessment toggle button text
+    const btn = document.getElementById('assessmentToggleBtn');
+    if (this.assessmentAvailable) {
+      btn.textContent = 'Disable Check-In';
+      btn.style.background = '#ffcccc';
+    } else {
+      btn.textContent = 'Enable Check-In';
+      btn.style.background = '#ccffcc';
+    }
+  },
+
+  toggleAssessmentAvailability() {
+    this.assessmentAvailable = !this.assessmentAvailable;
+    this.saveState();
+    this.updateBonusRoundVisibility();
+    this.updateAnalyticsDisplay();
   },
 
   renderAnswerTimeTrend() {
