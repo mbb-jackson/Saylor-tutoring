@@ -655,6 +655,13 @@
         </table>
       </div>
     </div>
+
+    <div style="margin-bottom: 2rem;">
+      <h3 style="font-size: 18px; margin-bottom: 1rem;">Check-In Results 📊</h3>
+      <div id="checkInResultsBody">
+        <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">No check-ins completed yet</div>
+      </div>
+    </div>
   </div>
 
   <!-- ASSESSMENT QUIZ SCREEN -->
@@ -1799,14 +1806,26 @@ const app = {
 
     // Disable check-in until parent enables it again
     this.assessmentAvailable = false;
+
+    // Calculate skill breakdown and save to history
+    const skillBreakdown = this.analyzeAssessmentResults();
+    const skillData = this.getAssessmentSkillData();
+
+    // Save assessment result to history
+    this.assessmentHistory.push({
+      timestamp: Date.now(),
+      date: new Date().toLocaleDateString(),
+      totalCorrect: this.assessmentData.correct,
+      totalQuestions: this.assessmentData.problems.length,
+      accuracy: Math.round((this.assessmentData.correct / this.assessmentData.problems.length) * 100),
+      skillsByFactor: skillData
+    });
+
     this.saveState();
     this.updateCoinDisplay();
 
     // Check for unlocked prizes
     this.checkForUnlockedPrizes();
-
-    // Calculate skill breakdown
-    const skillBreakdown = this.analyzeAssessmentResults();
 
     // Show results
     document.getElementById('assessmentCoinsEarned').textContent = coinsEarned;
@@ -1870,6 +1889,39 @@ const app = {
     }
 
     return html || '<div style="color: var(--text-secondary);">No data yet</div>';
+  },
+
+  getAssessmentSkillData() {
+    // Group results by factor (2-9) and return structured data
+    const factors = {};
+
+    for (let i = 2; i <= 9; i++) {
+      factors[i] = { correct: 0, total: 0, accuracy: 0 };
+    }
+
+    this.assessmentData.answers.forEach(answer => {
+      // Extract factors from problem (e.g., "3×5" → 3 and 5)
+      const parts = answer.problem.split('×');
+      const a = parseInt(parts[0]);
+      const b = parseInt(parts[1]);
+
+      factors[a].total++;
+      factors[b].total++;
+
+      if (answer.isCorrect) {
+        factors[a].correct++;
+        factors[b].correct++;
+      }
+    });
+
+    // Calculate accuracy percentages
+    for (let i = 2; i <= 9; i++) {
+      if (factors[i].total > 0) {
+        factors[i].accuracy = Math.round((factors[i].correct / factors[i].total) * 100);
+      }
+    }
+
+    return factors;
   },
 
   backToHome() {
@@ -2017,6 +2069,9 @@ const app = {
     // Add answer time trend by date
     this.renderAnswerTimeTrend();
 
+    // Display check-in results
+    this.displayCheckInResults();
+
     // Update assessment toggle button text
     const btn = document.getElementById('assessmentToggleBtn');
     if (this.assessmentAvailable) {
@@ -2033,6 +2088,102 @@ const app = {
     this.saveState();
     this.updateBonusRoundVisibility();
     this.updateAnalyticsDisplay();
+  },
+
+  displayCheckInResults() {
+    const container = document.getElementById('checkInResultsBody');
+    if (!container) return; // Container not yet added
+
+    if (this.assessmentHistory.length === 0) {
+      container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-secondary);">No check-ins completed yet</div>';
+      return;
+    }
+
+    // Grade-level benchmarks
+    // 4th grade: 70%+ on factors 2-6, 50%+ on 7-9
+    // 5th grade: 80%+ on factors 2-7, 60%+ on 8-9
+    const benchmarks = {
+      grade4: { 2: 70, 3: 70, 4: 70, 5: 70, 6: 70, 7: 50, 8: 50, 9: 50 },
+      grade5: { 2: 80, 3: 80, 4: 80, 5: 80, 6: 80, 7: 80, 8: 60, 9: 60 }
+    };
+
+    // Build HTML for each check-in
+    const html = this.assessmentHistory.map((checkIn, index) => {
+      const date = checkIn.date || new Date(checkIn.timestamp).toLocaleDateString();
+      const accuracy = checkIn.accuracy || 0;
+
+      // Determine benchmark status
+      let grade5Status = '✓'; // passing
+      let grade4Status = '✓'; // passing
+
+      // Check each factor against benchmarks
+      if (checkIn.skillsByFactor) {
+        for (let factor = 2; factor <= 9; factor++) {
+          if (checkIn.skillsByFactor[factor] && checkIn.skillsByFactor[factor].total > 0) {
+            const factorAccuracy = checkIn.skillsByFactor[factor].accuracy;
+            if (factorAccuracy < benchmarks.grade5[factor]) {
+              grade5Status = '⚠️';
+            }
+            if (factorAccuracy < benchmarks.grade4[factor]) {
+              grade4Status = '⚠️';
+            }
+          }
+        }
+      }
+
+      // Factor breakdown HTML
+      let factorHtml = '';
+      if (checkIn.skillsByFactor) {
+        for (let factor = 2; factor <= 9; factor++) {
+          if (checkIn.skillsByFactor[factor] && checkIn.skillsByFactor[factor].total > 0) {
+            const fact = checkIn.skillsByFactor[factor];
+            const grade5Target = benchmarks.grade5[factor];
+            const grade4Target = benchmarks.grade4[factor];
+
+            let status = '✓';
+            if (fact.accuracy < grade5Target) {
+              status = '⚠️';
+            }
+
+            factorHtml += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border);">
+              <span style="flex: 1;">${status} ${factor}×: ${fact.accuracy}%</span>
+              <span style="color: var(--text-secondary); font-size: 12px;">G5: ${grade5Target}% | G4: ${grade4Target}%</span>
+            </div>`;
+          }
+        }
+      }
+
+      return `
+        <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <div style="font-weight: 600; font-size: 16px;">Check-In #${this.assessmentHistory.length - index}</div>
+              <div style="color: var(--text-secondary); font-size: 14px;">${date}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 24px; font-weight: 700; color: var(--fill-accent);">${accuracy}%</div>
+              <div style="color: var(--text-secondary); font-size: 12px;">${checkIn.totalCorrect}/${checkIn.totalQuestions} correct</div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div style="background: var(--surface-1); padding: 0.75rem; border-radius: 8px; border-left: 3px solid ${grade5Status === '✓' ? '#4ade80' : '#fbbf24'};">
+              <div style="font-size: 12px; color: var(--text-secondary);">5th Grade Level</div>
+              <div style="font-size: 20px; font-weight: 600;">${grade5Status}</div>
+            </div>
+            <div style="background: var(--surface-1); padding: 0.75rem; border-radius: 8px; border-left: 3px solid ${grade4Status === '✓' ? '#4ade80' : '#fbbf24'};">
+              <div style="font-size: 12px; color: var(--text-secondary);">4th Grade Level</div>
+              <div style="font-size: 20px; font-weight: 600;">${grade4Status}</div>
+            </div>
+          </div>
+
+          <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 0.5rem;">Factor Breakdown:</div>
+          ${factorHtml}
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = html;
   },
 
   renderAnswerTimeTrend() {
