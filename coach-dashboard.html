@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saylor's Progress - Coach Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f5;
+    color: #333;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    margin: 0 0 10px 0;
+    font-size: 32px;
+    color: #222;
+  }
+
+  .status {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 30px;
+  }
+
+  .status.connected {
+    color: #22a647;
+  }
+
+  .status.disconnected {
+    color: #d33527;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: box-shadow 0.2s;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
+
+  .card h2 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-value {
+    font-size: 48px;
+    font-weight: 700;
+    color: #0066cc;
+    margin: 0;
+  }
+
+  .stat-label {
+    font-size: 14px;
+    color: #999;
+    margin-top: 8px;
+  }
+
+  .assessment-section {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+
+  .assessment-section h2 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    color: #222;
+  }
+
+  .assessment-history {
+    display: grid;
+    gap: 12px;
+  }
+
+  .assessment-item {
+    background: #f9f9f9;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .assessment-item:hover {
+    background: #f0f0f0;
+  }
+
+  .assessment-info {
+    flex: 1;
+  }
+
+  .assessment-date {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 4px;
+  }
+
+  .assessment-time {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .assessment-score {
+    text-align: right;
+  }
+
+  .score {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0066cc;
+  }
+
+  .score-label {
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .skill-card {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .skill-number {
+    font-size: 20px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 4px;
+  }
+
+  .skill-accuracy {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 4px 0;
+  }
+
+  .skill-accuracy.strong {
+    color: #22a647;
+  }
+
+  .skill-accuracy.medium {
+    color: #ff9800;
+  }
+
+  .skill-accuracy.weak {
+    color: #d33527;
+  }
+
+  .skill-count {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .benchmark-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #e8e8e8;
+  }
+
+  .benchmark-row:last-child {
+    border-bottom: none;
+  }
+
+  .benchmark-label {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .benchmark-targets {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+  }
+
+  .benchmark-target {
+    text-align: right;
+  }
+
+  .benchmark-target-label {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .benchmark-target-value {
+    font-weight: 600;
+    color: #0066cc;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+  }
+
+  .empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+
+  .badge.updated {
+    background: #e8f5e9;
+    color: #22a647;
+  }
+
+  .badge.grade4 {
+    background: #fff3e0;
+    color: #f57c00;
+  }
+
+  .badge.grade5 {
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📊 Saylor's Math Progress</h1>
+  <div id="connectionStatus" class="status disconnected">
+    🔴 Connecting to Firebase...
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>💰 Coins Earned</h2>
+      <p id="coinsDisplay" class="stat-value">-</p>
+      <p class="stat-label">Total coins available</p>
+    </div>
+
+    <div class="card">
+      <h2>✅ Assessments Done</h2>
+      <p id="assessmentCountDisplay" class="stat-value">-</p>
+      <p class="stat-label">Check-in assessments completed</p>
+    </div>
+
+    <div class="card">
+      <h2>🎯 Overall Accuracy</h2>
+      <p id="overallAccuracyDisplay" class="stat-value">-</p>
+      <p class="stat-label">Across all problems attempted</p>
+    </div>
+  </div>
+
+  <div class="assessment-section">
+    <h2>📋 Assessment History</h2>
+    <div id="assessmentHistoryContainer">
+      <div class="loading">Loading assessment data...</div>
+    </div>
+  </div>
+
+  <div class="assessment-section">
+    <h2>🎓 Grade-Level Benchmarks</h2>
+    <div id="benchmarkContainer">
+      <div class="loading">Loading benchmark data...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+
+<script>
+const grades = {
+  4: { 2: 70, 3: 70, 4: 70, 5: 70, 6: 70, 7: 50, 8: 50, 9: 50 },
+  5: { 2: 80, 3: 80, 4: 80, 5: 80, 6: 80, 7: 80, 8: 60, 9: 60 }
+};
+
+let database = null;
+let isFirebaseReady = false;
+let gameData = null;
+
+// Initialize Firebase
+async function initFirebase() {
+  try {
+    // IMPORTANT: Replace this config with your actual Firebase config
+    // Get it from: Firebase Console → Project Settings → Web App
+    const firebaseConfig = {
+      apiKey: "AIzaSyDx9cX9xyz...",  // REPLACE WITH REAL CONFIG
+      authDomain: "saylor-tutoring-xyz.firebaseapp.com",
+      databaseURL: "https://saylor-tutoring-xyz.firebaseio.com",
+      projectId: "saylor-tutoring-xyz",
+      storageBucket: "saylor-tutoring-xyz.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef123456"
+    };
+
+    const firebaseApp = firebase.initializeApp(firebaseConfig);
+    database = firebase.database(firebaseApp);
+
+    // Sign in anonymously
+    await firebase.auth(firebaseApp).signInAnonymously();
+
+    isFirebaseReady = true;
+    updateConnectionStatus(true);
+
+    // Set up real-time listener
+    setupRealtimeListener();
+
+    console.log('✅ Coach Dashboard: Firebase initialized');
+  } catch (error) {
+    console.error('❌ Firebase init error:', error);
+    updateConnectionStatus(false);
+    // Try again in 5 seconds
+    setTimeout(initFirebase, 5000);
+  }
+}
+
+function updateConnectionStatus(connected) {
+  const el = document.getElementById('connectionStatus');
+  if (connected) {
+    el.textContent = '🟢 Connected to Firebase - Real-time updates active';
+    el.className = 'status connected';
+  } else {
+    el.textContent = '🔴 Disconnected - Retrying connection...';
+    el.className = 'status disconnected';
+  }
+}
+
+function setupRealtimeListener() {
+  if (!database) return;
+
+  const dataRef = firebase.database().ref('saylor/gameState');
+
+  dataRef.on('value', (snapshot) => {
+    gameData = snapshot.val();
+    if (gameData) {
+      console.log('🔄 Coach Dashboard: Real-time update received');
+      updateDisplay();
+    }
+  });
+
+  // Monitor connection
+  firebase.database().ref('.info/connected').on('value', (snapshot) => {
+    if (snapshot.val()) {
+      updateConnectionStatus(true);
+    } else {
+      updateConnectionStatus(false);
+    }
+  });
+}
+
+function updateDisplay() {
+  if (!gameData) return;
+
+  // Update coins
+  document.getElementById('coinsDisplay').textContent =
+    (gameData.coins || 0).toFixed(2);
+
+  // Update assessment count
+  const assessments = gameData.assessmentHistory || [];
+  document.getElementById('assessmentCountDisplay').textContent = assessments.length;
+
+  // Update overall accuracy
+  const allHistory = gameData.fastGameHistory || [];
+  if (allHistory.length > 0) {
+    const correct = allHistory.filter(h => h.isCorrect).length;
+    const accuracy = Math.round((correct / allHistory.length) * 100);
+    document.getElementById('overallAccuracyDisplay').textContent = accuracy + '%';
+  }
+
+  // Display assessment history
+  displayAssessmentHistory(assessments);
+
+  // Display benchmarks
+  displayBenchmarks(assessments);
+}
+
+function displayAssessmentHistory(assessments) {
+  const container = document.getElementById('assessmentHistoryContainer');
+
+  if (!assessments || assessments.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No assessments completed yet</p></div>';
+    return;
+  }
+
+  // Sort by date descending (newest first)
+  const sorted = [...assessments].sort((a, b) => b.timestamp - a.timestamp);
+
+  let html = '<div class="assessment-history">';
+
+  sorted.forEach((assessment) => {
+    const date = new Date(assessment.timestamp);
+    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    // Calculate accuracy for this assessment
+    const skills = assessment.skillsByFactor || {};
+    const totalProblems = Object.values(skills).reduce((sum, s) => sum + (s.total || 0), 0);
+    const totalCorrect = Object.values(skills).reduce((sum, s) => sum + (s.correct || 0), 0);
+    const accuracy = totalProblems > 0 ? Math.round((totalCorrect / totalProblems) * 100) : 0;
+
+    html += `
+      <div class="assessment-item">
+        <div class="assessment-info">
+          <div class="assessment-date">${dateStr}</div>
+          <div class="assessment-time">${timeStr}</div>
+        </div>
+        <div class="assessment-score">
+          <div class="score">${accuracy}%</div>
+          <div class="score-label">${totalCorrect}/${totalProblems} correct</div>
+        </div>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function displayBenchmarks(assessments) {
+  const container = document.getElementById('benchmarkContainer');
+
+  if (!assessments || assessments.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>Complete an assessment to see benchmarks</p></div>';
+    return;
+  }
+
+  // Get the latest assessment
+  const latest = assessments[assessments.length - 1];
+  const skills = latest.skillsByFactor || {};
+
+  let html = '<div>';
+
+  [4, 5].forEach(grade => {
+    html += `<h3 style="margin: 20px 0 16px 0; color: #333; font-size: 16px;">Grade ${grade} Benchmarks</h3>`;
+
+    Object.keys(grades[grade]).forEach(factor => {
+      const target = grades[grade][factor];
+      const skillData = skills[factor] || { correct: 0, total: 0 };
+      const accuracy = skillData.total > 0 ? Math.round((skillData.correct / skillData.total) * 100) : 0;
+      const met = accuracy >= target;
+
+      html += `
+        <div class="benchmark-row">
+          <div class="benchmark-label">
+            ${factor}× tables
+            <span class="badge ${met ? 'updated' : ''}">${accuracy}%</span>
+          </div>
+          <div class="benchmark-targets">
+            <div class="benchmark-target">
+              <div class="benchmark-target-label">Grade ${grade} Target</div>
+              <div class="benchmark-target-value">${target}%</div>
+            </div>
+            <div class="benchmark-target">
+              <div class="benchmark-target-label">Status</div>
+              <div class="benchmark-target-value" style="color: ${met ? '#22a647' : '#d33527'}">
+                ${met ? '✅' : '⚠️'}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// Start initialization
+initFirebase();
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+  if (isFirebaseReady && !gameData) {
+    console.log('Checking for updates...');
+  }
+}, 30000);
+</script>
+
+</body>
+</html>

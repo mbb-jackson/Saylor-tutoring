@@ -4,6 +4,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+
 <style>
   * { box-sizing: border-box; }
   body {
@@ -753,6 +759,189 @@
 </div>
 
 <script>
+// ============================================================================
+// FIREBASE INITIALIZATION & STORAGE MODULE
+// ============================================================================
+
+let firebaseApp = null;
+let firebaseDatabase = null;
+let firebaseAuth = null;
+let firebaseUser = null;
+let isFirebaseReady = false;
+let realtimeListener = null;
+
+// Firebase configuration (PLACEHOLDER - replace with real config)
+const firebaseConfig = {
+  apiKey: "AIzaSyDummy_REPLACE_WITH_REAL_API_KEY",
+  authDomain: "saylor-tutoring.firebaseapp.com",
+  databaseURL: "https://saylor-tutoring-default-rtdb.firebaseio.com",
+  projectId: "saylor-tutoring",
+  storageBucket: "saylor-tutoring.appspot.com",
+  messagingSenderId: "PLACEHOLDER",
+  appId: "PLACEHOLDER"
+};
+
+// Initialize Firebase with error handling
+async function initializeFirebase() {
+  try {
+    // Import Firebase dynamically if not already loaded
+    if (typeof firebase === 'undefined') {
+      console.log('Firebase SDK not loaded, will use localStorage fallback');
+      return false;
+    }
+
+    firebaseApp = firebase.initializeApp(firebaseConfig);
+    firebaseDatabase = firebase.database();
+    firebaseAuth = firebase.auth();
+
+    // Sign in anonymously
+    await firebaseAuth.signInAnonymously();
+    firebaseUser = firebaseAuth.currentUser;
+    isFirebaseReady = true;
+
+    console.log('✅ Firebase initialized successfully with user:', firebaseUser?.uid);
+    return true;
+  } catch (error) {
+    console.error('⚠️ Firebase initialization failed:', error.message);
+    console.log('Will use localStorage fallback for this session');
+    return false;
+  }
+}
+
+// Storage abstraction: Firebase with localStorage fallback
+const storage = {
+  useFirebase: false,
+  localCopy: null, // Keep local copy for offline access
+
+  // Check if we should use Firebase
+  async init() {
+    try {
+      this.useFirebase = await initializeFirebase();
+      if (this.useFirebase) {
+        console.log('📱 Using Firebase Realtime Database');
+      } else {
+        console.log('💾 Using localStorage (offline mode)');
+      }
+    } catch (err) {
+      console.error('Storage init error:', err);
+      this.useFirebase = false;
+    }
+  },
+
+  // Get state from Firebase or localStorage
+  async getState() {
+    try {
+      if (!this.useFirebase) {
+        // Use localStorage
+        const saved = localStorage.getItem('saylorsGames');
+        this.localCopy = saved ? JSON.parse(saved) : null;
+        return this.localCopy;
+      }
+
+      // Try to read from Firebase
+      const ref = firebaseDatabase.ref('saylor/gameState');
+      const snapshot = await ref.get();
+
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        data.lastSyncTime = Date.now();
+        this.localCopy = data;
+        console.log('✅ Loaded from Firebase');
+        return data;
+      } else {
+        // No Firebase data, check localStorage for migration
+        console.log('No Firebase data found, checking localStorage for migration...');
+        const saved = localStorage.getItem('saylorsGames');
+        if (saved) {
+          const localData = JSON.parse(saved);
+          localData.lastSyncTime = Date.now();
+          // Migrate to Firebase
+          await this.setState(localData);
+          console.log('📤 Migrated data from localStorage to Firebase');
+          return localData;
+        }
+        return null;
+      }
+    } catch (error) {
+      console.error('Error getting state:', error);
+      // Fallback to localStorage
+      const saved = localStorage.getItem('saylorsGames');
+      this.localCopy = saved ? JSON.parse(saved) : null;
+      return this.localCopy;
+    }
+  },
+
+  // Save state to Firebase and localStorage
+  async setState(data) {
+    try {
+      // Always save to localStorage for offline access (synchronous, fast)
+      localStorage.setItem('saylorsGames', JSON.stringify(data));
+      this.localCopy = data;
+
+      // Save to Firebase if available (fire-and-forget to not block game)
+      if (this.useFirebase && firebaseDatabase) {
+        data.lastSyncTime = Date.now();
+        const ref = firebaseDatabase.ref('saylor/gameState');
+        // Fire the Firebase write but don't await it - app continues immediately
+        ref.set(data).then(() => {
+          console.log('✅ Synced to Firebase');
+        }).catch(err => {
+          console.error('Firebase sync error:', err.message);
+          // Data is still safe in localStorage
+        });
+      }
+    } catch (error) {
+      console.error('Error saving state:', error);
+      // At minimum, save to localStorage
+      localStorage.setItem('saylorsGames', JSON.stringify(data));
+    }
+  },
+
+  // Set up real-time listener for Firebase changes
+  setupRealtimeListener(onDataChange) {
+    if (!this.useFirebase || !firebaseDatabase) {
+      console.log('Real-time listener not available (Firebase not ready)');
+      return;
+    }
+
+    try {
+      // Remove existing listener
+      if (realtimeListener) {
+        realtimeListener();
+      }
+
+      const ref = firebaseDatabase.ref('saylor/gameState');
+      realtimeListener = ref.on('value', (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          data.lastSyncTime = Date.now();
+          this.localCopy = data;
+          console.log('🔄 Real-time update from Firebase');
+          onDataChange(data);
+        }
+      }, (error) => {
+        console.error('Real-time listener error:', error);
+      });
+
+      console.log('🔔 Real-time listener set up for /saylor/gameState');
+    } catch (error) {
+      console.error('Error setting up real-time listener:', error);
+    }
+  },
+
+  // Clean up real-time listener
+  cleanup() {
+    if (realtimeListener) {
+      realtimeListener();
+      realtimeListener = null;
+    }
+  }
+};
+
+// ============================================================================
+// APP OBJECT
+// ============================================================================
+
 const app = {
   state: {},
   numbers: [2, 3, 4, 5, 6, 7, 8, 9],
@@ -773,18 +962,57 @@ const app = {
     { name: 'Remote Control Boat', icon: '🚤', cost: 1500, claimed: 0 }
   ],
 
-  init() {
-    this.loadState();
+  async init() {
+    // Initialize Firebase and storage
+    await storage.init();
+
+    // Load state from Firebase or localStorage
+    await this.loadState();
+
     this.renderPrizes();
     this.updateCoinDisplay();
     this.showGameSelection();
     this.initEventListeners();
+
+    // Set up real-time listener if Firebase is available
+    if (storage.useFirebase) {
+      storage.setupRealtimeListener((updatedData) => {
+        this.handleRealtimeDataUpdate(updatedData);
+      });
+    }
   },
 
-  loadState() {
-    const saved = localStorage.getItem('saylorsGames');
+  handleRealtimeDataUpdate(data) {
+    // Update app state with Firebase changes from other devices
+    this.state = data.turdTimes || {};
+    this.coins = data.coins || 0;
+    this.fastGameHistory = data.fastGameHistory || [];
+    this.qualifierMultiplier = data.qualifierMultiplier || 0;
+    this.qualifierLog = data.qualifierLog || [];
+    this.timeSessions = data.timeSessions || [];
+    this.gistId = data.gistId || '';
+    this.assessmentHistory = data.assessmentHistory || [];
+    this.assessmentAvailable = data.assessmentAvailable !== undefined ? data.assessmentAvailable : true;
+
+    // Update UI
+    this.updateCoinDisplay();
+    this.renderPrizes();
+    this.updateBonusRoundVisibility();
+
+    // Update analytics if visible
+    const analyticsScreen = document.getElementById('analyticsScreen');
+    if (analyticsScreen.classList.contains('active')) {
+      this.updateAnalyticsDisplay();
+    }
+
+    console.log('📊 UI updated with real-time Firebase data');
+  },
+
+  async loadState() {
     const defaultData = {"turdTimes":{"2":{"completions":3},"3":{"completions":0},"4":{"completions":0},"5":{"completions":0},"6":{"completions":0},"7":{"completions":5},"8":{"completions":5},"9":{"completions":4}},"coins":27.25,"prizes":[{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":0},{"claimed":1},{"claimed":0}],"fastGameHistory":[{"timestamp":1791038353582,"problem":"5×3","expected":15,"userAnswer":-1,"timeTaken":5.01,"isCorrect":false},{"timestamp":1791038353844,"problem":"5×3","expected":15,"userAnswer":15,"timeTaken":5.088,"isCorrect":true},{"timestamp":1791038359666,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.01,"isCorrect":false},{"timestamp":1791038365683,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.016,"isCorrect":false},{"timestamp":1791038371686,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.002,"isCorrect":false},{"timestamp":1791038377704,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.006,"isCorrect":false},{"timestamp":1791038383710,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.005,"isCorrect":false},{"timestamp":1791038390645,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5,"isCorrect":false},{"timestamp":1791038396648,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.002,"isCorrect":false},{"timestamp":1791038403646,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038409647,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5,"isCorrect":false},{"timestamp":1791038416646,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038422648,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038429645,"problem":"8×5","expected":40,"userAnswer":-1,"timeTaken":5.001,"isCorrect":false},{"timestamp":1791038468578,"problem":"9×9","expected":81,"userAnswer":81,"timeTaken":3.971,"isCorrect":true},{"timestamp":1791038475063,"problem":"4×6","expected":24,"userAnswer":24,"timeTaken":5.661,"isCorrect":true},{"timestamp":1791038481538,"problem":"8×6","expected":48,"userAnswer":48,"timeTaken":5.65,"isCorrect":true},{"timestamp":1791038488489,"problem":"7×3","expected":21,"userAnswer":21,"timeTaken":6.13,"isCorrect":true},{"timestamp":1791038503656,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":14.349,"isCorrect":true},{"timestamp":1791038517935,"problem":"8×8","expected":64,"userAnswer":64,"timeTaken":13.463,"isCorrect":true},{"timestamp":1791038522245,"problem":"8×7","expected":56,"userAnswer":56,"timeTaken":3.508,"isCorrect":true},{"timestamp":1791038526464,"problem":"5×2","expected":10,"userAnswer":10,"timeTaken":3.408,"isCorrect":true},{"timestamp":1791038531429,"problem":"5×8","expected":40,"userAnswer":40,"timeTaken":4.162,"isCorrect":true},{"timestamp":1791038548901,"problem":"4×6","expected":24,"userAnswer":24,"timeTaken":16.66,"isCorrect":true},{"timestamp":1791038553214,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":3.509,"isCorrect":true},{"timestamp":1791038557589,"problem":"3×3","expected":9,"userAnswer":9,"timeTaken":3.562,"isCorrect":true},{"timestamp":1791038572296,"problem":"4×2","expected":8,"userAnswer":8,"timeTaken":13.895,"isCorrect":true},{"timestamp":1791038584743,"problem":"7×4","expected":28,"userAnswer":28,"timeTaken":11.636,"isCorrect":true},{"timestamp":1791038595924,"problem":"6×3","expected":18,"userAnswer":18,"timeTaken":10.37,"isCorrect":true},{"timestamp":1791038606014,"problem":"7×5","expected":35,"userAnswer":35,"timeTaken":9.278,"isCorrect":true},{"timestamp":1791038609187,"problem":"3×3","expected":9,"userAnswer":9,"timeTaken":2.372,"isCorrect":true},{"timestamp":1791038616787,"problem":"9×8","expected":72,"userAnswer":72,"timeTaken":6.787,"isCorrect":true},{"timestamp":1791038625752,"problem":"7×6","expected":42,"userAnswer":42,"timeTaken":8.155,"isCorrect":true},{"timestamp":1791038651597,"problem":"9×5","expected":45,"userAnswer":45,"timeTaken":25.033,"isCorrect":true},{"timestamp":1791038655452,"problem":"2×2","expected":4,"userAnswer":4,"timeTaken":3.053,"isCorrect":true},{"timestamp":1791038660025,"problem":"7×2","expected":14,"userAnswer":14,"timeTaken":3.762,"isCorrect":true},{"timestamp":1791038666392,"problem":"3×7","expected":21,"userAnswer":21,"timeTaken":5.558,"isCorrect":true},{"timestamp":1791038672005,"problem":"7×2","expected":14,"userAnswer":14,"timeTaken":4.802,"isCorrect":true},{"timestamp":1791038682964,"problem":"4×3","expected":12,"userAnswer":12,"timeTaken":10.147,"isCorrect":true},{"timestamp":1791038691250,"problem":"7×2","expected":14,"userAnswer":14,"timeTaken":7.476,"isCorrect":true},{"timestamp":1791038696523,"problem":"3×5","expected":15,"userAnswer":15,"timeTaken":4.462,"isCorrect":true},{"timestamp":1791038701318,"problem":"3×6","expected":18,"userAnswer":36,"timeTaken":3.993,"isCorrect":false},{"timestamp":1791038718388,"problem":"3×6","expected":18,"userAnswer":18,"timeTaken":21.055,"isCorrect":true},{"timestamp":1791038727500,"problem":"6×9","expected":54,"userAnswer":54,"timeTaken":8.3,"isCorrect":true},{"timestamp":1791038738127,"problem":"3×9","expected":27,"userAnswer":27,"timeTaken":9.817,"isCorrect":true},{"timestamp":1791038741412,"problem":"3×2","expected":6,"userAnswer":6,"timeTaken":2.482,"isCorrect":true},{"timestamp":1791038772596,"problem":"6×4","expected":24,"userAnswer":24,"timeTaken":30.372,"isCorrect":true},{"timestamp":1791038784768,"problem":"4×6","expected":24,"userAnswer":24,"timeTaken":11.361,"isCorrect":true},{"timestamp":1791038791839,"problem":"4×7","expected":28,"userAnswer":28,"timeTaken":6.26,"isCorrect":true},{"timestamp":1791038801427,"problem":"8×6","expected":48,"userAnswer":48,"timeTaken":8.775,"isCorrect":true},{"timestamp":1791038809838,"problem":"2×5","expected":10,"userAnswer":10,"timeTaken":7.6,"isCorrect":true},{"timestamp":1791038825166,"problem":"8×9","expected":72,"userAnswer":56,"timeTaken":14.516,"isCorrect":false},{"timestamp":1791038828419,"problem":"8×9","expected":72,"userAnswer":54,"timeTaken":17.779,"isCorrect":false},{"timestamp":1791038832669,"problem":"8×9","expected":72,"userAnswer":72,"timeTaken":22.021,"isCorrect":true},{"timestamp":1791038839941,"problem":"5×2","expected":10,"userAnswer":10,"timeTaken":6.459,"isCorrect":true},{"timestamp":1791038858907,"problem":"8×4","expected":32,"userAnswer":32,"timeTaken":18.155,"isCorrect":true},{"timestamp":1791038862994,"problem":"2×2","expected":4,"userAnswer":4,"timeTaken":3.28,"isCorrect":true},{"timestamp":1791038867673,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":3.869,"isCorrect":true},{"timestamp":1791038883371,"problem":"5×8","expected":40,"userAnswer":40,"timeTaken":14.886,"isCorrect":true},{"timestamp":1791038889419,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":5.224,"isCorrect":true},{"timestamp":1791038897285,"problem":"9×7","expected":63,"userAnswer":63,"timeTaken":7.055,"isCorrect":true},{"timestamp":1791038903247,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":5.152,"isCorrect":true},{"timestamp":1791038926427,"problem":"2×4","expected":8,"userAnswer":8,"timeTaken":22.365,"isCorrect":true},{"timestamp":1791038930937,"problem":"4×3","expected":12,"userAnswer":12,"timeTaken":3.709,"isCorrect":true},{"timestamp":1791038941256,"problem":"6×3","expected":18,"userAnswer":18,"timeTaken":9.506,"isCorrect":true},{"timestamp":1791038951106,"problem":"9×5","expected":45,"userAnswer":45,"timeTaken":9.038,"isCorrect":true},{"timestamp":1791038964679,"problem":"5×9","expected":45,"userAnswer":45,"timeTaken":12.752,"isCorrect":true},{"timestamp":1791040865981,"problem":"5×5","expected":25,"userAnswer":25,"timeTaken":5.332,"isCorrect":true},{"timestamp":1791041555522,"problem":"7×5","expected":35,"userAnswer":35,"timeTaken":14.442,"isCorrect":true},{"timestamp":1791041576539,"problem":"4×3","expected":12,"userAnswer":12,"timeTaken":5.486,"isCorrect":true},{"timestamp":1791041589092,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":11.735,"isCorrect":true},{"timestamp":1791041599989,"problem":"6×5","expected":30,"userAnswer":30,"timeTaken":10.081,"isCorrect":true},{"timestamp":1791041701045,"problem":"8×4","expected":32,"userAnswer":32,"timeTaken":100.076,"isCorrect":true},{"timestamp":1791041717000,"problem":"6×2","expected":12,"userAnswer":12,"timeTaken":15.146,"isCorrect":true},{"timestamp":1791041727048,"problem":"8×3","expected":24,"userAnswer":24,"timeTaken":9.237,"isCorrect":true},{"timestamp":1791041733097,"problem":"7×7","expected":49,"userAnswer":48,"timeTaken":5.233,"isCorrect":false},{"timestamp":1791041738795,"problem":"7×7","expected":49,"userAnswer":49,"timeTaken":10.931,"isCorrect":true},{"timestamp":1791041797797,"problem":"7×9","expected":63,"userAnswer":63,"timeTaken":58.002,"isCorrect":true},{"timestamp":1791041802036,"problem":"8×5","expected":40,"userAnswer":40,"timeTaken":3.434,"isCorrect":true},{"timestamp":1791041809133,"problem":"5×6","expected":30,"userAnswer":30,"timeTaken":6.283,"isCorrect":true},{"timestamp":1791041816096,"problem":"5×7","expected":35,"userAnswer":35,"timeTaken":6.151,"isCorrect":true},{"timestamp":1791041833470,"problem":"6×6","expected":36,"userAnswer":36,"timeTaken":16.563,"isCorrect":true},{"timestamp":1791041844066,"problem":"6×9","expected":54,"userAnswer":54,"timeTaken":9.782,"isCorrect":true},{"timestamp":1791041850096,"problem":"7×3","expected":21,"userAnswer":21,"timeTaken":5.217,"isCorrect":true},{"timestamp":1791041857339,"problem":"4×7","expected":28,"userAnswer":28,"timeTaken":6.431,"isCorrect":true},{"timestamp":1791041877227,"problem":"9×7","expected":63,"userAnswer":63,"timeTaken":19.079,"isCorrect":true},{"timestamp":1791041880252,"problem":"6×9","expected":54,"userAnswer":54,"timeTaken":2.223,"isCorrect":true},{"timestamp":1791041905117,"problem":"4×7","expected":28,"userAnswer":28,"timeTaken":24.054,"isCorrect":true},{"timestamp":1791042046254,"problem":"8×6","expected":48,"userAnswer":48,"timeTaken":140.154,"isCorrect":true},{"timestamp":1791042103549,"problem":"3×7","expected":21,"userAnswer":28,"timeTaken":56.312,"isCorrect":false},{"timestamp":1791042117474,"problem":"3×7","expected":21,"userAnswer":21,"timeTaken":70.406,"isCorrect":true}],"qualifierMultiplier":0,"qualifierLog":[],"timeSessions":[],"gistId":"","assessmentHistory":[]};
-    const data = saved ? JSON.parse(saved) : defaultData;
+
+    // Get data from Firebase (with localStorage fallback)
+    const data = await storage.getState() || defaultData;
 
     this.state = data.turdTimes || {};
     this.coins = data.coins || 100;
@@ -812,7 +1040,7 @@ const app = {
   },
 
   saveState() {
-    localStorage.setItem('saylorsGames', JSON.stringify({
+    const stateData = {
       turdTimes: this.state,
       coins: this.coins,
       prizes: this.prizes.map(p => ({ claimed: p.claimed })),
@@ -823,7 +1051,11 @@ const app = {
       gistId: this.gistId,
       assessmentHistory: this.assessmentHistory || [],
       assessmentAvailable: this.assessmentAvailable
-    }));
+    };
+
+    // Save to Firebase (with localStorage fallback) - non-blocking
+    storage.setState(stateData);
+
     // Auto-sync to GitHub Gist if we have a gist ID and WiFi is available
     this.attemptGistSync();
   },
@@ -2915,7 +3147,17 @@ const app = {
   }
 };
 
-app.init();
+// Initialize app with Firebase
+app.init().catch(err => {
+  console.error('Failed to initialize app:', err);
+  // App will still work with localStorage fallback
+});
+
+// Clean up Firebase listener when page unloads
+window.addEventListener('beforeunload', () => {
+  storage.cleanup();
+  console.log('✅ Firebase listener cleaned up');
+});
 </script>
 
 <script>
