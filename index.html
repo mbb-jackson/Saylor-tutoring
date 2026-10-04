@@ -692,8 +692,11 @@
     <div id="assessmentQuiz" style="display: none; padding: 2rem;">
       <div style="margin-bottom: 2rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <button onclick="app.switchTab('home')" style="padding: 8px 16px; font-size: 13px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;">← Back</button>
-          <span style="font-size: 14px; color: var(--text-secondary);">Problem <span id="assessmentProblemNum">1</span> of <span id="assessmentTotal">15</span></span>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="app.switchTab('home')" style="padding: 8px 16px; font-size: 13px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;">← Back</button>
+            <button onclick="app.startAssessment()" style="padding: 8px 16px; font-size: 13px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 500;">🔄 Restart</button>
+          </div>
+          <span style="font-size: 14px; color: var(--text-secondary);">Problem <span id="assessmentProblemNum">1</span> of <span id="assessmentTotal">25</span></span>
           <span style="font-size: 14px; color: var(--text-secondary);" id="assessmentTime"></span>
         </div>
         <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 8px; height: 6px; overflow: hidden;">
