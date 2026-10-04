@@ -1664,13 +1664,19 @@ const app = {
 
   // ASSESSMENT QUIZ FUNCTIONS
   startAssessment() {
+    // If restarting mid-attempt, remove incomplete attempt entries from history
+    if (this.assessmentData && this.assessmentData.historyBaselineLength !== undefined) {
+      this.fastGameHistory = this.fastGameHistory.slice(0, this.assessmentData.historyBaselineLength);
+    }
+
     // Initialize assessment quiz - 25 questions
     this.assessmentData = {
       started: true,
       problems: this.generateAssessmentProblems(25),
       currentIndex: 0,
       correct: 0,
-      answers: []
+      answers: [],
+      historyBaselineLength: this.fastGameHistory.length // Track entries to exclude if restarted
     };
 
     // Hide start screen, show quiz screen
