@@ -1019,12 +1019,28 @@ const app = {
     this.state = data.turdTimes || {};
     this.coins = data.coins || 0;
     this.fastGameHistory = data.fastGameHistory || [];
+    this.ranges2DigitHistory = data.ranges2DigitHistory || [];
     this.qualifierMultiplier = data.qualifierMultiplier || 0;
     this.qualifierLog = data.qualifierLog || [];
     this.timeSessions = data.timeSessions || [];
     this.gistId = data.gistId || '';
     this.assessmentHistory = data.assessmentHistory || [];
     this.assessmentAvailable = data.assessmentAvailable !== undefined ? data.assessmentAvailable : true;
+
+    // Initialize missing state keys for single-digit numbers
+    this.numbers.forEach(n => {
+      if (!this.state[n]) {
+        this.state[n] = { completions: 0 };
+      }
+    });
+
+    // Initialize missing state keys for 2-digit ranges
+    this.ranges2Digit.forEach(range => {
+      const rangeKey = `range_${range.multiplier}`;
+      if (!this.state[rangeKey]) {
+        this.state[rangeKey] = { completions: 0 };
+      }
+    });
 
     // Update UI
     this.updateCoinDisplay();
