@@ -1386,8 +1386,8 @@ const app = {
     this.trackSessionEnd('fastCash');
     clearTimeout(this.fastGameSession.problemTimeout);
 
-    // Award coins: 1.25 per correct answer (with qualifier multiplier)
-    let coinsEarned = this.fastGameSession.correct * 1.25;
+    // Award coins: 1 per correct answer (with qualifier multiplier)
+    let coinsEarned = this.fastGameSession.correct * 1;
     const multiplier = 1 + this.qualifierMultiplier;
     coinsEarned = coinsEarned * multiplier;
     this.coins += coinsEarned;
