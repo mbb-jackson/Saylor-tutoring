@@ -979,6 +979,7 @@ const app = {
   currentSession: null,
   coins: 0,
   fastGameHistory: [],
+  ranges2DigitHistory: [],
   qualifierMultiplier: 0,
   qualifierLog: [],
 
@@ -1048,6 +1049,7 @@ const app = {
     this.state = data.turdTimes || {};
     this.coins = data.coins || 100;
     this.fastGameHistory = data.fastGameHistory || [];
+    this.ranges2DigitHistory = data.ranges2DigitHistory || [];
     this.qualifierMultiplier = data.qualifierMultiplier || 0;
     this.qualifierLog = data.qualifierLog || [];
     this.timeSessions = data.timeSessions || [];
@@ -1084,6 +1086,7 @@ const app = {
       coins: this.coins,
       prizes: this.prizes.map(p => ({ claimed: p.claimed })),
       fastGameHistory: this.fastGameHistory,
+      ranges2DigitHistory: this.ranges2DigitHistory,
       qualifierMultiplier: this.qualifierMultiplier,
       qualifierLog: this.qualifierLog,
       timeSessions: this.timeSessions,
@@ -2655,6 +2658,13 @@ const app = {
         <div class="stack-reward">🪙 × 10</div>
       `;
 
+      // Hide completed cards
+      if (done >= 5) {
+        card.style.opacity = '0.4';
+        card.style.pointerEvents = 'none';
+        card.style.cursor = 'default';
+      }
+
       container.appendChild(card);
     });
 
@@ -2678,8 +2688,8 @@ const app = {
       card.setAttribute('data-range', rangeKey);
       card.onclick = () => this.startPractice(rangeKey);
 
-      let progressText = `${done}/1`;
-      if (done === 1) progressText = '✓';
+      let progressText = `${done}/2`;
+      if (done === 2) progressText = '✓';
 
       card.innerHTML = `
         <div class="stack-number">${range.multiplier}</div>
@@ -2688,10 +2698,17 @@ const app = {
         <div class="stack-reward">🪙 × 15</div>
       `;
 
+      // Disable if completed
+      if (done >= 2) {
+        card.style.opacity = '0.4';
+        card.style.pointerEvents = 'none';
+        card.style.cursor = 'default';
+      }
+
       container.appendChild(card);
     });
 
-    const total = this.numbers.length * 5 + this.ranges2Digit.length * 1;
+    const total = this.numbers.length * 5 + this.ranges2Digit.length * 2;
     const rangesComplete = this.ranges2Digit.reduce((sum, range) => sum + this.state[`range_${range.multiplier}`].completions, 0);
     const percent = Math.round(((totalDone + rangesComplete) / total) * 100);
     document.getElementById('overallProgress').textContent = `${totalDone + rangesComplete}/${total} complete`;
@@ -2807,7 +2824,7 @@ const app = {
     // Get state for either single-digit or 2-digit range
     const state = session.is2Digit ? this.state[session.rangeKey] : this.state[session.number];
     const coinsReward = session.is2Digit ? 15 : 10;
-    const maxCompletions = session.is2Digit ? 1 : 5;
+    const maxCompletions = session.is2Digit ? 2 : 5;
 
     if (userAnswer === problem.product) {
       this.showCorrect();
@@ -2826,6 +2843,20 @@ const app = {
       if (session.index >= session.problems.length) {
         state.completions = Math.min(maxCompletions, state.completions + 1);
         this.coins += coinsReward;
+
+        // Track 2-digit range performance
+        if (session.is2Digit) {
+          const accuracy = Math.round((session.correct / session.problems.length) * 100);
+          this.ranges2DigitHistory.push({
+            timestamp: Date.now(),
+            range: session.range.label,
+            multiplier: session.range.multiplier,
+            problems: session.problems.length,
+            correct: session.correct,
+            accuracy: accuracy
+          });
+        }
+
         this.saveState();
         this.updateCoinDisplay();
         this.checkForUnlockedPrizes();
@@ -2858,6 +2889,20 @@ const app = {
         if (session.index >= session.problems.length) {
           state.completions = Math.min(maxCompletions, state.completions + 1);
           this.coins += coinsReward;
+
+          // Track 2-digit range performance
+          if (session.is2Digit) {
+            const accuracy = Math.round((session.correct / session.problems.length) * 100);
+            this.ranges2DigitHistory.push({
+              timestamp: Date.now(),
+              range: session.range.label,
+              multiplier: session.range.multiplier,
+              problems: session.problems.length,
+              correct: session.correct,
+              accuracy: accuracy
+            });
+          }
+
           this.saveState();
           this.updateCoinDisplay();
           this.checkForUnlockedPrizes();
