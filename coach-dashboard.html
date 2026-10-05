@@ -273,7 +273,10 @@
 <body>
 
 <div class="container">
-  <h1>📊 Saylor's Math Progress</h1>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1>📊 Saylor's Math Progress</h1>
+    <button onclick="exportAnalytics()" style="padding: 10px 20px; background: #0066cc; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">📥 Export Analytics</button>
+  </div>
   <div id="connectionStatus" class="status disconnected">
     🔴 Connecting to Firebase...
   </div>
@@ -514,6 +517,71 @@ function displayBenchmarks(assessments) {
 
   html += '</div>';
   container.innerHTML = html;
+}
+
+function exportAnalytics() {
+  if (!gameData) {
+    alert('No data to export yet. Please wait for Firebase to load.');
+    return;
+  }
+
+  // Calculate overall stats
+  const allHistory = gameData.fastGameHistory || [];
+  const correct = allHistory.filter(h => h.isCorrect).length;
+  const overallAccuracy = allHistory.length > 0 ? Math.round((correct / allHistory.length) * 100) : 0;
+
+  // Calculate by skill (table)
+  const skillStats = {};
+  allHistory.forEach(record => {
+    const match = record.problem.match(/(\d+)×/);
+    if (match) {
+      const skill = match[1];
+      if (!skillStats[skill]) {
+        skillStats[skill] = { correct: 0, total: 0 };
+      }
+      skillStats[skill].total++;
+      if (record.isCorrect) skillStats[skill].correct++;
+    }
+  });
+
+  // Format skill accuracy
+  const skillAccuracy = {};
+  Object.keys(skillStats).forEach(skill => {
+    const data = skillStats[skill];
+    skillAccuracy[skill] = {
+      correct: data.correct,
+      total: data.total,
+      accuracy: Math.round((data.correct / data.total) * 100)
+    };
+  });
+
+  // Build analytics object
+  const analytics = {
+    exportedAt: new Date().toISOString(),
+    coins: gameData.coins || 0,
+    assessmentCount: (gameData.assessmentHistory || []).length,
+    overallAccuracy: overallAccuracy,
+    totalProblems: allHistory.length,
+    skillAccuracy: skillAccuracy,
+    benchmarks: {
+      grade4: { 2: 70, 3: 70, 4: 70, 5: 70, 6: 70, 7: 50, 8: 50, 9: 50 },
+      grade5: { 2: 80, 3: 80, 4: 80, 5: 80, 6: 80, 7: 80, 8: 60, 9: 60 }
+    }
+  };
+
+  // Download JSON file
+  const dataStr = JSON.stringify(analytics, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `saylor-analytics-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  console.log('📊 Analytics exported:', analytics);
 }
 
 // Start initialization
