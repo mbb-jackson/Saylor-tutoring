@@ -369,6 +369,11 @@
 <body>
 
 <div class="container">
+  <!-- Firebase Status Indicator -->
+  <div id="firebaseStatus" style="padding: 12px 16px; margin-bottom: 1rem; border-radius: 8px; font-weight: 600; text-align: center; background: #ffe0e0; color: #d33527;">
+    🔴 Checking Firebase...
+  </div>
+
   <div class="header">
     <h1>Turd Daddy University</h1>
     <div style="display: flex; gap: 16px; align-items: center;">
@@ -781,12 +786,29 @@ const firebaseConfig = {
   appId: "1:676519374671:web:72fe499e971b6f69f59f3a"
 };
 
+// Update Firebase status indicator
+function updateFirebaseStatus(connected) {
+  const statusEl = document.getElementById('firebaseStatus');
+  if (!statusEl) return;
+
+  if (connected) {
+    statusEl.innerHTML = '🟢 Firebase Connected - Data syncing';
+    statusEl.style.background = '#e8f5e9';
+    statusEl.style.color = '#22a647';
+  } else {
+    statusEl.innerHTML = '⚠️ Using Local Storage - Firebase unavailable';
+    statusEl.style.background = '#fff3e0';
+    statusEl.style.color = '#f57c00';
+  }
+}
+
 // Initialize Firebase with error handling
 async function initializeFirebase() {
   try {
     // Import Firebase dynamically if not already loaded
     if (typeof firebase === 'undefined') {
       console.log('Firebase SDK not loaded, will use localStorage fallback');
+      updateFirebaseStatus(false);
       return false;
     }
 
@@ -800,10 +822,12 @@ async function initializeFirebase() {
     isFirebaseReady = true;
 
     console.log('✅ Firebase initialized successfully with user:', firebaseUser?.uid);
+    updateFirebaseStatus(true);
     return true;
   } catch (error) {
     console.error('⚠️ Firebase initialization failed:', error.message);
     console.log('Will use localStorage fallback for this session');
+    updateFirebaseStatus(false);
     return false;
   }
 }
