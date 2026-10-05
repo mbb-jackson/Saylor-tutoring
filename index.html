@@ -1075,7 +1075,10 @@ const app = {
 
     if (data.prizes && data.prizes.length > 0) {
       data.prizes.forEach((p, i) => {
-        if (this.prizes[i]) this.prizes[i].claimed = p.claimed || 0;
+        if (this.prizes[i]) {
+          this.prizes[i].claimed = p.claimed || 0;
+          this.prizes[i].wasUnlocked = p.wasUnlocked || false;
+        }
       });
     }
   },
@@ -1084,7 +1087,7 @@ const app = {
     const stateData = {
       turdTimes: this.state,
       coins: this.coins,
-      prizes: this.prizes.map(p => ({ claimed: p.claimed })),
+      prizes: this.prizes.map(p => ({ claimed: p.claimed, wasUnlocked: p.wasUnlocked || false })),
       fastGameHistory: this.fastGameHistory,
       ranges2DigitHistory: this.ranges2DigitHistory,
       qualifierMultiplier: this.qualifierMultiplier,
@@ -1115,7 +1118,7 @@ const app = {
     const data = {
       turdTimes: this.state,
       coins: this.coins,
-      prizes: this.prizes.map(p => ({ claimed: p.claimed })),
+      prizes: this.prizes.map(p => ({ claimed: p.claimed, wasUnlocked: p.wasUnlocked || false })),
       fastGameHistory: this.fastGameHistory,
       qualifierMultiplier: this.qualifierMultiplier,
       qualifierLog: this.qualifierLog,
