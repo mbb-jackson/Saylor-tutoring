@@ -970,6 +970,12 @@ const storage = {
 const app = {
   state: {},
   numbers: [2, 3, 4, 5, 6, 7, 8, 9],
+  ranges2Digit: [
+    { multiplier: 2, min: 12, max: 29, label: '12-29 × 2' },
+    { multiplier: 3, min: 12, max: 29, label: '12-29 × 3' },
+    { multiplier: 4, min: 12, max: 29, label: '12-29 × 4' },
+    { multiplier: 5, min: 12, max: 29, label: '12-29 × 5' }
+  ],
   currentSession: null,
   coins: 0,
   fastGameHistory: [],
@@ -1054,6 +1060,14 @@ const app = {
     this.numbers.forEach(n => {
       if (!this.state[n]) {
         this.state[n] = { completions: 0 };
+      }
+    });
+
+    // Initialize 2-digit ranges state
+    this.ranges2Digit.forEach(range => {
+      const rangeKey = `range_${range.multiplier}`;
+      if (!this.state[rangeKey]) {
+        this.state[rangeKey] = { completions: 0 };
       }
     });
 
@@ -2622,6 +2636,7 @@ const app = {
 
     let totalDone = 0;
 
+    // Single-digit cards (2-9)
     this.numbers.forEach(n => {
       const done = this.state[n].completions;
       totalDone += done;
@@ -2643,29 +2658,92 @@ const app = {
       container.appendChild(card);
     });
 
-    const total = this.numbers.length * 5;
-    const percent = Math.round((totalDone / total) * 100);
-    document.getElementById('overallProgress').textContent = `${totalDone}/${total} complete`;
+    // Add separator for 2-digit ranges
+    const separator = document.createElement('div');
+    separator.style.gridColumn = '1 / -1';
+    separator.style.marginTop = '1.5rem';
+    separator.style.marginBottom = '1rem';
+    separator.style.paddingTop = '1rem';
+    separator.style.borderTop = '1px solid var(--border)';
+    separator.innerHTML = '<div style="font-size: 14px; font-weight: 600; color: var(--text-secondary);">2-Digit Ranges</div>';
+    container.appendChild(separator);
+
+    // 2-digit range cards
+    this.ranges2Digit.forEach(range => {
+      const rangeKey = `range_${range.multiplier}`;
+      const done = this.state[rangeKey].completions;
+
+      const card = document.createElement('div');
+      card.className = 'stack-card';
+      card.setAttribute('data-range', rangeKey);
+      card.onclick = () => this.startPractice(rangeKey);
+
+      let progressText = `${done}/1`;
+      if (done === 1) progressText = '✓';
+
+      card.innerHTML = `
+        <div class="stack-number">${range.multiplier}</div>
+        <div class="stack-subtext" style="font-size: 12px; color: var(--text-secondary); margin: 0.5rem 0;">${range.label}</div>
+        <div class="stack-progress">${progressText}</div>
+        <div class="stack-reward">🪙 × 15</div>
+      `;
+
+      container.appendChild(card);
+    });
+
+    const total = this.numbers.length * 5 + this.ranges2Digit.length * 1;
+    const rangesComplete = this.ranges2Digit.reduce((sum, range) => sum + this.state[`range_${range.multiplier}`].completions, 0);
+    const percent = Math.round(((totalDone + rangesComplete) / total) * 100);
+    document.getElementById('overallProgress').textContent = `${totalDone + rangesComplete}/${total} complete`;
     document.getElementById('overallFill').style.width = `${percent}%`;
   },
 
-  startPractice(number) {
-    const state = this.state[number];
+  startPractice(numberOrRange) {
+    // Check if this is a 2-digit range or single digit
+    const is2Digit = typeof numberOrRange === 'string' && numberOrRange.startsWith('range_');
 
-    if (state.completions >= 5) {
-      return;
+    if (is2Digit) {
+      // 2-digit range
+      const rangeKey = numberOrRange;
+      const state = this.state[rangeKey];
+
+      if (state.completions >= 1) {
+        return;
+      }
+
+      const range = this.ranges2Digit.find(r => `range_${r.multiplier}` === rangeKey);
+
+      this.currentSession = {
+        rangeKey: rangeKey,
+        range: range,
+        problems: this.generate2DigitProblems(range),
+        index: 0,
+        correct: 0,
+        completionNumber: 1,
+        currentProblemRetries: 0,
+        is2Digit: true
+      };
+    } else {
+      // Single-digit
+      const number = numberOrRange;
+      const state = this.state[number];
+
+      if (state.completions >= 5) {
+        return;
+      }
+
+      const currentCompletion = state.completions + 1;
+
+      this.currentSession = {
+        number: number,
+        problems: this.generateProblems(number),
+        index: 0,
+        correct: 0,
+        completionNumber: currentCompletion,
+        currentProblemRetries: 0,
+        is2Digit: false
+      };
     }
-
-    const currentCompletion = state.completions + 1;
-
-    this.currentSession = {
-      number: number,
-      problems: this.generateProblems(number),
-      index: 0,
-      correct: 0,
-      completionNumber: currentCompletion,
-      currentProblemRetries: 0
-    };
 
     this.renderPractice();
   },
@@ -2681,16 +2759,37 @@ const app = {
     return problems.sort(() => Math.random() - 0.5);
   },
 
+  generate2DigitProblems(range) {
+    // Generate 10 random 2-digit problems from the range
+    const problems = [];
+    for (let i = 0; i < 10; i++) {
+      const num = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+      problems.push({
+        number: num,
+        multiplier: range.multiplier,
+        product: num * range.multiplier
+      });
+    }
+    return problems;
+  },
+
   renderPractice() {
     document.getElementById('mainScreen').classList.add('hidden');
     document.getElementById('practiceScreen').classList.add('active');
 
-    const { number, problems, index, completionNumber } = this.currentSession;
+    const { problems, index, completionNumber, is2Digit, number, range } = this.currentSession;
     const problem = problems[index];
 
-    document.getElementById('numberLabel').textContent = `Number ${number}`;
-    document.getElementById('attemptNum').textContent = completionNumber;
-    document.getElementById('problem').textContent = `${number} × ${problem.multiplier} = ?`;
+    if (is2Digit) {
+      document.getElementById('numberLabel').textContent = `${range.label} • Problem ${index + 1}/10`;
+      document.getElementById('attemptNum').textContent = completionNumber;
+      document.getElementById('problem').textContent = `${problem.number} × ${problem.multiplier} = ?`;
+    } else {
+      document.getElementById('numberLabel').textContent = `Number ${number}`;
+      document.getElementById('attemptNum').textContent = completionNumber;
+      document.getElementById('problem').textContent = `${number} × ${problem.multiplier} = ?`;
+    }
+
     document.getElementById('feedback').textContent = '';
     document.getElementById('feedback').className = 'feedback';
     document.getElementById('answer').value = '';
@@ -2704,7 +2803,11 @@ const app = {
     const session = this.currentSession;
     const problem = session.problems[session.index];
     const userAnswer = parseInt(input);
-    const state = this.state[session.number];
+
+    // Get state for either single-digit or 2-digit range
+    const state = session.is2Digit ? this.state[session.rangeKey] : this.state[session.number];
+    const coinsReward = session.is2Digit ? 15 : 10;
+    const maxCompletions = session.is2Digit ? 1 : 5;
 
     if (userAnswer === problem.product) {
       this.showCorrect();
@@ -2721,8 +2824,8 @@ const app = {
       session.currentProblemRetries = 0;
 
       if (session.index >= session.problems.length) {
-        state.completions = Math.min(5, state.completions + 1);
-        this.coins += 10;
+        state.completions = Math.min(maxCompletions, state.completions + 1);
+        this.coins += coinsReward;
         this.saveState();
         this.updateCoinDisplay();
         this.checkForUnlockedPrizes();
@@ -2753,8 +2856,8 @@ const app = {
         session.currentProblemRetries = 0;
 
         if (session.index >= session.problems.length) {
-          state.completions = Math.min(5, state.completions + 1);
-          this.coins += 10;
+          state.completions = Math.min(maxCompletions, state.completions + 1);
+          this.coins += coinsReward;
           this.saveState();
           this.updateCoinDisplay();
           this.checkForUnlockedPrizes();
