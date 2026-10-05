@@ -274,6 +274,17 @@
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
+    width: 100%;
+  }
+
+  #sketchCanvas {
+    max-width: 100%;
+    height: auto;
+    border: 2px solid var(--border) !important;
+    border-radius: 8px !important;
+    background: white !important;
+    cursor: crosshair !important;
+    touch-action: none !important;
   }
 
   .input-group { display: flex; gap: 8px; margin: 1.5rem 0; }
@@ -502,8 +513,8 @@
           </div>
 
           <div class="sketch-area">
-            <canvas id="sketchCanvas" width="400" height="300" style="border: 2px solid var(--border); border-radius: 8px; background: white; display: block; margin: 0 auto; cursor: crosshair; touch-action: none;"></canvas>
-            <button onclick="app.clearSketch()" style="margin-top: 0.5rem; padding: 8px 16px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 14px;">Clear</button>
+            <canvas id="sketchCanvas"></canvas>
+            <button onclick="app.clearSketch()" style="padding: 8px 16px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 14px;">Clear</button>
           </div>
         </div>
       </div>
@@ -2868,29 +2879,34 @@ const app = {
     const canvas = document.getElementById('sketchCanvas');
     if (!canvas) return;
 
+    // Set canvas size - responsive but with minimum
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const size = Math.min(rect.width - 20, 500);
+    canvas.width = size;
+    canvas.height = 250;
+
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     let isDrawing = false;
     let lastX = 0;
     let lastY = 0;
 
     const startDrawing = (e) => {
+      e.preventDefault();
       isDrawing = true;
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      lastX = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left * scaleX;
-      lastY = (e.clientY || e.touches?.[0]?.clientY || 0) - rect.top * scaleY;
+      lastX = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left;
+      lastY = (e.clientY || e.touches?.[0]?.clientY || 0) - rect.top;
     };
 
     const draw = (e) => {
       if (!isDrawing) return;
+      e.preventDefault();
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const x = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left * scaleX;
-      const y = (e.clientY || e.touches?.[0]?.clientY || 0) - rect.top * scaleY;
+      const x = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left;
+      const y = (e.clientY || e.touches?.[0]?.clientY || 0) - rect.top;
 
       ctx.strokeStyle = '#333';
       ctx.lineWidth = 3;
@@ -2908,6 +2924,14 @@ const app = {
     const stopDrawing = () => {
       isDrawing = false;
     };
+
+    canvas.removeEventListener('mousedown', startDrawing);
+    canvas.removeEventListener('mousemove', draw);
+    canvas.removeEventListener('mouseup', stopDrawing);
+    canvas.removeEventListener('mouseleave', stopDrawing);
+    canvas.removeEventListener('touchstart', startDrawing);
+    canvas.removeEventListener('touchmove', draw);
+    canvas.removeEventListener('touchend', stopDrawing);
 
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
