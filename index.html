@@ -2677,9 +2677,9 @@ const app = {
         <div class="stack-reward">🪙 × 10</div>
       `;
 
-      // Hide completed cards
+      // Gray out completed cards
       if (done >= 5) {
-        card.style.opacity = '0.4';
+        card.style.backgroundColor = '#e8e8e8';
         card.style.pointerEvents = 'none';
         card.style.cursor = 'default';
       }
@@ -2717,9 +2717,9 @@ const app = {
         <div class="stack-reward">🪙 × 15</div>
       `;
 
-      // Disable if completed
+      // Gray out if completed
       if (done >= 2) {
-        card.style.opacity = '0.4';
+        card.style.backgroundColor = '#e8e8e8';
         card.style.pointerEvents = 'none';
         card.style.cursor = 'default';
       }
