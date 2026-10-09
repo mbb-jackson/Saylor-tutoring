@@ -3497,8 +3497,10 @@ const app = {
         }
 
         container.appendChild(card);
+        console.log(`✅ Created card for ${range.id}`);
       });
 
+      console.log(`📊 Container now has ${container.children.length} cards`);
       const total = this.divisionRanges.length * 4;
       const percent = Math.round((totalDone / total) * 100);
       document.getElementById('divisionOverallProgress').textContent = `${totalDone}/${total} complete`;
