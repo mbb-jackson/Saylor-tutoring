@@ -2973,6 +2973,8 @@ const app = {
       this.showCorrect();
       this.playCorrectSound();
 
+      session.correct++;  // Track correct answer
+
       if (session.currentProblemRetries > 0) {
         const remaining = session.problems.slice(session.index + 1);
         const pos = Math.floor(Math.random() * (remaining.length + 1));
@@ -3018,52 +3020,46 @@ const app = {
       this.showWrong(problem.product);
       this.playWrongSound();
 
-      session.currentProblemRetries++;
+      // For 2-digit ranges: just show wrong and let her try again (no retry limit)
+      if (session.is2Digit) {
+        // Clear input and let her try again
+        document.getElementById('answer').value = '';
+        document.getElementById('answer').focus();
+      } else {
+        // For single-digit ranges: track retries, move to next problem after 3 attempts
+        session.currentProblemRetries++;
 
-      if (session.currentProblemRetries >= 3) {
-        const remaining = session.problems.slice(session.index + 1);
-        const pos = Math.floor(Math.random() * (remaining.length + 1));
-        remaining.splice(pos, 0, problem);
-        session.problems.splice(session.index + 1, session.problems.length - session.index - 1, ...remaining);
+        if (session.currentProblemRetries >= 3) {
+          const remaining = session.problems.slice(session.index + 1);
+          const pos = Math.floor(Math.random() * (remaining.length + 1));
+          remaining.splice(pos, 0, problem);
+          session.problems.splice(session.index + 1, session.problems.length - session.index - 1, ...remaining);
 
-        session.index++;
-        session.currentProblemRetries = 0;
+          session.index++;
+          session.currentProblemRetries = 0;
 
-        if (session.index >= session.problems.length) {
-          state.completions = Math.min(maxCompletions, state.completions + 1);
-          this.coins += coinsReward;
-
-          // Track 2-digit range performance
-          if (session.is2Digit) {
-            const accuracy = Math.round((session.correct / session.problems.length) * 100);
-            this.ranges2DigitHistory.push({
-              timestamp: Date.now(),
-              range: session.range.label,
-              multiplier: session.range.multiplier,
-              problems: session.problems.length,
-              correct: session.correct,
-              accuracy: accuracy
-            });
+          if (session.index >= session.problems.length) {
+            state.completions = Math.min(maxCompletions, state.completions + 1);
+            this.coins += coinsReward;
+            this.saveState();
+            this.updateCoinDisplay();
+            this.checkForUnlockedPrizes();
+            this.createCoinEarn();
+            this.playCoinSound();
+            this.createDancingCat();
+            setTimeout(() => {
+              this.backToMain();
+            }, 1600);
+          } else {
+            setTimeout(() => {
+              this.renderPractice();
+            }, 1500);
           }
-
-          this.saveState();
-          this.updateCoinDisplay();
-          this.checkForUnlockedPrizes();
-          this.createCoinEarn();
-          this.playCoinSound();
-          this.createDancingCat();
-          setTimeout(() => {
-            this.backToMain();
-          }, 1600);
         } else {
           setTimeout(() => {
             this.renderPractice();
           }, 1500);
         }
-      } else {
-        setTimeout(() => {
-          this.renderPractice();
-        }, 1500);
       }
     }
   },
