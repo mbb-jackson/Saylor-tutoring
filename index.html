@@ -231,10 +231,10 @@
   .stack-card[data-number="8"] { background: linear-gradient(135deg, #FF6348 0%, #FF7F50 100%); color: white; }
   .stack-card[data-number="9"] { background: linear-gradient(135deg, #5F27CD 0%, #8E44AD 100%); color: white; }
 
-  .stack-card[data-range="range_2"] { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: white; }
-  .stack-card[data-range="range_3"] { background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; }
-  .stack-card[data-range="range_4"] { background: linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333; }
-  .stack-card[data-range="range_5"] { background: linear-gradient(135deg, #6BCB77 0%, #8FE399 100%); color: white; }
+  .stack-card[data-range="range_3_easy"] { background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; }
+  .stack-card[data-range="range_3_hard"] { background: linear-gradient(135deg, #0FA3B1 0%, #1AC8D4 100%); color: white; }
+  .stack-card[data-range="range_8_easy"] { background: linear-gradient(135deg, #FF6348 0%, #FF7F50 100%); color: white; }
+  .stack-card[data-range="range_8_hard"] { background: linear-gradient(135deg, #CC3333 0%, #E55253 100%); color: white; }
 
   .stack-number { font-size: 36px; font-weight: 500; margin-bottom: 8px; }
   .stack-progress { font-size: 13px; opacity: 0.9; margin-bottom: 12px; }
@@ -1011,10 +1011,10 @@ const app = {
   state: {},
   numbers: [2, 3, 4, 5, 6, 7, 8, 9],
   ranges2Digit: [
-    { multiplier: 2, min: 12, max: 29, label: '12-29 × 2' },
-    { multiplier: 3, min: 12, max: 29, label: '12-29 × 3' },
-    { multiplier: 4, min: 12, max: 29, label: '12-29 × 4' },
-    { multiplier: 5, min: 12, max: 29, label: '12-29 × 5' }
+    { id: 'range_3_easy', multiplier: 3, min: 12, max: 19, label: '12-19 × 3' },
+    { id: 'range_3_hard', multiplier: 3, min: 20, max: 29, label: '20-29 × 3' },
+    { id: 'range_8_easy', multiplier: 8, min: 12, max: 19, label: '12-19 × 8' },
+    { id: 'range_8_hard', multiplier: 8, min: 20, max: 29, label: '20-29 × 8' }
   ],
   currentSession: null,
   coins: 0,
@@ -1076,7 +1076,7 @@ const app = {
 
     // Initialize missing state keys for 2-digit ranges
     this.ranges2Digit.forEach(range => {
-      const rangeKey = `range_${range.multiplier}`;
+      const rangeKey = range.id || `range_${range.multiplier}`;
       if (!this.state[rangeKey]) {
         this.state[rangeKey] = { completions: 0 };
       }
@@ -1123,7 +1123,7 @@ const app = {
 
     // Initialize 2-digit ranges state
     this.ranges2Digit.forEach(range => {
-      const rangeKey = `range_${range.multiplier}`;
+      const rangeKey = range.id || `range_${range.multiplier}`;
       if (!this.state[rangeKey]) {
         this.state[rangeKey] = { completions: 0 };
       }
@@ -2739,7 +2739,7 @@ const app = {
 
     // 2-digit range cards
     this.ranges2Digit.forEach(range => {
-      const rangeKey = `range_${range.multiplier}`;
+      const rangeKey = range.id || `range_${range.multiplier}`;
       const done = this.state[rangeKey].completions;
 
       const card = document.createElement('div');
@@ -2768,7 +2768,7 @@ const app = {
     });
 
     const total = this.numbers.length * 5 + this.ranges2Digit.length * 2;
-    const rangesComplete = this.ranges2Digit.reduce((sum, range) => sum + this.state[`range_${range.multiplier}`].completions, 0);
+    const rangesComplete = this.ranges2Digit.reduce((sum, range) => sum + (this.state[range.id || `range_${range.multiplier}`]?.completions || 0), 0);
     const percent = Math.round(((totalDone + rangesComplete) / total) * 100);
     document.getElementById('overallProgress').textContent = `${totalDone + rangesComplete}/${total} complete`;
     document.getElementById('overallFill').style.width = `${percent}%`;
@@ -2787,7 +2787,7 @@ const app = {
         return;
       }
 
-      const range = this.ranges2Digit.find(r => `range_${r.multiplier}` === rangeKey);
+      const range = this.ranges2Digit.find(r => (r.id || `range_${r.multiplier}`) === rangeKey);
 
       this.currentSession = {
         rangeKey: rangeKey,
