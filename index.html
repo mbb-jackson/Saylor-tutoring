@@ -235,6 +235,9 @@
   .stack-card[data-range="range_8"] { background: linear-gradient(135deg, #FF6348 0%, #FF7F50 100%); color: white; }
   .stack-card[data-range="range_mixed_1"] { background: linear-gradient(135deg, #A569BD 0%, #D08CE9 100%); color: white; }
   .stack-card[data-range="range_mixed_2"] { background: linear-gradient(135deg, #9C6B7A 0%, #C89BC4 100%); color: white; }
+  .stack-card[data-range="checkin_2x1"] { background: linear-gradient(135deg, #FFA500 0%, #FFD700 100%); color: #333; }
+  .stack-card[data-range="practice_3x1"] { background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%); color: #333; }
+  .stack-card[data-range="checkin_3x1"] { background: linear-gradient(135deg, #FF1493 0%, #FF69B4 100%); color: white; }
 
   .stack-number { font-size: 36px; font-weight: 500; margin-bottom: 8px; }
   .stack-progress { font-size: 13px; opacity: 0.9; margin-bottom: 12px; }
@@ -1011,10 +1014,13 @@ const app = {
   state: {},
   numbers: [2, 3, 4, 5, 6, 7, 8, 9],
   ranges2Digit: [
-    { id: 'range_3', multiplier: 3, min: 12, max: 29, label: '12-29 × 3' },
-    { id: 'range_8', multiplier: 8, min: 12, max: 29, label: '12-29 × 8' },
-    { id: 'range_mixed_1', min: 10, max: 99, mixed: true, label: '10-99 × 2-9 (mixed)' },
-    { id: 'range_mixed_2', min: 10, max: 99, mixed: true, label: '10-99 × 2-9 (mixed)' }
+    { id: 'range_3', multiplier: 3, min: 12, max: 29, label: '12-29 × 3', problemCount: 10, coinReward: 15 },
+    { id: 'range_8', multiplier: 8, min: 12, max: 29, label: '12-29 × 8', problemCount: 10, coinReward: 15 },
+    { id: 'range_mixed_1', min: 10, max: 99, mixed: true, label: '10-99 × 2-9 (mixed)', problemCount: 10, coinReward: 15 },
+    { id: 'range_mixed_2', min: 10, max: 99, mixed: true, label: '10-99 × 2-9 (mixed)', problemCount: 10, coinReward: 15 },
+    { id: 'checkin_2x1', min: 10, max: 99, mixed: true, label: '2×1 Check-In', problemCount: 10, coinReward: 35, maxCompletions: 1 },
+    { id: 'practice_3x1', multiplier: null, min: 100, max: 999, label: '3×1 Practice (5)', problemCount: 5, coinReward: 7, maxCompletions: 1 },
+    { id: 'checkin_3x1', min: 100, max: 999, mixed: true, label: '3×1 Check-In', problemCount: 10, coinReward: 35, maxCompletions: 1 }
   ],
   currentSession: null,
   coins: 0,
@@ -2747,20 +2753,32 @@ const app = {
       card.setAttribute('data-range', rangeKey);
       card.onclick = () => this.startPractice(rangeKey);
 
-      let progressText = `${done}/2`;
-      if (done === 2) progressText = '✓';
+      const maxCompletions = range.maxCompletions || 2;
+      let progressText = `${done}/${maxCompletions}`;
+      if (done >= maxCompletions) progressText = '✓';
 
-      const displayNumber = range.mixed ? '🎲' : range.multiplier;
+      let displayNumber;
+      if (range.id.includes('checkin')) {
+        displayNumber = '✅';
+      } else if (range.id.includes('practice')) {
+        displayNumber = '📝';
+      } else if (range.mixed) {
+        displayNumber = '🎲';
+      } else {
+        displayNumber = range.multiplier;
+      }
+
+      const coinReward = range.coinReward || 15;
 
       card.innerHTML = `
         <div class="stack-number">${displayNumber}</div>
         <div class="stack-subtext" style="font-size: 12px; color: var(--text-secondary); margin: 0.5rem 0;">${range.label}</div>
         <div class="stack-progress">${progressText}</div>
-        <div class="stack-reward">🪙 × 15</div>
+        <div class="stack-reward">🪙 × ${coinReward}</div>
       `;
 
       // Gray out if completed
-      if (done >= 2) {
+      if (done >= maxCompletions) {
         card.style.backgroundColor = '#e8e8e8';
         card.style.pointerEvents = 'none';
         card.style.cursor = 'default';
@@ -2769,7 +2787,8 @@ const app = {
       container.appendChild(card);
     });
 
-    const total = this.numbers.length * 5 + this.ranges2Digit.length * 2;
+    const total2Digit = this.ranges2Digit.reduce((sum, range) => sum + (range.maxCompletions || 2), 0);
+    const total = this.numbers.length * 5 + total2Digit;
     const rangesComplete = this.ranges2Digit.reduce((sum, range) => sum + (this.state[range.id || `range_${range.multiplier}`]?.completions || 0), 0);
     const percent = Math.round(((totalDone + rangesComplete) / total) * 100);
     document.getElementById('overallProgress').textContent = `${totalDone + rangesComplete}/${total} complete`;
@@ -2838,9 +2857,10 @@ const app = {
   },
 
   generate2DigitProblems(range) {
-    // Generate 10 random 2-digit problems from the range
+    // Generate random 2-digit/3-digit problems from the range (count based on range.problemCount, default 10)
+    const problemCount = range.problemCount || 10;
     const problems = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < problemCount; i++) {
       const num = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
       const multiplier = range.mixed
         ? Math.floor(Math.random() * 8) + 2  // Random digit 2-9
@@ -2966,8 +2986,8 @@ const app = {
 
     // Get state for either single-digit or 2-digit range
     const state = session.is2Digit ? this.state[session.rangeKey] : this.state[session.number];
-    const coinsReward = session.is2Digit ? 15 : 10;
-    const maxCompletions = session.is2Digit ? 2 : 5;
+    const coinsReward = session.is2Digit ? (session.range.coinReward || 15) : 10;
+    const maxCompletions = session.is2Digit ? (session.range.maxCompletions || 2) : 5;
 
     if (userAnswer === problem.product) {
       this.showCorrect();
