@@ -3445,10 +3445,21 @@ const app = {
       console.log('divisionRanges:', this.divisionRanges);
       console.log('state:', this.state);
 
-      document.getElementById('divisionMainScreen').style.display = 'block';
-      document.getElementById('divisionPracticeScreen').style.display = 'none';
-
+      const mainScreen = document.getElementById('divisionMainScreen');
+      const practiceScreen = document.getElementById('divisionPracticeScreen');
       const container = document.getElementById('divisionStacksContainer');
+
+      console.log('divisionMainScreen:', mainScreen);
+      console.log('divisionPracticeScreen:', practiceScreen);
+      console.log('divisionStacksContainer:', container);
+
+      if (!mainScreen || !practiceScreen || !container) {
+        console.error('❌ Missing required HTML elements!');
+        return;
+      }
+
+      mainScreen.style.display = 'block';
+      practiceScreen.style.display = 'none';
       container.innerHTML = '';
 
       let totalDone = 0;
