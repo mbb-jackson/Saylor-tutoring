@@ -3440,47 +3440,63 @@ const app = {
   },
 
   renderDivisionMain() {
-    document.getElementById('divisionMainScreen').style.display = 'block';
-    document.getElementById('divisionPracticeScreen').style.display = 'none';
+    try {
+      console.log('📊 renderDivisionMain called');
+      console.log('divisionRanges:', this.divisionRanges);
+      console.log('state:', this.state);
 
-    const container = document.getElementById('divisionStacksContainer');
-    container.innerHTML = '';
+      document.getElementById('divisionMainScreen').style.display = 'block';
+      document.getElementById('divisionPracticeScreen').style.display = 'none';
 
-    let totalDone = 0;
+      const container = document.getElementById('divisionStacksContainer');
+      container.innerHTML = '';
 
-    // Divisor cards (2-9)
-    this.divisionRanges.forEach(range => {
-      const done = this.state[range.id].completions;
-      totalDone += done;
+      let totalDone = 0;
 
-      const card = document.createElement('div');
-      card.className = 'stack-card';
-      card.setAttribute('data-divisor', range.id);
-      card.onclick = () => this.startDivisionPractice(range.id);
+      // Divisor cards (2-9)
+      this.divisionRanges.forEach(range => {
+        // Ensure state exists for this range
+        if (!this.state[range.id]) {
+          console.log(`⚠️ Initializing missing state for ${range.id}`);
+          this.state[range.id] = { completions: 0, stageCompletions: [0, 0, 0, 0] };
+        }
+        const done = this.state[range.id].completions;
+        console.log(`📊 Range ${range.id}: ${done} completions`);
+        totalDone += done;
 
-      let progressText = `${done}/4`;
-      if (done === 4) progressText = '✓';
+        const card = document.createElement('div');
+        card.className = 'stack-card';
+        card.setAttribute('data-divisor', range.id);
+        card.onclick = () => this.startDivisionPractice(range.id);
 
-      card.innerHTML = `
-        <div class="stack-number">${range.divisor}</div>
-        <div class="stack-progress">${progressText}</div>
-        <div class="stack-reward">🪙 × 12</div>
-      `;
+        let progressText = `${done}/4`;
+        if (done === 4) progressText = '✓';
 
-      // Gray out completed cards
-      if (done >= 4) {
-        card.style.backgroundColor = '#e8e8e8';
-        card.style.pointerEvents = 'none';
-        card.style.cursor = 'default';
-      }
+        card.innerHTML = `
+          <div class="stack-number">${range.divisor}</div>
+          <div class="stack-progress">${progressText}</div>
+          <div class="stack-reward">🪙 × 12</div>
+        `;
 
-      container.appendChild(card);
-    });
+        // Gray out completed cards
+        if (done >= 4) {
+          card.style.backgroundColor = '#e8e8e8';
+          card.style.pointerEvents = 'none';
+          card.style.cursor = 'default';
+        }
 
-    const total = this.divisionRanges.length * 4;
-    const percent = Math.round((totalDone / total) * 100);
-    document.getElementById('divisionOverallProgress').textContent = `${totalDone}/${total} complete`;
-    document.getElementById('divisionOverallFill').style.width = `${percent}%`;
+        container.appendChild(card);
+      });
+
+      const total = this.divisionRanges.length * 4;
+      const percent = Math.round((totalDone / total) * 100);
+      document.getElementById('divisionOverallProgress').textContent = `${totalDone}/${total} complete`;
+      document.getElementById('divisionOverallFill').style.width = `${percent}%`;
+      console.log('✅ renderDivisionMain complete');
+    } catch(e) {
+      console.error('❌ Error in renderDivisionMain:', e);
+      console.error(e.stack);
+    }
   },
 
   startDivisionPractice(divisorId) {
