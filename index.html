@@ -1405,12 +1405,19 @@ const app = {
   },
 
   showDivisionSelection() {
+    console.log('🎮 showDivisionSelection called');
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('divisionScreen').classList.add('active');
-    document.getElementById('divisionSelectionScreen').style.display = 'block';
-    document.getElementById('turdSplitterGame').style.display = 'none';
+    const divisionScreen = document.getElementById('divisionScreen');
+    console.log('divisionScreen element:', divisionScreen);
+    if (divisionScreen) divisionScreen.classList.add('active');
+    const divisionSelectionScreen = document.getElementById('divisionSelectionScreen');
+    console.log('divisionSelectionScreen element:', divisionSelectionScreen);
+    if (divisionSelectionScreen) divisionSelectionScreen.style.display = 'block';
+    const turdSplitterGame = document.getElementById('turdSplitterGame');
+    if (turdSplitterGame) turdSplitterGame.style.display = 'none';
     this.updateCoinDisplay();
     document.getElementById('divisionCoinsLabel').textContent = this.coins;
+    console.log('✅ showDivisionSelection complete');
   },
 
   backToDivisionSelection() {
@@ -3424,10 +3431,12 @@ const app = {
 
   // DIVISION GAME (TURD SPLITTER) FUNCTIONS
   startTurdSplitterGame() {
+    console.log('🎮 startTurdSplitterGame called');
     this.trackSessionStart('turdSplitter');
     document.getElementById('divisionSelectionScreen').style.display = 'none';
     document.getElementById('turdSplitterGame').style.display = 'block';
     this.renderDivisionMain();
+    console.log('✅ startTurdSplitterGame complete');
   },
 
   renderDivisionMain() {
