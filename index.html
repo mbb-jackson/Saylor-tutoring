@@ -452,6 +452,18 @@
     <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
       Master the tables · Earn coins · Unlock prizes
     </p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; max-width: 600px; margin: 0 auto 2rem;">
+      <div onclick="app.showGameSelection()" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+        <div style="font-size: 36px; margin-bottom: 0.5rem;">🐢</div>
+        <div style="font-size: 16px; font-weight: 600;">Turd Times</div>
+        <div style="font-size: 12px; opacity: 0.9;">Multiplication</div>
+      </div>
+      <div onclick="app.showDivisionSelection()" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+        <div style="font-size: 36px; margin-bottom: 0.5rem;">✂️</div>
+        <div style="font-size: 16px; font-weight: 600;">Turd Splitter</div>
+        <div style="font-size: 12px; opacity: 0.9;">Division</div>
+      </div>
+    </div>
   </div>
 
   <!-- MULTIPLICATION GAMES -->
@@ -598,11 +610,61 @@
     </div>
   </div>
 
-  <!-- DIVISION -->
+  <!-- DIVISION (TURD SPLITTER) -->
   <div id="divisionScreen" class="screen">
-    <div style="text-align: center; padding: 3rem;">
-      <h2>Division</h2>
-      <p style="color: var(--text-secondary); font-size: 18px;">Coming soon! 🚀</p>
+    <!-- Division Game Selection Menu -->
+    <div class="division-selection-screen" id="divisionSelectionScreen">
+      <div class="back-btn">
+        <button onclick="app.showHome()">← Back</button>
+      </div>
+      <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 2rem; text-align: center;">You have <span style="font-weight: 600; color: var(--fill-accent);" id="divisionCoinsLabel">0</span> coins, ready to learn division?</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 600px;">
+        <div onclick="app.startTurdSplitterGame()" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+          <div style="font-size: 48px; margin-bottom: 1rem;">✂️</div>
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Turd Splitter</div>
+          <div style="font-size: 14px; opacity: 0.9;">Master division facts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TURD SPLITTER GAME -->
+    <div class="turd-splitter-game" id="turdSplitterGame" style="display: none;">
+      <div class="back-btn">
+        <button onclick="app.backToDivisionSelection()">← Back</button>
+      </div>
+      <h2 style="margin-bottom: 2rem; font-size: 24px;">Turd Splitter</h2>
+      <div class="division-main-screen" id="divisionMainScreen">
+        <div class="stacks" id="divisionStacksContainer"></div>
+        <div class="stats">
+          <div id="divisionOverallProgress"></div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="divisionOverallFill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="division-practice-screen" id="divisionPracticeScreen">
+        <div class="back-btn">
+          <button onclick="app.backToDivisionMain()">← Back</button>
+        </div>
+
+        <div class="practice-container">
+          <div class="attempt-label">
+            <span id="divisionNumberLabel"></span> — Stage <span id="divisionStageNum"></span> • Problem <span id="divisionProblemNum"></span>
+          </div>
+
+          <div class="problem-section">
+            <div class="problem" id="divisionProblem"></div>
+            <div style="font-size: 14px; color: var(--text-secondary); margin-top: 0.5rem;" id="divisionScaffold"></div>
+            <div class="feedback" id="divisionFeedback"></div>
+
+            <div class="input-group">
+              <input type="number" id="divisionAnswer" placeholder="?" inputmode="numeric">
+              <button class="submit" onclick="app.submitDivision()">Check</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1022,7 +1084,18 @@ const app = {
     { id: 'practice_3x1', multiplier: null, min: 100, max: 999, label: '3×1 Practice (5)', problemCount: 5, coinReward: 7, maxCompletions: 1 },
     { id: 'checkin_3x1', min: 100, max: 999, mixed: true, label: '3×1 Check-In', problemCount: 10, coinReward: 20, maxCompletions: 1 }
   ],
+  divisionRanges: [
+    { id: 'div_2', divisor: 2, label: '2s Division', stages: 4, coinReward: 12 },
+    { id: 'div_3', divisor: 3, label: '3s Division', stages: 4, coinReward: 12 },
+    { id: 'div_4', divisor: 4, label: '4s Division', stages: 4, coinReward: 12 },
+    { id: 'div_5', divisor: 5, label: '5s Division', stages: 4, coinReward: 12 },
+    { id: 'div_6', divisor: 6, label: '6s Division', stages: 4, coinReward: 12 },
+    { id: 'div_7', divisor: 7, label: '7s Division', stages: 4, coinReward: 12 },
+    { id: 'div_8', divisor: 8, label: '8s Division', stages: 4, coinReward: 12 },
+    { id: 'div_9', divisor: 9, label: '9s Division', stages: 4, coinReward: 12 }
+  ],
   currentSession: null,
+  currentDivisionSession: null,
   coins: 0,
   fastGameHistory: [],
   ranges2DigitHistory: [],
@@ -1132,6 +1205,13 @@ const app = {
       const rangeKey = range.id || `range_${range.multiplier}`;
       if (!this.state[rangeKey]) {
         this.state[rangeKey] = { completions: 0 };
+      }
+    });
+
+    // Initialize division ranges state (4 stages per divisor, 2-9)
+    this.divisionRanges.forEach(range => {
+      if (!this.state[range.id]) {
+        this.state[range.id] = { completions: 0, stageCompletions: [0, 0, 0, 0] };
       }
     });
 
@@ -1322,6 +1402,36 @@ const app = {
     document.getElementById('fastCatGame').style.display = 'none';
     document.getElementById('bubbleBusterGame').style.display = 'none';
     this.updateBonusRoundVisibility();
+  },
+
+  showDivisionSelection() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('divisionScreen').classList.add('active');
+    document.getElementById('divisionSelectionScreen').style.display = 'block';
+    document.getElementById('turdSplitterGame').style.display = 'none';
+    this.updateCoinDisplay();
+    document.getElementById('divisionCoinsLabel').textContent = this.coins;
+  },
+
+  backToDivisionSelection() {
+    // Track session end
+    if (this.currentGameMode) {
+      this.trackSessionEnd(this.currentGameMode);
+    }
+
+    // Clear active division session
+    if (this.currentDivisionSession) {
+      this.currentDivisionSession = null;
+    }
+
+    this.showDivisionSelection();
+  },
+
+  showHome() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('homeScreen').classList.add('active');
+    this.updateCoinDisplay();
+    document.getElementById('homeCoins').textContent = this.coins;
   },
 
   startTurdTimesGame() {
@@ -3312,6 +3422,249 @@ const app = {
     this.updateCoinDisplay();
   },
 
+  // DIVISION GAME (TURD SPLITTER) FUNCTIONS
+  startTurdSplitterGame() {
+    this.trackSessionStart('turdSplitter');
+    document.getElementById('divisionSelectionScreen').style.display = 'none';
+    document.getElementById('turdSplitterGame').style.display = 'block';
+    this.renderDivisionMain();
+  },
+
+  renderDivisionMain() {
+    document.getElementById('divisionMainScreen').style.display = 'block';
+    document.getElementById('divisionPracticeScreen').style.display = 'none';
+
+    const container = document.getElementById('divisionStacksContainer');
+    container.innerHTML = '';
+
+    let totalDone = 0;
+
+    // Divisor cards (2-9)
+    this.divisionRanges.forEach(range => {
+      const done = this.state[range.id].completions;
+      totalDone += done;
+
+      const card = document.createElement('div');
+      card.className = 'stack-card';
+      card.setAttribute('data-divisor', range.id);
+      card.onclick = () => this.startDivisionPractice(range.id);
+
+      let progressText = `${done}/4`;
+      if (done === 4) progressText = '✓';
+
+      card.innerHTML = `
+        <div class="stack-number">${range.divisor}</div>
+        <div class="stack-progress">${progressText}</div>
+        <div class="stack-reward">🪙 × 12</div>
+      `;
+
+      // Gray out completed cards
+      if (done >= 4) {
+        card.style.backgroundColor = '#e8e8e8';
+        card.style.pointerEvents = 'none';
+        card.style.cursor = 'default';
+      }
+
+      container.appendChild(card);
+    });
+
+    const total = this.divisionRanges.length * 4;
+    const percent = Math.round((totalDone / total) * 100);
+    document.getElementById('divisionOverallProgress').textContent = `${totalDone}/${total} complete`;
+    document.getElementById('divisionOverallFill').style.width = `${percent}%`;
+  },
+
+  startDivisionPractice(divisorId) {
+    const range = this.divisionRanges.find(r => r.id === divisorId);
+    const state = this.state[divisorId];
+
+    if (state.completions >= 4) {
+      return;
+    }
+
+    const currentStage = state.completions + 1;
+
+    this.currentDivisionSession = {
+      divisorId: divisorId,
+      divisor: range.divisor,
+      problems: this.generateDivisionProblems(range.divisor, currentStage),
+      index: 0,
+      correct: 0,
+      stage: currentStage,
+      currentProblemRetries: 0
+    };
+
+    this.renderDivisionPractice();
+  },
+
+  generateDivisionProblems(divisor, stage) {
+    const problems = [];
+
+    // Generate 5 problems for each stage
+    for (let i = 2; i <= 9; i++) {
+      const multiplicand = divisor;
+      const multiplier = i;
+      const product = multiplicand * multiplier;
+
+      problems.push({
+        dividend: product,
+        divisor: divisor,
+        quotient: multiplier,
+        multiplier: multiplier,
+        stage: stage
+      });
+    }
+
+    return problems.sort(() => Math.random() - 0.5);
+  },
+
+  renderDivisionPractice() {
+    document.getElementById('divisionMainScreen').style.display = 'none';
+    document.getElementById('divisionPracticeScreen').style.display = 'block';
+
+    const { problems, index, stage, divisor } = this.currentDivisionSession;
+    const problem = problems[index];
+
+    document.getElementById('divisionNumberLabel').textContent = `${divisor}s Division`;
+    document.getElementById('divisionStageNum').textContent = stage;
+    document.getElementById('divisionProblemNum').textContent = index + 1;
+    document.getElementById('divisionFeedback').textContent = '';
+    document.getElementById('divisionFeedback').className = 'feedback';
+    document.getElementById('divisionAnswer').value = '';
+    document.getElementById('divisionAnswer').focus();
+
+    // Generate problem display based on stage
+    let problemDisplay = '';
+    let scaffoldDisplay = '';
+
+    if (stage === 1) {
+      // Stage 1: Show fact family (multiplication + division together)
+      problemDisplay = `If ${divisor} × ${problem.multiplier} = ${problem.dividend}, what is ${problem.dividend} ÷ ${divisor} = ?`;
+      scaffoldDisplay = '';
+    } else if (stage === 2) {
+      // Stage 2: Show division problem with visible multiplication fact
+      problemDisplay = `${problem.dividend} ÷ ${divisor} = ?`;
+      scaffoldDisplay = `Hint: ${divisor} × ${problem.multiplier} = ${problem.dividend}`;
+    } else if (stage === 3) {
+      // Stage 3: Show division problem with optional hint
+      problemDisplay = `${problem.dividend} ÷ ${divisor} = ?`;
+      scaffoldDisplay = `(Hint available)`;
+    } else if (stage === 4) {
+      // Stage 4: Show only the division problem, no hints
+      problemDisplay = `${problem.dividend} ÷ ${divisor} = ?`;
+      scaffoldDisplay = '';
+    }
+
+    document.getElementById('divisionProblem').textContent = problemDisplay;
+    document.getElementById('divisionScaffold').textContent = scaffoldDisplay;
+  },
+
+  submitDivision() {
+    const input = document.getElementById('divisionAnswer').value.trim();
+    if (!input) return;
+
+    const session = this.currentDivisionSession;
+    const problem = session.problems[session.index];
+    const userAnswer = parseInt(input);
+
+    const state = this.state[session.divisorId];
+    const coinsReward = 12;
+    const maxCompletions = 4;
+    const fb = document.getElementById('divisionFeedback');
+
+    if (userAnswer === problem.quotient) {
+      // Show correct feedback
+      const emojis = ['👍', '✅', '🎯', '🌟', '💪', '👏', '🚀', '⭐'];
+      const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+      fb.textContent = randomEmoji;
+      fb.className = 'feedback correct';
+
+      this.createCelebration('🎉');
+      this.createCelebration('✨');
+      this.playCorrectSound();
+
+      session.correct++;
+
+      if (session.currentProblemRetries > 0) {
+        const remaining = session.problems.slice(session.index + 1);
+        const pos = Math.floor(Math.random() * (remaining.length + 1));
+        remaining.splice(pos, 0, problem);
+        session.problems.splice(session.index + 1, session.problems.length - session.index - 1, ...remaining);
+      }
+
+      session.index++;
+      session.currentProblemRetries = 0;
+
+      if (session.index >= session.problems.length) {
+        // Completed this stage
+        state.completions = Math.min(maxCompletions, state.completions + 1);
+        state.stageCompletions[session.stage - 1] = 1;
+        this.coins += coinsReward;
+
+        this.saveState();
+        this.updateCoinDisplay();
+        this.checkForUnlockedPrizes();
+        this.createCoinEarn();
+        this.playCoinSound();
+        this.createDancingCat();
+
+        setTimeout(() => {
+          this.backToDivisionMain();
+        }, 1600);
+      } else {
+        setTimeout(() => {
+          this.renderDivisionPractice();
+        }, 600);
+      }
+    } else {
+      // Show wrong feedback
+      fb.innerHTML = `<span style="font-size: 40px;">✗</span> <span style="font-size: 32px;">${problem.quotient}</span>`;
+      fb.className = 'feedback wrong';
+      this.playWrongSound();
+
+      // Track retries - move to next after 3 attempts
+      session.currentProblemRetries++;
+
+      if (session.currentProblemRetries >= 3) {
+        const remaining = session.problems.slice(session.index + 1);
+        const pos = Math.floor(Math.random() * (remaining.length + 1));
+        remaining.splice(pos, 0, problem);
+        session.problems.splice(session.index + 1, session.problems.length - session.index - 1, ...remaining);
+
+        session.index++;
+        session.currentProblemRetries = 0;
+
+        if (session.index >= session.problems.length) {
+          state.completions = Math.min(maxCompletions, state.completions + 1);
+          state.stageCompletions[session.stage - 1] = 1;
+          this.coins += coinsReward;
+          this.saveState();
+          this.updateCoinDisplay();
+          this.checkForUnlockedPrizes();
+          this.createCoinEarn();
+          this.playCoinSound();
+          this.createDancingCat();
+
+          setTimeout(() => {
+            this.backToDivisionMain();
+          }, 1600);
+        } else {
+          setTimeout(() => {
+            this.renderDivisionPractice();
+          }, 1500);
+        }
+      } else {
+        document.getElementById('divisionAnswer').value = '';
+        document.getElementById('divisionAnswer').focus();
+      }
+    }
+  },
+
+  backToDivisionMain() {
+    this.currentDivisionSession = null;
+    this.renderDivisionMain();
+  },
+
   initEventListeners() {
     const self = this;
 
@@ -3326,6 +3679,13 @@ const app = {
     document.getElementById('fastAnswer').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         self.fastSubmit();
+      }
+    });
+
+    // Turd Splitter (Division) answer input
+    document.getElementById('divisionAnswer').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        self.submitDivision();
       }
     });
   },
