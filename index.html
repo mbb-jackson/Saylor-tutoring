@@ -231,10 +231,10 @@
   .stack-card[data-number="8"] { background: linear-gradient(135deg, #FF6348 0%, #FF7F50 100%); color: white; }
   .stack-card[data-number="9"] { background: linear-gradient(135deg, #5F27CD 0%, #8E44AD 100%); color: white; }
 
-  .stack-card[data-range="range_3_easy"] { background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; }
-  .stack-card[data-range="range_3_hard"] { background: linear-gradient(135deg, #0FA3B1 0%, #1AC8D4 100%); color: white; }
-  .stack-card[data-range="range_8_easy"] { background: linear-gradient(135deg, #FF6348 0%, #FF7F50 100%); color: white; }
-  .stack-card[data-range="range_8_hard"] { background: linear-gradient(135deg, #CC3333 0%, #E55253 100%); color: white; }
+  .stack-card[data-range="range_3"] { background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; }
+  .stack-card[data-range="range_8"] { background: linear-gradient(135deg, #FF6348 0%, #FF7F50 100%); color: white; }
+  .stack-card[data-range="range_mixed_1"] { background: linear-gradient(135deg, #A569BD 0%, #D08CE9 100%); color: white; }
+  .stack-card[data-range="range_mixed_2"] { background: linear-gradient(135deg, #9C6B7A 0%, #C89BC4 100%); color: white; }
 
   .stack-number { font-size: 36px; font-weight: 500; margin-bottom: 8px; }
   .stack-progress { font-size: 13px; opacity: 0.9; margin-bottom: 12px; }
@@ -1011,10 +1011,10 @@ const app = {
   state: {},
   numbers: [2, 3, 4, 5, 6, 7, 8, 9],
   ranges2Digit: [
-    { id: 'range_3_easy', multiplier: 3, min: 12, max: 19, label: '12-19 × 3' },
-    { id: 'range_3_hard', multiplier: 3, min: 20, max: 29, label: '20-29 × 3' },
-    { id: 'range_8_easy', multiplier: 8, min: 12, max: 19, label: '12-19 × 8' },
-    { id: 'range_8_hard', multiplier: 8, min: 20, max: 29, label: '20-29 × 8' }
+    { id: 'range_3', multiplier: 3, min: 12, max: 29, label: '12-29 × 3' },
+    { id: 'range_8', multiplier: 8, min: 12, max: 29, label: '12-29 × 8' },
+    { id: 'range_mixed_1', min: 10, max: 99, mixed: true, label: '10-99 × 2-9 (mixed)' },
+    { id: 'range_mixed_2', min: 10, max: 99, mixed: true, label: '10-99 × 2-9 (mixed)' }
   ],
   currentSession: null,
   coins: 0,
@@ -2750,8 +2750,10 @@ const app = {
       let progressText = `${done}/2`;
       if (done === 2) progressText = '✓';
 
+      const displayNumber = range.mixed ? '🎲' : range.multiplier;
+
       card.innerHTML = `
-        <div class="stack-number">${range.multiplier}</div>
+        <div class="stack-number">${displayNumber}</div>
         <div class="stack-subtext" style="font-size: 12px; color: var(--text-secondary); margin: 0.5rem 0;">${range.label}</div>
         <div class="stack-progress">${progressText}</div>
         <div class="stack-reward">🪙 × 15</div>
@@ -2840,10 +2842,13 @@ const app = {
     const problems = [];
     for (let i = 0; i < 10; i++) {
       const num = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+      const multiplier = range.mixed
+        ? Math.floor(Math.random() * 8) + 2  // Random digit 2-9
+        : range.multiplier;  // Fixed multiplier
       problems.push({
         number: num,
-        multiplier: range.multiplier,
-        product: num * range.multiplier
+        multiplier: multiplier,
+        product: num * multiplier
       });
     }
     return problems;
