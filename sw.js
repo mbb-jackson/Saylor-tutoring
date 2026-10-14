@@ -1,5 +1,5 @@
 // Service Worker for Saylor's Times Tables
-const CACHE_NAME = 'saylors-games-v4';
+const CACHE_NAME = 'saylors-games-v5';
 const urlsToCache = [
   '/',
   '/index.html'

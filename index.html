@@ -1133,7 +1133,7 @@ const app = {
     { id: 'range_mixed_1', min: 10, max: 99, mixed: true, label: '10-99 × 2-9 (mixed)', problemCount: 10, coinReward: 15 },
     { id: 'range_mixed_2', min: 10, max: 99, mixed: true, label: '10-99 × 2-9 (mixed)', problemCount: 10, coinReward: 15 },
     { id: 'checkin_2x1', min: 10, max: 99, mixed: true, label: '2×1 Check-In', problemCount: 10, coinReward: 20, maxCompletions: 1 },
-    { id: 'practice_3x1', multiplier: null, min: 100, max: 999, label: '3×1 Practice (5)', problemCount: 5, coinReward: 7, maxCompletions: 1 },
+    { id: 'practice_3x1', mixed: true, min: 100, max: 999, label: '3×1 Practice (5)', problemCount: 5, coinReward: 7, maxCompletions: 1 },
     { id: 'checkin_3x1', min: 100, max: 999, mixed: true, label: '3×1 Check-In', problemCount: 10, coinReward: 20, maxCompletions: 1 }
   ],
   divisionRanges: [
@@ -3179,7 +3179,9 @@ const app = {
 
   startPractice(numberOrRange) {
     // Check if this is a 2-digit range or single digit
-    const is2Digit = typeof numberOrRange === 'string' && numberOrRange.startsWith('range_');
+    // Any id listed in ranges2Digit (range_*, checkin_*, practice_*) is a range, not a single digit
+    const is2Digit = typeof numberOrRange === 'string' &&
+      this.ranges2Digit.some(r => (r.id || `range_${r.multiplier}`) === numberOrRange);
 
     if (is2Digit) {
       // 2-digit range
@@ -3264,7 +3266,7 @@ const app = {
     const problem = problems[index];
 
     if (is2Digit) {
-      document.getElementById('numberLabel').textContent = `${range.label} • Problem ${index + 1}/10`;
+      document.getElementById('numberLabel').textContent = `${range.label} • Problem ${index + 1}/${problems.length}`;
       document.getElementById('attemptNum').textContent = completionNumber;
       document.getElementById('problem').textContent = `${problem.number} × ${problem.multiplier} = ?`;
     } else {
