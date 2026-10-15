@@ -1065,7 +1065,9 @@ const storage = {
         data.lastSyncTime = Date.now();
         const ref = firebaseDatabase.ref('saylor/gameState');
         // Fire the Firebase write but don't await it - app continues immediately
-        ref.set(data).then(() => {
+        // Firebase rejects NaN/undefined values and then saves nothing; JSON round-trip turns NaN into null and drops undefined
+        const clean = JSON.parse(JSON.stringify(data));
+        ref.set(clean).then(() => {
           console.log('✅ Synced to Firebase');
         }).catch(err => {
           console.error('Firebase sync error:', err.message);
