@@ -609,19 +609,17 @@ const SKILLS_MAP = {
   }
 };
 
+const FIREBASE_STATE_URL = 'https://saylortutoring-c6b54-default-rtdb.firebaseio.com/saylor/gameState.json';
+
 const coach = {
   data: null,
   gistId: localStorage.getItem('coachGistId') || '',
   autoRefreshInterval: null,
 
   init() {
-    if (this.gistId) {
-      this.loadGistData();
-      // Auto-refresh every 30 seconds
-      this.autoRefreshInterval = setInterval(() => this.loadGistData(), 30000);
-    } else {
-      this.showSetup();
-    }
+    // Reads Saylor's live data straight from Firebase (no Gist ID needed)
+    this.loadGistData();
+    this.autoRefreshInterval = setInterval(() => this.loadGistData(), 30000);
   },
 
   showSetup() {
@@ -635,55 +633,21 @@ const coach = {
   },
 
   async loadGistData() {
-    const gistId = document.getElementById('gistIdInput')?.value?.trim() || this.gistId;
-    if (!gistId) return;
-
-    this.gistId = gistId;
-    localStorage.setItem('coachGistId', gistId);
-    if (document.getElementById('gistIdInput')) {
-      document.getElementById('gistIdInput').value = gistId;
-    }
-    document.getElementById('gistIdSetting').value = gistId;
-
     const statusBadge = document.getElementById('statusBadge');
     statusBadge.textContent = 'Syncing...';
     statusBadge.className = 'status-badge status-offline';
 
     try {
-      const response = await fetch(`https://api.github.com/gists/${gistId}`);
-
+      const response = await fetch(FIREBASE_STATE_URL);
       if (!response.ok) {
-        throw new Error('Gist not found or not accessible');
+        throw new Error('Firebase read failed (' + response.status + ')');
+      }
+      const state = await response.json();
+      if (!state) {
+        throw new Error('No progress data yet');
       }
 
-      const gistData = await response.json();
-
-      // Try to find the file - be flexible with naming
-      let fileContent = null;
-
-      // First try exact name
-      fileContent = gistData.files['saylor-progress.json']?.content;
-
-      // If not found, try to find any JSON file
-      if (!fileContent) {
-        const fileNames = Object.keys(gistData.files || {});
-        const jsonFile = fileNames.find(name => name.includes('progress') || name.endsWith('.json'));
-        if (jsonFile) {
-          fileContent = gistData.files[jsonFile]?.content;
-        }
-      }
-
-      // If still not found, use first file
-      if (!fileContent) {
-        const firstFile = Object.values(gistData.files || {})[0];
-        fileContent = firstFile?.content;
-      }
-
-      if (!fileContent) {
-        throw new Error('No JSON files found in gist');
-      }
-
-      this.data = JSON.parse(fileContent);
+      this.data = state;
       document.getElementById('lastSyncTime').textContent = new Date().toLocaleTimeString();
 
       this.showDashboard();
@@ -695,7 +659,6 @@ const coach = {
       statusBadge.textContent = '✗ Offline';
       statusBadge.className = 'status-badge status-offline';
       console.error('Failed to load Gist:', err);
-      alert('Error: ' + err.message);
     }
   },
 
