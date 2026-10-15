@@ -944,6 +944,20 @@ const firebaseConfig = {
   appId: "1:676519374671:web:72fe499e971b6f69f59f3a"
 };
 
+// Visible warning when progress is not reaching the database
+function showSaveStatus(ok, msg) {
+  let el = document.getElementById('saveStatusBanner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'saveStatusBanner';
+    el.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;padding:12px;text-align:center;font:600 15px -apple-system,sans-serif;color:#fff;background:#c62828;display:none';
+    document.body.appendChild(el);
+  }
+  if (ok) { el.style.display = 'none'; return; }
+  el.textContent = '⚠️ Progress NOT saved. Tell Michael. ' + (msg || '');
+  el.style.display = 'block';
+}
+
 // Update Firebase status indicator
 function updateFirebaseStatus(connected) {
   const statusEl = document.getElementById('firebaseStatus');
@@ -1025,11 +1039,20 @@ const storage = {
       const snapshot = await ref.get();
 
       if (snapshot.exists()) {
-        const data = snapshot.val();
-        data.lastSyncTime = Date.now();
-        this.localCopy = data;
+        const remote = snapshot.val();
+        const savedLocal = localStorage.getItem('saylorsGames');
+        const local = savedLocal ? JSON.parse(savedLocal) : null;
+        if (local && (local.lastSyncTime || 0) > (remote.lastSyncTime || 0)) {
+          // This device has newer progress that never reached Firebase: keep it and push it up
+          console.log('⚠️ Local progress is newer than Firebase; pushing local copy');
+          this.localCopy = local;
+          await this.setState(local);
+          return local;
+        }
+        this.localCopy = remote;
+        localStorage.setItem('saylorsGames', JSON.stringify(remote));
         console.log('✅ Loaded from Firebase');
-        return data;
+        return remote;
       } else {
         // No Firebase data, check localStorage for migration
         console.log('No Firebase data found, checking localStorage for migration...');
@@ -1056,6 +1079,8 @@ const storage = {
   // Save state to Firebase and localStorage
   async setState(data) {
     try {
+      // Stamp the save time first so this device's copy can be compared with Firebase later
+      data.lastSyncTime = Date.now();
       // Always save to localStorage for offline access (synchronous, fast)
       localStorage.setItem('saylorsGames', JSON.stringify(data));
       this.localCopy = data;
@@ -1069,13 +1094,16 @@ const storage = {
         const clean = JSON.parse(JSON.stringify(data));
         ref.set(clean).then(() => {
           console.log('✅ Synced to Firebase');
+          showSaveStatus(true);
         }).catch(err => {
           console.error('Firebase sync error:', err.message);
+          showSaveStatus(false, err.message);
           // Data is still safe in localStorage
         });
       }
     } catch (error) {
       console.error('Error saving state:', error);
+      showSaveStatus(false, error.message);
       // At minimum, save to localStorage
       localStorage.setItem('saylorsGames', JSON.stringify(data));
     }
@@ -1191,6 +1219,10 @@ const app = {
   },
 
   handleRealtimeDataUpdate(data) {
+    // Ignore a database copy that is older than what this device saved last
+    const savedLocal = localStorage.getItem('saylorsGames');
+    const localMeta = savedLocal ? JSON.parse(savedLocal) : null;
+    if (localMeta && (localMeta.lastSyncTime || 0) > (data.lastSyncTime || 0)) return;
     // Update app state with Firebase changes from other devices
     this.state = data.turdTimes || {};
     this.coins = data.coins || 0;
