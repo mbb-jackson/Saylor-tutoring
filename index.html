@@ -1088,6 +1088,10 @@ const storage = {
       // Save to Firebase if available (fire-and-forget to not block game)
       if (this.useFirebase && firebaseDatabase) {
         data.lastSyncTime = Date.now();
+        if (this.connected === false) {
+          // Offline: the write waits for a connection and does not fail, so say so on screen
+          showSaveStatus(false, 'Offline: saved on this device only. It will sync when connected.');
+        }
         const ref = firebaseDatabase.ref('saylor/gameState');
         // Fire the Firebase write but don't await it - app continues immediately
         // Firebase rejects NaN/undefined values and then saves nothing; JSON round-trip turns NaN into null and drops undefined
@@ -1123,10 +1127,14 @@ const storage = {
       }
 
       const ref = firebaseDatabase.ref('saylor/gameState');
+      firebaseDatabase.ref('.info/connected').on('value', (snap) => {
+        this.connected = snap.val() === true;
+      });
+
       realtimeListener = ref.on('value', (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.val();
-          data.lastSyncTime = Date.now();
+          // Keep the timestamp Firebase stored. Stamping Date.now() here made every update look newest.
           this.localCopy = data;
           console.log('🔄 Real-time update from Firebase');
           onDataChange(data);
@@ -1222,7 +1230,11 @@ const app = {
     // Ignore a database copy that is older than what this device saved last
     const savedLocal = localStorage.getItem('saylorsGames');
     const localMeta = savedLocal ? JSON.parse(savedLocal) : null;
-    if (localMeta && (localMeta.lastSyncTime || 0) > (data.lastSyncTime || 0)) return;
+    if (localMeta && (localMeta.lastSyncTime || 0) > (data.lastSyncTime || 0)) {
+      // Database copy is older (e.g. a rejected write was rolled back): keep this device's progress and push it up
+      storage.setState(localMeta);
+      return;
+    }
     // Update app state with Firebase changes from other devices
     this.state = data.turdTimes || {};
     this.coins = data.coins || 0;
