@@ -782,10 +782,17 @@ const coach = {
       ? checkIns.slice(0, 5).map(c => row(esc(c.date || 'Check-in'), `${c.totalCorrect}/${c.totalQuestions}`, `${c.accuracy}%`)).join('')
       : '<p style="color:var(--text-secondary); font-size:14px;">No check-ins saved yet.</p>';
 
-    // Multiplication tables and 2-digit ranges
-    const tables = [2,3,4,5,6,7,8,9].map(n => (st[String(n)] || {}).completions || 0);
-    const rangeKeys = Object.keys(st).filter(k => k.startsWith('range_'));
-    const rangeRows = rangeKeys.map(k => row(esc(k.replace(/_/g, ' ')), ((st[k] || {}).completions || 0) + ' done')).join('');
+    // Multiplication tables: one line each, same names the app uses
+    const tableRows = [2,3,4,5,6,7,8,9].map(n => row(`${n}s table`, `${(st[String(n)] || {}).completions || 0} done`)).join('');
+
+    // Two-digit sets, using the app's own labels (legacy keys are not shown)
+    const setLabels = [
+      ['range_3', '12–29 × 3'],
+      ['range_8', '12–29 × 8'],
+      ['range_mixed_1', '10–99 × 2–9 (mixed) #1'],
+      ['range_mixed_2', '10–99 × 2–9 (mixed) #2']
+    ];
+    const rangeRows = setLabels.map(([k, label]) => row(label, `${(st[k] || {}).completions || 0} done`)).join('');
 
     document.getElementById('progressSection').innerHTML = `
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;">
@@ -798,10 +805,10 @@ const coach = {
         <div>
           <div style="font-weight:600; margin-bottom:6px;">Check-ins (newest first)</div>
           ${checkHtml}
-          <div style="font-weight:600; margin:14px 0 6px;">Multiplication tables (completions)</div>
-          ${row('Tables 2–9', tables.join(' · '))}
-          <div style="font-weight:600; margin:14px 0 6px;">Other sets</div>
-          ${rangeRows || '<p style="color:var(--text-secondary); font-size:14px;">None yet.</p>'}
+          <div style="font-weight:600; margin:14px 0 6px;">Multiplication tables</div>
+          ${tableRows}
+          <div style="font-weight:600; margin:14px 0 6px;">Two-digit sets</div>
+          ${rangeRows}
         </div>
       </div>`;
   },
