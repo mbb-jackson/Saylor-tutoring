@@ -3869,7 +3869,7 @@ const app = {
     const problem = session.problems[session.index];
     const hint = document.getElementById('divisionHint');
     if (problem && session.hintIndex === session.index) {
-      hint.textContent = `${session.divisor} × ${problem.quotient} = ${problem.dividend}`;
+      hint.textContent = `Hint: ${session.divisor} × ${problem.quotient} = ${problem.dividend}`;
       hint.style.display = 'block';
     } else {
       hint.textContent = '';
