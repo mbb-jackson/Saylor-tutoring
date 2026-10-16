@@ -4075,8 +4075,10 @@ const app = {
 
       if (session.index >= session.problems.length) {
         // Completed this stage
-        state.completions = Math.min(maxCompletions, state.completions + 1);
-        state.stageCompletions[session.stage - 1] = 1;
+        // Re-read: saveState() can swap in a fresh copy of progress from the database
+        const current = this.state[session.divisorId];
+        current.completions = Math.min(maxCompletions, current.completions + 1);
+        current.stageCompletions[session.stage - 1] = 1;
         this.coins += coinsReward * (1 + this.qualifierMultiplier);
 
         this.saveState();
@@ -4118,8 +4120,10 @@ const app = {
         session.hintIndex = null;
 
         if (session.index >= session.problems.length) {
-          state.completions = Math.min(maxCompletions, state.completions + 1);
-          state.stageCompletions[session.stage - 1] = 1;
+          // Re-read: saveState() can swap in a fresh copy of progress from the database
+          const current = this.state[session.divisorId];
+          current.completions = Math.min(maxCompletions, current.completions + 1);
+          current.stageCompletions[session.stage - 1] = 1;
           this.coins += coinsReward * (1 + this.qualifierMultiplier);
           this.saveState();
           this.updateCoinDisplay();
