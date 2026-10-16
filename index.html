@@ -1696,7 +1696,7 @@ const app = {
       q = Object.assign(q, {
         divisor, quotient, remainder,
         dividend: divisor * quotient + remainder,
-        hasRemainder: level.remainder
+        hasRemainder: true // always two answer boxes; no-remainder questions expect 0
       });
     } else if (level.kind === 'estimate') {
       // 4-digit dividend ÷ 1-digit, rounded to one significant digit: 5,572 ÷ 8 ≈ 700
