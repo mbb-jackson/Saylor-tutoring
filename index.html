@@ -45,6 +45,18 @@
 
   .coin-icon { font-size: 32px; }
 
+  /* Gold coin used everywhere the old silver emoji was */
+  .gold-coin {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff6b0 0%, #ffd700 40%, #d4a017 75%, #a67c00 100%);
+    border: 0.08em solid #a67c00;
+    box-shadow: inset 0 0 0 0.12em rgba(255, 255, 255, 0.35);
+    vertical-align: -0.12em;
+  }
+
   .nav-tabs {
     display: flex;
     gap: 12px;
@@ -414,7 +426,7 @@
     <h1>Turd Daddy University</h1>
     <div style="display: flex; gap: 16px; align-items: center;">
       <div class="coin-display">
-        <span class="coin-icon">🪙</span>
+        <span class="coin-icon"><span class="gold-coin"></span></span>
         <span id="totalCoins">0</span>
       </div>
       <button onclick="app.switchTab('prizes')" style="padding: 16px 28px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">🎁 Prize Store</button>
@@ -443,7 +455,7 @@
         </div>
         <div style="background: rgba(255, 255, 255, 0.4); border-radius: 12px; padding: 1.2rem; border: 2px solid rgba(255, 255, 255, 0.6);">
           <div style="font-size: 12px; font-weight: 700; color: rgba(0, 0, 0, 0.7); margin-bottom: 0.5rem;">EARN</div>
-          <div style="font-size: 32px; font-weight: 900;">35 🪙</div>
+          <div style="font-size: 32px; font-weight: 900;">35 <span class="gold-coin"></span></div>
         </div>
       </div>
     </div>
@@ -490,7 +502,7 @@
         <div onclick="app.showMegaMenu()" style="grid-column: 1 / -1; background: linear-gradient(135deg, #FFD93D 0%, #FF9F43 100%); color: #333; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
           <div style="font-size: 48px; margin-bottom: 1rem;">🏆</div>
           <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Mega Prize</div>
-          <div style="font-size: 14px; opacity: 0.9;">All 81 facts · under 3 minutes · 200 🪙</div>
+          <div style="font-size: 14px; opacity: 0.9;">All 81 facts · under 3 minutes · 200 <span class="gold-coin"></span></div>
         </div>
       </div>
     </div>
@@ -651,7 +663,7 @@
           <div style="font-size: 80px; margin-bottom: 1rem;">🎉</div>
           <h3 style="font-size: 28px; margin-bottom: 2rem;">Great Job!</h3>
           <div style="font-size: 72px; font-weight: 600; margin-bottom: 0.5rem;">
-            +<span id="coinsEarned">0</span> 🪙
+            +<span id="coinsEarned">0</span> <span class="gold-coin"></span>
           </div>
           <div style="font-size: 16px; margin-bottom: 2rem; opacity: 0.85;">
             <span id="finalCorrect">0</span> correct
@@ -852,7 +864,7 @@
           </div>
           <div>
             <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.5rem;">Coins Reward</div>
-            <div style="font-size: 36px; font-weight: 700; color: var(--fill-accent);">35 🪙</div>
+            <div style="font-size: 36px; font-weight: 700; color: var(--fill-accent);">35 <span class="gold-coin"></span></div>
           </div>
         </div>
       </div>
@@ -1313,10 +1325,10 @@ const app = {
       }
     });
 
-    // Initialize division ranges state (4 stages per divisor, 2-9)
+    // Initialize division ranges state (2 stages per divisor, 2-9)
     this.divisionRanges.forEach(range => {
       if (!this.state[range.id]) {
-        this.state[range.id] = { completions: 0, stageCompletions: [0, 0, 0, 0] };
+        this.state[range.id] = { completions: 0, stageCompletions: [0, 0] };
       }
     });
 
@@ -1753,9 +1765,9 @@ const app = {
     document.getElementById('megaMenu').style.display = 'block';
     document.getElementById('megaPlay').style.display = 'none';
     document.getElementById('megaResults').style.display = 'none';
-    document.getElementById('megaPrizeNote').textContent = this.megaWon
+    document.getElementById('megaPrizeNote').innerHTML = this.megaWon
       ? 'Mega Prize already won. Runs still count for speed.'
-      : 'First clean run wins 200 🪙';
+      : 'First clean run wins 200 <span class="gold-coin"></span>';
     this.renderMegaHistory();
   },
 
@@ -1918,7 +1930,7 @@ const app = {
     document.getElementById('megaResultVerdict').textContent = passed
       ? (awarded ? 'MEGA PRIZE!' : 'Clean run!')
       : (!fastEnough ? 'Over 3:00. Try again!' : 'Too many misses on one number. Try again!');
-    document.getElementById('megaResultCoins').textContent = awarded ? '+200 🪙' : '';
+    document.getElementById('megaResultCoins').innerHTML = awarded ? '+200 <span class="gold-coin"></span>' : '';
 
     if (awarded) {
       this.showMegaWin();
@@ -2527,7 +2539,7 @@ const app = {
       setTimeout(() => {
         const coin = document.createElement('div');
         coin.className = 'coin-float';
-        coin.textContent = '🪙';
+        coin.innerHTML = '<span class="gold-coin"></span>';
         coin.style.left = (Math.random() * 60 + 20) + '%';
         coin.style.top = (Math.random() * 40 + 40) + '%';
         container.appendChild(coin);
@@ -2993,7 +3005,7 @@ const app = {
         <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.3); border-radius: 12px;">
           <div style="font-size: 60px; margin-bottom: 0.5rem;">${prize.icon}</div>
           <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.25rem;">${prize.name}</div>
-          <div style="font-size: 14px; opacity: 0.8;">🪙 ${prize.cost}</div>
+          <div style="font-size: 14px; opacity: 0.8;"><span class="gold-coin"></span> ${prize.cost}</div>
         </div>
       `;
     });
@@ -3065,7 +3077,7 @@ const app = {
       card.innerHTML = `
         <div class="stack-number">${n}</div>
         <div class="stack-progress">${progressText}</div>
-        <div class="stack-reward">🪙 × 10</div>
+        <div class="stack-reward"><span class="gold-coin"></span> × 10</div>
       `;
 
       // Gray out completed cards
@@ -3119,7 +3131,7 @@ const app = {
         <div class="stack-number">${displayNumber}</div>
         <div class="stack-subtext" style="font-size: 12px; color: var(--text-secondary); margin: 0.5rem 0;">${range.label}</div>
         <div class="stack-progress">${progressText}</div>
-        <div class="stack-reward">🪙 × ${coinReward}</div>
+        <div class="stack-reward"><span class="gold-coin"></span> × ${coinReward}</div>
       `;
 
       // Gray out if completed
@@ -3459,7 +3471,7 @@ const app = {
   createCoinEarn() {
     const coin = document.createElement('div');
     coin.className = 'coin-earn';
-    coin.textContent = '🪙';
+    coin.innerHTML = '<span class="gold-coin"></span>';
     document.body.appendChild(coin);
     setTimeout(() => coin.remove(), 1500);
   },
@@ -3579,7 +3591,7 @@ const app = {
       card.innerHTML = `
         <div class="prize-icon">${prize.icon}</div>
         <div class="prize-name">${prize.name}</div>
-        <div class="prize-cost">🪙 ${prize.cost}</div>
+        <div class="prize-cost"><span class="gold-coin"></span> ${prize.cost}</div>
         <div class="prize-claimed">Claimed: ${prize.claimed}</div>
         <button class="${buttonClass}" ${canClaim ? `onclick="app.claimPrize(${originalIndex})"` : ''}>${buttonText}</button>
       `;
@@ -3613,12 +3625,12 @@ const app = {
             <div>
               <div style="font-weight: 600; color: var(--text-primary);">${prize.name}</div>
               <div style="font-size: 13px; color: var(--text-secondary);">
-                ${prize.claimed} ${prize.claimed === 1 ? 'time' : 'times'} · 🪙 ${prize.cost} each
+                ${prize.claimed} ${prize.claimed === 1 ? 'time' : 'times'} · <span class="gold-coin"></span> ${prize.cost} each
               </div>
             </div>
           </div>
           <div style="text-align: right; font-weight: 600; font-size: 16px; color: var(--fill-accent);">
-            -🪙 ${totalSpent}
+            -<span class="gold-coin"></span> ${totalSpent}
           </div>
         </div>
       `;
@@ -3629,7 +3641,7 @@ const app = {
     html += `
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; font-weight: 600; font-size: 16px; background: var(--surface-1); border-radius: 8px; margin-top: 1rem;">
         <div>Total Spent:</div>
-        <div style="font-size: 20px; color: var(--fill-accent);">🪙 ${totalSpent}</div>
+        <div style="font-size: 20px; color: var(--fill-accent);"><span class="gold-coin"></span> ${totalSpent}</div>
       </div>
     `;
 
@@ -3699,7 +3711,7 @@ const app = {
         // Ensure state exists for this range
         if (!this.state[range.id]) {
           console.log(`⚠️ Initializing missing state for ${range.id}`);
-          this.state[range.id] = { completions: 0, stageCompletions: [0, 0, 0, 0] };
+          this.state[range.id] = { completions: 0, stageCompletions: [0, 0] };
         }
         const done = this.state[range.id].completions;
         console.log(`📊 Range ${range.id}: ${done} completions`);
@@ -3710,17 +3722,17 @@ const app = {
         card.setAttribute('data-divisor', range.id);
         card.onclick = () => this.startDivisionPractice(range.id);
 
-        let progressText = `${done}/4`;
-        if (done === 4) progressText = '✓';
+        let progressText = `${done}/2`;
+        if (done === 2) progressText = '✓';
 
         card.innerHTML = `
           <div class="stack-number">${range.divisor}</div>
           <div class="stack-progress">${progressText}</div>
-          <div class="stack-reward">🪙 × 12</div>
+          <div class="stack-reward"><span class="gold-coin"></span> × 12</div>
         `;
 
         // Gray out completed cards
-        if (done >= 4) {
+        if (done >= 2) {
           card.style.backgroundColor = '#e8e8e8';
           card.style.pointerEvents = 'none';
           card.style.cursor = 'default';
@@ -3731,7 +3743,7 @@ const app = {
       });
 
       console.log(`📊 Container now has ${container.children.length} cards`);
-      const total = this.divisionRanges.length * 4;
+      const total = this.divisionRanges.length * 2;
       const percent = Math.round((totalDone / total) * 100);
       document.getElementById('divisionOverallProgress').textContent = `${totalDone}/${total} complete`;
       document.getElementById('divisionOverallFill').style.width = `${percent}%`;
@@ -3746,7 +3758,7 @@ const app = {
     const range = this.divisionRanges.find(r => r.id === divisorId);
     const state = this.state[divisorId];
 
-    if (state.completions >= 4) {
+    if (state.completions >= 2) {
       return;
     }
 
@@ -3837,7 +3849,7 @@ const app = {
 
     const state = this.state[session.divisorId];
     const coinsReward = 12;
-    const maxCompletions = 4;
+    const maxCompletions = 2;
     const fb = document.getElementById('divisionFeedback');
 
     if (userAnswer === problem.quotient) {
@@ -3867,7 +3879,7 @@ const app = {
         // Completed this stage
         state.completions = Math.min(maxCompletions, state.completions + 1);
         state.stageCompletions[session.stage - 1] = 1;
-        this.coins += coinsReward;
+        this.coins += coinsReward * (1 + this.qualifierMultiplier);
 
         this.saveState();
         this.updateCoinDisplay();
@@ -3905,7 +3917,7 @@ const app = {
         if (session.index >= session.problems.length) {
           state.completions = Math.min(maxCompletions, state.completions + 1);
           state.stageCompletions[session.stage - 1] = 1;
-          this.coins += coinsReward;
+          this.coins += coinsReward * (1 + this.qualifierMultiplier);
           this.saveState();
           this.updateCoinDisplay();
           this.checkForUnlockedPrizes();
