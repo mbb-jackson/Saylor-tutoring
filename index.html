@@ -1755,6 +1755,14 @@ const app = {
       this.coins += this.longDivPoints() * (1 + this.qualifierMultiplier);
       this.updateCoinDisplay();
       this.playCorrectSound();
+      // Show the tick briefly, then go straight to the next question
+      const answeredQ = q;
+      setTimeout(() => {
+        if (this.longDivQ === answeredQ) {
+          this.longDivNewQuestion();
+          this.renderLongDivision();
+        }
+      }, 1200);
     } else {
       q.misses++;
       this.playWrongSound();
@@ -1849,8 +1857,6 @@ const app = {
       else if (q && q.misses >= 2) feedback = `<div style="font-size: 18px; color: #ef4444; text-align: center; margin-top: 12px;">Wrong.</div>`;
 
       const showNext = q && (q.answered || q.misses >= 2);
-      const nextButton = q && q.correct ? `
-        <div style="margin-top: 18px;"><button onclick="app.longDivMore()" style="padding: 12px 32px; font-size: 18px; font-weight: 600; font-family: inherit; color: white; background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;">Next question</button></div>` : '';
       const next = !showNext ? '' : `
         <div style="display: flex; gap: 14px; justify-content: flex-end; margin-top: 18px;">
           <button onclick="app.longDivMO()" style="${linkStyle}">MO</button>
@@ -1862,7 +1868,7 @@ const app = {
             ${videoLink || ''}
             ${q && !q.answered ? `<button onclick="app.longDivToggleCoach()" style="padding: 8px 16px; font-size: 14px; font-weight: 600; font-family: inherit; color: white; background: ${q.coached ? 'linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333' : 'linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%)'}; border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;">Coaching: ${q.coached ? 'on' : 'off'}</button>` : ''}
           </div>
-          ${body}${feedback}${hint}${nextButton}${next}
+          ${body}${feedback}${hint}${next}
         </div>`;
     }
     document.getElementById('longDivMain').innerHTML = main;
