@@ -812,7 +812,73 @@ const coach = {
           <div style="font-weight:600; margin:14px 0 6px;">Two-digit sets</div>
           ${rangeRows}
         </div>
-      </div>`;
+      </div>
+      ${this.longDivHtml(st)}`;
+  },
+
+  longDivHtml(st) {
+    const ld = st.longDiv || {};
+    const log = ld.log || [];
+    const names = { a: '2÷1, no remainder', b: '2÷1, with remainder', est: 'Estimate', c: '3÷1, no remainder', d: '3÷1, with remainder' };
+    const levelName = id => names[id] || id;
+    const levelList = ['a', 'b', 'est', 'c', 'd'];
+    const furthest = ld.maxLevel;
+    const cur = ld.level;
+    const curName = levelList[cur] ? levelName(levelList[cur]) : 'Video';
+    const furthestName = levelList[furthest] ? levelName(levelList[furthest]) : 'Video';
+
+    // Uncoached first tries only: these are what count for correct totals and the streak
+    const firstTries = log.filter(e => (e.attempt || 0) === 0);
+    const counted = firstTries.filter(e => !e.coached);
+    const countedCorrect = counted.filter(e => e.correct).length;
+    const coachedCount = firstTries.length - counted.length;
+    const last10 = counted.slice(-10);
+    const last10Correct = last10.filter(e => e.correct).length;
+    let inARow = 0;
+    for (let i = counted.length - 1; i >= 0 && counted[i].correct; i--) inARow++;
+    const ready = last10.length === 10 && last10Correct >= 9;
+
+    const summary = `
+      <div style="display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);"><span>Current level</span><span style="font-weight:600;">${curName} <span style="font-weight:400; color:var(--text-secondary); font-size:13px;">(furthest: ${furthestName})</span></span></div>
+      <div style="display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);"><span>Problems, first try (coaching excluded)</span><span style="font-weight:600;">${countedCorrect} / ${counted.length} correct</span></div>
+      <div style="display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);"><span>Correct in a row</span><span style="font-weight:600;">${inARow}</span></div>
+      <div style="display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);"><span>Last 10 first tries</span><span style="font-weight:600;">${last10Correct} / ${last10.length}${ready ? ' — ready to move on' : ''}</span></div>
+      <div style="display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);"><span>Coached problems (not counted above)</span><span style="font-weight:600;">${coachedCount}</span></div>`;
+
+    // Lessons by day: one row per date and level
+    const days = {};
+    log.forEach(e => {
+      const day = new Date(e.t);
+      const key = day.toLocaleDateString('en-CA') + '|' + e.level;
+      if (!days[key]) days[key] = { date: day, level: e.level, problems: 0, coached: 0, correct: 0, countedN: 0, wrongTries: 0 };
+      const row = days[key];
+      if (!e.correct) row.wrongTries++;
+      if ((e.attempt || 0) === 0) {
+        row.problems++;
+        if (e.coached) row.coached++;
+        else { row.countedN++; if (e.correct) row.correct++; }
+      }
+    });
+    const dayRows = Object.values(days).sort((a, b) => b.date - a.date).map(r => `
+      <tr>
+        <td style="padding:6px 8px 6px 0; border-bottom:0.5px solid var(--border);">${r.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
+        <td style="padding:6px 8px; border-bottom:0.5px solid var(--border);">${levelName(r.level)}</td>
+        <td style="padding:6px 8px; border-bottom:0.5px solid var(--border);">${r.problems}</td>
+        <td style="padding:6px 8px; border-bottom:0.5px solid var(--border);">${r.correct} / ${r.countedN}</td>
+        <td style="padding:6px 8px; border-bottom:0.5px solid var(--border);">${r.coached}</td>
+        <td style="padding:6px 0 6px 8px; border-bottom:0.5px solid var(--border);">${r.wrongTries}</td>
+      </tr>`).join('');
+
+    return `
+      <div style="margin-top:22px; font-weight:600; margin-bottom:6px;">Long division</div>
+      ${summary}
+      <div style="font-weight:600; margin:16px 0 6px;">Lessons by day</div>
+      ${dayRows
+        ? `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:14px;">
+            <tr style="text-align:left; color:var(--text-secondary);"><th style="padding:6px 8px 6px 0;">Date</th><th style="padding:6px 8px;">Level</th><th style="padding:6px 8px;">Problems</th><th style="padding:6px 8px;">Correct (not coached)</th><th style="padding:6px 8px;">Coached</th><th style="padding:6px 0 6px 8px;">Wrong tries</th></tr>
+            ${dayRows}
+          </table></div>`
+        : '<div style="color:var(--text-secondary);">No long division yet</div>'}`;
   },
 
   generateAlerts(totalMinutes, sessionsThisWeek, totalProblems) {

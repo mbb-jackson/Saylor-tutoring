@@ -1744,7 +1744,8 @@ const app = {
       remainder: q.hasRemainder ? q.remainder : null,
       answer: answer,
       correct: ok,
-      coached: !!q.coached
+      coached: !!q.coached,
+      attempt: q.misses // 0 = first try on this question
     });
     if (st.log.length > 300) st.log.splice(0, st.log.length - 300);
 
@@ -1857,9 +1858,9 @@ const app = {
 
       main = `
         <div style="padding: 8px 4px;">
-          <div style="display: flex; justify-content: ${q && !q.answered ? 'space-between' : 'flex-end'}; align-items: center; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
-            ${q && !q.answered ? `<button onclick="app.longDivToggleCoach()" style="${linkStyle}">Coaching: ${q.coached ? 'on' : 'off'}</button>` : ''}
+          <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
             ${videoLink || ''}
+            ${q && !q.answered ? `<button onclick="app.longDivToggleCoach()" style="padding: 8px 16px; font-size: 14px; font-weight: 600; font-family: inherit; color: white; background: ${q.coached ? 'linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333' : 'linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%)'}; border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;">Coaching: ${q.coached ? 'on' : 'off'}</button>` : ''}
           </div>
           ${body}${feedback}${hint}${nextButton}${next}
         </div>`;
