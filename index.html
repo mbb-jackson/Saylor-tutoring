@@ -2052,7 +2052,7 @@ const app = {
     const picker = document.getElementById('bubbleModePicker');
     picker.style.display = 'block';
     // The picker sits above the game cards, so bring it into view
-    picker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (picker.scrollIntoView) picker.scrollIntoView({ behavior: 'smooth', block: 'center' });
   },
 
   hideBubbleModePicker() {
