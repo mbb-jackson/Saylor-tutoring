@@ -679,12 +679,13 @@ const coach = {
     // Calculate metrics
     const totalSeconds = timeSessions.reduce((sum, s) => sum + (s.durationSec || 0), 0);
     const totalMinutes = Math.round(totalSeconds / 60);
-    const thisWeekSessions = timeSessions.filter(s => {
-      const date = new Date(s.startTime);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return date >= weekAgo;
-    }).length;
+    // Count only real practice (2+ minutes), and how many separate days she played
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const realWeekSessions = timeSessions.filter(s =>
+      new Date(s.startTime) >= weekAgo && (s.durationSec || 0) >= 120);
+    const thisWeekSessions = realWeekSessions.length;
+    const thisWeekDays = new Set(realWeekSessions.map(s => new Date(s.startTime).toDateString())).size;
 
     const gameCount = {};
     timeSessions.forEach(s => {
@@ -694,7 +695,7 @@ const coach = {
 
     // Update summary cards
     document.getElementById('totalTime').textContent = totalMinutes;
-    document.getElementById('sessionsCount').textContent = thisWeekSessions;
+    document.getElementById('sessionsCount').textContent = `${thisWeekSessions} (${thisWeekDays} days)`;
     document.getElementById('coinsEarned').textContent = Math.round(this.data.coins || 0);
 
     if (favoriteGame) {
