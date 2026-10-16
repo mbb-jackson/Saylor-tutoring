@@ -1755,7 +1755,6 @@ const app = {
       this.playCorrectSound();
     } else {
       q.misses++;
-      if (q.misses >= 2) q.answered = true; // after two misses, MO / More appear
       this.playWrongSound();
     }
     this.saveState();
@@ -1820,7 +1819,7 @@ const app = {
             <input id="ldQuotient" type="text" inputmode="numeric" autocomplete="off" ${dis} style="${box}">
             ${q.hasRemainder ? `<span>remainder</span><input id="ldRemainder" type="text" inputmode="numeric" autocomplete="off" ${dis} style="${box}">` : ''}
           </div>
-          ${q.answered ? '' : `<div style="margin-top: 20px;"><button onclick="app.longDivCheck()" style="background: none; border: none; padding: 4px 2px; font-size: 16px; color: var(--fill-accent); text-decoration: underline; cursor: pointer;">Submit</button></div>`}`;
+          ${q.answered ? '' : `<div style="margin-top: 20px;"><button onclick="app.longDivCheck()" style="padding: 12px 32px; font-size: 18px; font-weight: 600; font-family: inherit; color: white; background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;">Submit</button></div>`}`;
         if (q.misses >= 2 && !q.correct) {
           const product = q.divisor * q.quotient;
           hint = `<div style="margin-top: 16px; font-size: 18px; color: var(--text-secondary); text-align: center;">
@@ -1841,7 +1840,7 @@ const app = {
       else if (q && q.misses === 1) feedback = `<div style="font-size: 18px; color: #ef4444; text-align: center; margin-top: 12px;">Wrong. Try again.</div>`;
       else if (q && q.misses >= 2) feedback = `<div style="font-size: 18px; color: #ef4444; text-align: center; margin-top: 12px;">Wrong.</div>`;
 
-      const showNext = q && q.answered;
+      const showNext = q && (q.answered || q.misses >= 2);
       const next = !showNext ? '' : `
         <div style="display: flex; gap: 14px; justify-content: flex-end; margin-top: 18px;">
           <button onclick="app.longDivMore()" style="${linkStyle}">More</button>
