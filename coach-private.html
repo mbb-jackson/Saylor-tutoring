@@ -479,6 +479,11 @@
     <div id="overviewTab" class="tab-content active">
       <div id="alerts"></div>
 
+      <div class="time-breakdown">
+        <h3>✅ What She Has Done</h3>
+        <div id="progressSection"></div>
+      </div>
+
       <div class="summary-grid">
         <div class="summary-card">
           <div class="label">Total Practice Time</div>
@@ -648,7 +653,10 @@ const coach = {
       }
 
       this.data = state;
-      document.getElementById('lastSyncTime').textContent = new Date().toLocaleTimeString();
+      const savedAt = state.lastSyncTime ? new Date(state.lastSyncTime) : null;
+      document.getElementById('lastSyncTime').textContent = savedAt
+        ? savedAt.toLocaleString() + ' (' + this.ageText(savedAt) + ')'
+        : 'No save time recorded';
 
       this.showDashboard();
       this.updateDashboard();
@@ -717,10 +725,85 @@ const coach = {
     // Render recent sessions
     this.renderSessions(timeSessions);
 
-    if (this.data.lastSync) {
+    if (this.data.lastSyncTime) {
       document.getElementById('dataUpdateTime').textContent =
-        new Date(this.data.lastSync).toLocaleTimeString();
+        new Date(this.data.lastSyncTime).toLocaleString();
     }
+
+    this.renderProgress();
+  },
+
+  ageText(date) {
+    const mins = Math.round((Date.now() - date.getTime()) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + ' min ago';
+    const hrs = Math.round(mins / 60);
+    if (hrs < 48) return hrs + ' hr ago';
+    return Math.round(hrs / 24) + ' days ago';
+  },
+
+  renderProgress() {
+    const d = this.data;
+    const st = d.turdTimes || {};
+    const divHist = d.divisionHistory || [];
+    const checkIns = (d.assessmentHistory || []).slice().reverse();
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const row = (label, value, note) => `
+      <div style="display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);">
+        <span>${label}</span><span style="font-weight:600;">${value}${note ? ` <span style="font-weight:400; color:var(--text-secondary); font-size:13px;">${note}</span>` : ''}</span>
+      </div>`;
+
+    // Division: stages done per divisor (2 stages each), plus misses from the attempt log
+    const misses = {};
+    divHist.forEach(a => { if (!a.isCorrect) misses[a.divisor] = (misses[a.divisor] || 0) + 1; });
+    let divRows = '';
+    let divDone = 0;
+    [2,3,4,5,6,7,8,9].forEach(n => {
+      const stage = (st['div_' + n] || {}).stageCompletions || [];
+      const done = stage.filter(x => x).length;
+      divDone += done;
+      divRows += row(`${n}s division`, `${done}/2 stages`, misses[n] ? `${misses[n]} wrong answers` : '');
+    });
+
+    // Most-missed division facts
+    const factMisses = {};
+    divHist.forEach(a => {
+      if (a.isCorrect) return;
+      const k = `${a.dividend} ÷ ${a.divisor}`;
+      factMisses[k] = (factMisses[k] || 0) + 1;
+    });
+    const topFacts = Object.entries(factMisses).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const topHtml = topFacts.length
+      ? topFacts.map(([k, v]) => row(esc(k), v + ' missed')).join('')
+      : '<p style="color:var(--text-secondary); font-size:14px;">No division misses recorded yet.</p>';
+
+    // Check-ins
+    const checkHtml = checkIns.length
+      ? checkIns.slice(0, 5).map(c => row(esc(c.date || 'Check-in'), `${c.totalCorrect}/${c.totalQuestions}`, `${c.accuracy}%`)).join('')
+      : '<p style="color:var(--text-secondary); font-size:14px;">No check-ins saved yet.</p>';
+
+    // Multiplication tables and 2-digit ranges
+    const tables = [2,3,4,5,6,7,8,9].map(n => (st[String(n)] || {}).completions || 0);
+    const rangeKeys = Object.keys(st).filter(k => k.startsWith('range_'));
+    const rangeRows = rangeKeys.map(k => row(esc(k.replace(/_/g, ' ')), ((st[k] || {}).completions || 0) + ' done')).join('');
+
+    document.getElementById('progressSection').innerHTML = `
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;">
+        <div>
+          <div style="font-weight:600; margin-bottom:6px;">Division — ${divDone}/16 stages</div>
+          ${divRows}
+          <div style="font-weight:600; margin:14px 0 6px;">Most-missed division facts</div>
+          ${topHtml}
+        </div>
+        <div>
+          <div style="font-weight:600; margin-bottom:6px;">Check-ins (newest first)</div>
+          ${checkHtml}
+          <div style="font-weight:600; margin:14px 0 6px;">Multiplication tables (completions)</div>
+          ${row('Tables 2–9', tables.join(' · '))}
+          <div style="font-weight:600; margin:14px 0 6px;">Other sets</div>
+          ${rangeRows || '<p style="color:var(--text-secondary); font-size:14px;">None yet.</p>'}
+        </div>
+      </div>`;
   },
 
   generateAlerts(totalMinutes, sessionsThisWeek, totalProblems) {
