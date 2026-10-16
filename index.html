@@ -718,8 +718,8 @@
           </div>
 
           <div class="problem-section">
+            <div id="divisionHint" style="display: none; font-size: 18px; color: var(--text-secondary); margin-bottom: 0.5rem;"></div>
             <div class="problem" id="divisionProblem"></div>
-            <div style="font-size: 14px; color: var(--text-secondary); margin-top: 0.5rem;" id="divisionScaffold"></div>
             <div class="feedback" id="divisionFeedback"></div>
 
             <div class="input-group">
@@ -814,6 +814,25 @@
           </thead>
           <tbody id="slowestProblemsBody">
             <tr><td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No data yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+      <h3 style="font-size: 18px; margin-bottom: 1rem;">Division Misses (where to focus)</h3>
+      <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border); background: var(--surface-1);">
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-secondary);">Problem</th>
+              <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--text-secondary);">Attempts</th>
+              <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--text-secondary);">Missed</th>
+              <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-secondary);">Missed after hint</th>
+            </tr>
+          </thead>
+          <tbody id="divisionMissesBody">
+            <tr><td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No data yet</td></tr>
           </tbody>
         </table>
       </div>
@@ -1201,6 +1220,7 @@ const app = {
   coins: 0,
   fastGameHistory: [],
   ranges2DigitHistory: [],
+  divisionHistory: [],
   qualifierMultiplier: 0,
   qualifierLog: [],
   megaRuns: [],
@@ -1252,6 +1272,7 @@ const app = {
     this.coins = data.coins || 0;
     this.fastGameHistory = data.fastGameHistory || [];
     this.ranges2DigitHistory = data.ranges2DigitHistory || [];
+    this.divisionHistory = data.divisionHistory || [];
     this.qualifierMultiplier = data.qualifierMultiplier || 0;
     this.qualifierLog = data.qualifierLog || [];
     this.megaRuns = data.megaRuns || [];
@@ -1300,6 +1321,7 @@ const app = {
     this.coins = data.coins || 100;
     this.fastGameHistory = data.fastGameHistory || [];
     this.ranges2DigitHistory = data.ranges2DigitHistory || [];
+    this.divisionHistory = data.divisionHistory || [];
     this.qualifierMultiplier = data.qualifierMultiplier || 0;
     this.qualifierLog = data.qualifierLog || [];
     this.megaRuns = data.megaRuns || [];
@@ -1349,6 +1371,7 @@ const app = {
       prizes: this.prizes.map(p => ({ claimed: p.claimed, wasUnlocked: p.wasUnlocked || false })),
       fastGameHistory: this.fastGameHistory,
       ranges2DigitHistory: this.ranges2DigitHistory,
+      divisionHistory: this.divisionHistory,
       qualifierMultiplier: this.qualifierMultiplier,
       qualifierLog: this.qualifierLog,
       megaRuns: this.megaRuns,
@@ -2748,6 +2771,32 @@ const app = {
       `).join('');
     }
 
+    // Division misses: every attempt is in divisionHistory
+    const divBody = document.getElementById('divisionMissesBody');
+    const divStats = {};
+    (this.divisionHistory || []).forEach(a => {
+      const key = `${a.dividend} ÷ ${a.divisor}`;
+      if (!divStats[key]) divStats[key] = { problem: key, attempts: 0, missed: 0, missedAfterHint: 0 };
+      divStats[key].attempts++;
+      if (!a.isCorrect) {
+        divStats[key].missed++;
+        if (a.hintShown) divStats[key].missedAfterHint++;
+      }
+    });
+    const divRows = Object.values(divStats).filter(r => r.missed > 0).sort((x, y) => y.missed - x.missed || x.problem.localeCompare(y.problem)).slice(0, 15);
+    if (divRows.length === 0) {
+      divBody.innerHTML = '<tr><td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No division misses yet</td></tr>';
+    } else {
+      divBody.innerHTML = divRows.map(r => `
+        <tr style="border-bottom: 0.5px solid var(--border);">
+          <td style="padding: 12px; text-align: left;">${r.problem}</td>
+          <td style="padding: 12px; text-align: center; color: var(--text-secondary);">${r.attempts}</td>
+          <td style="padding: 12px; text-align: center; font-weight: 500; color: #ff6b6b;">${r.missed}</td>
+          <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${r.missedAfterHint}</td>
+        </tr>
+      `).join('');
+    }
+
     // Update missed problems table
     const missedBody = document.getElementById('missedProblemsBody');
     if (analytics.missedProblems.length === 0) {
@@ -3771,7 +3820,8 @@ const app = {
       index: 0,
       correct: 0,
       stage: currentStage,
-      currentProblemRetries: 0
+      currentProblemRetries: 0,
+      hintIndex: null
     };
 
     this.renderDivisionPractice();
@@ -3813,30 +3863,24 @@ const app = {
     document.getElementById('divisionAnswer').value = '';
     document.getElementById('divisionAnswer').focus();
 
-    // Generate problem display based on stage
-    let problemDisplay = '';
-    let scaffoldDisplay = '';
+    // Same question in every session: the answer is never on screen
+    document.getElementById('divisionProblem').textContent = `${problem.dividend} ÷ ${divisor} = ?`;
 
-    if (stage === 1) {
-      // Stage 1: Show fact family (multiplication + division together)
-      problemDisplay = `If ${divisor} × ${problem.multiplier} = ${problem.dividend}, what is ${problem.dividend} ÷ ${divisor} = ?`;
-      scaffoldDisplay = '';
-    } else if (stage === 2) {
-      // Stage 2: Show division problem with visible multiplication fact
-      problemDisplay = `${problem.dividend} ÷ ${divisor} = ?`;
-      scaffoldDisplay = `Hint: ${divisor} × ${problem.multiplier} = ${problem.dividend}`;
-    } else if (stage === 3) {
-      // Stage 3: Show division problem with optional hint
-      problemDisplay = `${problem.dividend} ÷ ${divisor} = ?`;
-      scaffoldDisplay = `(Hint available)`;
-    } else if (stage === 4) {
-      // Stage 4: Show only the division problem, no hints
-      problemDisplay = `${problem.dividend} ÷ ${divisor} = ?`;
-      scaffoldDisplay = '';
+    this.showDivisionHint();
+  },
+
+  // Hint (fact family) appears above the problem only after a miss on this problem
+  showDivisionHint() {
+    const session = this.currentDivisionSession;
+    const problem = session.problems[session.index];
+    const hint = document.getElementById('divisionHint');
+    if (problem && session.hintIndex === session.index) {
+      hint.textContent = `${session.divisor} × ${problem.quotient} = ${problem.dividend}`;
+      hint.style.display = 'block';
+    } else {
+      hint.textContent = '';
+      hint.style.display = 'none';
     }
-
-    document.getElementById('divisionProblem').textContent = problemDisplay;
-    document.getElementById('divisionScaffold').textContent = scaffoldDisplay;
   },
 
   submitDivision() {
@@ -3846,13 +3890,28 @@ const app = {
     const session = this.currentDivisionSession;
     const problem = session.problems[session.index];
     const userAnswer = parseInt(input);
+    const hintVisible = session.hintIndex === session.index;
 
     const state = this.state[session.divisorId];
     const coinsReward = 12;
     const maxCompletions = 2;
     const fb = document.getElementById('divisionFeedback');
 
+    const recordDivisionAttempt = (isCorrect) => {
+      this.divisionHistory.push({
+        timestamp: Date.now(),
+        divisor: session.divisor,
+        dividend: problem.dividend,
+        quotient: problem.quotient,
+        userAnswer: Number.isNaN(userAnswer) ? null : userAnswer,
+        isCorrect: isCorrect,
+        stage: session.stage,
+        hintShown: hintVisible
+      });
+    };
+
     if (userAnswer === problem.quotient) {
+      recordDivisionAttempt(true);
       // Show correct feedback
       const emojis = ['👍', '✅', '🎯', '🌟', '💪', '👏', '🚀', '⭐'];
       const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
@@ -3864,6 +3923,8 @@ const app = {
       this.playCorrectSound();
 
       session.correct++;
+      session.hintIndex = null;
+      this.saveState();
 
       if (session.currentProblemRetries > 0) {
         const remaining = session.problems.slice(session.index + 1);
@@ -3897,10 +3958,14 @@ const app = {
         }, 600);
       }
     } else {
-      // Show wrong feedback
-      fb.innerHTML = `<span style="font-size: 40px;">✗</span> <span style="font-size: 32px;">${problem.quotient}</span>`;
+      recordDivisionAttempt(false);
+      // Show wrong feedback (no answer shown); the hint appears above the problem
+      fb.innerHTML = `<span style="font-size: 40px;">✗</span>`;
       fb.className = 'feedback wrong';
       this.playWrongSound();
+      session.hintIndex = session.index;
+      this.showDivisionHint();
+      this.saveState();
 
       // Track retries - move to next after 3 attempts
       session.currentProblemRetries++;
@@ -3913,6 +3978,7 @@ const app = {
 
         session.index++;
         session.currentProblemRetries = 0;
+        session.hintIndex = null;
 
         if (session.index >= session.problems.length) {
           state.completions = Math.min(maxCompletions, state.completions + 1);
