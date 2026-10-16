@@ -1709,7 +1709,7 @@ const app = {
       if (lead === 10) { lead = 1; power = p + 1; }
       const correct = lead * Math.pow(10, power);
       const choices = [correct / 10, correct, correct * 10, correct * 100].sort(() => Math.random() - 0.5);
-      q = Object.assign(q, { divisor, dividend, correct, choices });
+      q = Object.assign(q, { divisor, dividend, answer: correct, choices });
     }
 
     this.longDivQ = q;
@@ -1729,7 +1729,7 @@ const app = {
     const q = this.longDivQ;
     if (!q || q.answered || q.kind !== 'estimate') return;
     const value = q.choices[index];
-    this.longDivRecord(q, value === q.correct, { choice: 'ABCD'[index], value });
+    this.longDivRecord(q, value === q.answer, { choice: 'ABCD'[index], value });
   },
 
   longDivRecord(q, ok, answer) {
@@ -1740,7 +1740,7 @@ const app = {
       level: level.id,
       dividend: q.dividend,
       divisor: q.divisor,
-      expected: q.kind === 'estimate' ? q.correct : q.quotient,
+      expected: q.kind === 'estimate' ? q.answer : q.quotient,
       remainder: q.hasRemainder ? q.remainder : null,
       answer: answer,
       correct: ok
@@ -1820,11 +1820,11 @@ const app = {
             <input id="ldQuotient" type="text" inputmode="numeric" autocomplete="off" ${dis} style="${box}">
             ${q.hasRemainder ? `<span>remainder</span><input id="ldRemainder" type="text" inputmode="numeric" autocomplete="off" ${dis} style="${box}">` : ''}
           </div>
-          ${q.answered ? '' : `<div style="margin-top: 20px;"><button onclick="app.longDivCheck()" style="padding: 12px 28px; font-size: 16px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Check</button></div>`}`;
-        if (q.misses > 0 && !q.correct) {
+          ${q.answered ? '' : `<div style="margin-top: 20px;"><button onclick="app.longDivCheck()" style="background: none; border: none; padding: 4px 2px; font-size: 16px; color: var(--fill-accent); text-decoration: underline; cursor: pointer;">Submit</button></div>`}`;
+        if (q.misses >= 2 && !q.correct) {
           const product = q.divisor * q.quotient;
           hint = `<div style="margin-top: 16px; font-size: 18px; color: var(--text-secondary); text-align: center;">
-            Check: ${q.divisor} × ${q.quotient} = ${product}${q.hasRemainder ? `<br>${q.dividend} − ${product} = ${q.remainder}` : ''}
+            Hint: ${q.divisor} × ${q.quotient} = ${product}${q.hasRemainder ? `<br>${q.dividend} − ${product} = ${q.remainder}` : ''}
           </div>`;
         }
       } else if (q && q.kind === 'estimate') {
@@ -1832,13 +1832,14 @@ const app = {
           <div style="font-size: 18px; font-weight: 600;">Estimate.</div>
           <div style="font-family: 'Times New Roman', Times, serif; font-size: 36px; margin: 18px 0;">${q.dividend.toLocaleString('en-US')} ÷ ${q.divisor} ≈ ?</div>
           <div style="display: grid; gap: 10px; max-width: 420px; margin: 0 auto;">
-            ${q.choices.map((v, i) => `<button ${q.answered ? 'disabled' : ''} onclick="app.longDivPick(${i})" style="text-align: left; padding: 12px 16px; font-size: 22px; border: 0.5px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text-primary); cursor: pointer;">
+            ${q.choices.map((v, i) => `<button class="stack-card" ${q.answered ? 'disabled' : ''} onclick="app.longDivPick(${i})" style="text-align: left; padding: 16px; font-size: 22px; color: var(--text-primary); font-family: inherit;">
               <span style="display: inline-block; width: 32px; height: 32px; line-height: 32px; text-align: center; border: 1.5px solid var(--text-secondary); border-radius: 50%; font-size: 15px; margin-right: 12px;">${'ABCD'[i]}</span>${v.toLocaleString('en-US')}
             </button>`).join('')}
           </div>`;
       }
       if (q && q.correct) feedback = `<div style="font-size: 40px; text-align: center; margin-top: 12px;">✅</div>`;
-      else if (q && q.misses > 0) feedback = `<div style="font-size: 18px; color: #ef4444; text-align: center; margin-top: 12px;">✗ Try again</div>`;
+      else if (q && q.misses === 1) feedback = `<div style="font-size: 18px; color: #ef4444; text-align: center; margin-top: 12px;">Wrong. Try again.</div>`;
+      else if (q && q.misses >= 2) feedback = `<div style="font-size: 18px; color: #ef4444; text-align: center; margin-top: 12px;">Wrong.</div>`;
 
       const showNext = q && q.answered;
       const next = !showNext ? '' : `
@@ -1849,9 +1850,7 @@ const app = {
 
       main = `
         <div style="padding: 8px 4px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; font-size: 14px; color: var(--text-secondary);">
-            <span>${cur.label}</span>${videoLink}
-          </div>
+          ${videoLink ? `<div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">${videoLink}</div>` : ''}
           ${body}${feedback}${hint}${next}
         </div>`;
     }
