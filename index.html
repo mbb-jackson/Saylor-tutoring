@@ -643,7 +643,7 @@
         <div style="margin-top: 2rem; font-size: 18px; color: var(--text-secondary); margin-bottom: 2rem;">
           Correct: <span id="fastCorrect">0</span>
         </div>
-        <button onclick="app.endFastGame()" style="padding: 14px 28px; font-size: 16px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Stop & Claim Coins</button>
+        <button onclick="app.endFastGame()" style="padding: 14px 28px; font-size: 16px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Stop</button>
       </div>
 
       <div id="fastGameResults" style="display: none; text-align: center;">
@@ -1662,6 +1662,12 @@ const app = {
     if (isCorrect) {
       // Correct answer
       this.fastGameSession.correct++;
+      // Pay each correct answer right away; no claim step
+      const perAnswer = 1 * (1 + this.qualifierMultiplier);
+      this.fastGameSession.coinsEarned = (this.fastGameSession.coinsEarned || 0) + perAnswer;
+      this.coins += perAnswer;
+      this.saveState();
+      this.updateCoinDisplay();
       document.getElementById('fastCorrect').textContent = this.fastGameSession.correct;
       document.getElementById('fastFeedback').textContent = '✅';
       this.playCorrectSound();
@@ -1702,11 +1708,8 @@ const app = {
     this.trackSessionEnd('fastCash');
     clearTimeout(this.fastGameSession.problemTimeout);
 
-    // Award coins: 1 per correct answer (with qualifier multiplier)
-    let coinsEarned = this.fastGameSession.correct * 1;
-    const multiplier = 1 + this.qualifierMultiplier;
-    coinsEarned = coinsEarned * multiplier;
-    this.coins += coinsEarned;
+    // Coins were already added per correct answer in fastSubmit; just report the total
+    const coinsEarned = this.fastGameSession.coinsEarned || 0;
     this.saveState();
     this.updateCoinDisplay();
 
@@ -2424,10 +2427,10 @@ const app = {
       canvas.removeEventListener('mouseup', (e) => this.handleBubbleMouseUp(e));
     }
 
-    // Award coins disabled for testing - let coinsEarned = this.bubbleGameSession.correct * 1.25;
-    // const multiplier = 1 + this.qualifierMultiplier;
-    // coinsEarned = Math.floor(coinsEarned * multiplier);
-    // this.coins += coinsEarned;
+    // Pay on finish: 1.25 coins per correct bubble, with qualifier multiplier
+    const bubbleCoins = Math.floor(this.bubbleGameSession.correct * 1.25 * (1 + this.qualifierMultiplier));
+    this.coins += bubbleCoins;
+    this.updateCoinDisplay();
 
     this.checkForUnlockedPrizes();
     this.saveState();
