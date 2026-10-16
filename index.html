@@ -2123,14 +2123,14 @@ const app = {
     this.createBubbles();
   },
 
-  // Wrong choices for a quotient: near the answer first, so they are tricky but never 0 or negative
+  // Wrong choices for a quotient: the closest other answers (quotient ±1, then ±2),
+  // so she has to think instead of guessing. Never 0 or negative.
   generateDivisionWrong(correct) {
-    const shuffle = arr => arr.sort(() => Math.random() - 0.5);
     const pool = [];
     for (let n = 1; n <= 12; n++) if (n !== correct) pool.push(n);
-    const near = shuffle(pool.filter(n => Math.abs(n - correct) <= 3));
-    const rest = shuffle(pool.filter(n => Math.abs(n - correct) > 3));
-    return near.concat(rest).slice(0, 4);
+    // nearest first; ties (±1 and ±2 are equally near) broken at random
+    pool.sort((x, y) => (Math.abs(x - correct) - Math.abs(y - correct)) || (Math.random() - 0.5));
+    return pool.slice(0, 4);
   },
 
   // Division bubble taps go to the division history; multiplication bubbles are not logged (as before)
