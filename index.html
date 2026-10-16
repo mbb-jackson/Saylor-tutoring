@@ -1046,12 +1046,31 @@ async function initializeFirebase() {
 }
 
 // Storage abstraction: Firebase with localStorage fallback
+// Test mode: open the app with ?test=1 to try things without touching Saylor's database.
+// Progress stays in this browser only, under its own key, and a banner says so.
+const TEST_MODE = new URLSearchParams(window.location.search).has('test');
+const SAVE_KEY = TEST_MODE ? 'saylorsGames_test' : 'saylorsGames';
+
+function showTestBanner() {
+  const bar = document.createElement('div');
+  bar.id = 'testModeBanner';
+  bar.textContent = 'TEST MODE: nothing here is saved to Saylor\'s database';
+  bar.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: #f57c00; color: white; text-align: center; font-weight: 600; padding: 6px; font-size: 14px;';
+  document.body.appendChild(bar);
+}
+
 const storage = {
   useFirebase: false,
   localCopy: null, // Keep local copy for offline access
 
   // Check if we should use Firebase
   async init() {
+    if (TEST_MODE) {
+      this.useFirebase = false;
+      showTestBanner();
+      console.log('🧪 TEST MODE: database not used');
+      return;
+    }
     try {
       this.useFirebase = await initializeFirebase();
       if (this.useFirebase) {
@@ -1070,7 +1089,7 @@ const storage = {
     try {
       if (!this.useFirebase) {
         // Use localStorage
-        const saved = localStorage.getItem('saylorsGames');
+        const saved = localStorage.getItem(SAVE_KEY);
         this.localCopy = saved ? JSON.parse(saved) : null;
         return this.localCopy;
       }
@@ -1081,7 +1100,7 @@ const storage = {
 
       if (snapshot.exists()) {
         const remote = snapshot.val();
-        const savedLocal = localStorage.getItem('saylorsGames');
+        const savedLocal = localStorage.getItem(SAVE_KEY);
         const local = savedLocal ? JSON.parse(savedLocal) : null;
         if (local && (local.lastSyncTime || 0) > (remote.lastSyncTime || 0)) {
           // This device has newer progress that never reached Firebase: keep it and push it up
@@ -1091,13 +1110,13 @@ const storage = {
           return local;
         }
         this.localCopy = remote;
-        localStorage.setItem('saylorsGames', JSON.stringify(remote));
+        localStorage.setItem(SAVE_KEY, JSON.stringify(remote));
         console.log('✅ Loaded from Firebase');
         return remote;
       } else {
         // No Firebase data, check localStorage for migration
         console.log('No Firebase data found, checking localStorage for migration...');
-        const saved = localStorage.getItem('saylorsGames');
+        const saved = localStorage.getItem(SAVE_KEY);
         if (saved) {
           const localData = JSON.parse(saved);
           localData.lastSyncTime = Date.now();
@@ -1111,7 +1130,7 @@ const storage = {
     } catch (error) {
       console.error('Error getting state:', error);
       // Fallback to localStorage
-      const saved = localStorage.getItem('saylorsGames');
+      const saved = localStorage.getItem(SAVE_KEY);
       this.localCopy = saved ? JSON.parse(saved) : null;
       return this.localCopy;
     }
@@ -1123,7 +1142,7 @@ const storage = {
       // Stamp the save time first so this device's copy can be compared with Firebase later
       data.lastSyncTime = Date.now();
       // Always save to localStorage for offline access (synchronous, fast)
-      localStorage.setItem('saylorsGames', JSON.stringify(data));
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
       this.localCopy = data;
 
       // Save to Firebase if available (fire-and-forget to not block game)
@@ -1150,7 +1169,7 @@ const storage = {
       console.error('Error saving state:', error);
       showSaveStatus(false, error.message);
       // At minimum, save to localStorage
-      localStorage.setItem('saylorsGames', JSON.stringify(data));
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     }
   },
 
@@ -1270,7 +1289,7 @@ const app = {
 
   handleRealtimeDataUpdate(data) {
     // Ignore a database copy that is older than what this device saved last
-    const savedLocal = localStorage.getItem('saylorsGames');
+    const savedLocal = localStorage.getItem(SAVE_KEY);
     const localMeta = savedLocal ? JSON.parse(savedLocal) : null;
     if (localMeta && (localMeta.lastSyncTime || 0) > (data.lastSyncTime || 0)) {
       // Database copy is older (e.g. a rejected write was rolled back): keep this device's progress and push it up
@@ -1463,7 +1482,7 @@ const app = {
   },
 
   async attemptGistSync() {
-    if (!this.gistId || this.timeSessions.length === 0) return;
+    if (TEST_MODE || !this.gistId || this.timeSessions.length === 0) return;
 
     // Check if we have connectivity (try a simple fetch)
     try {
