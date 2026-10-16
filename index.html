@@ -2051,188 +2051,68 @@ const app = {
     // Store reference for event handlers
     const self = this;
 
-    // Attach event listeners directly
-    canvas.onmousedown = (e) => {
-      console.log('🖱️ DOWN - about to call handleBubbleMouseDown');
-      try {
-        self.handleBubbleMouseDown(e);
-      } catch (err) {
-        console.error('❌ ERROR in handleBubbleMouseDown:', err);
-      }
-    };
-    canvas.onmousemove = (e) => {
-      try {
-        self.handleBubbleMouseMove(e);
-      } catch (err) {
-        console.error('❌ ERROR in handleBubbleMouseMove:', err);
-      }
-    };
-    canvas.onmouseup = (e) => {
-      console.log('🖱️ UP - about to call handleBubbleMouseUp');
-      try {
-        self.handleBubbleMouseUp(e);
-      } catch (err) {
-        console.error('❌ ERROR in handleBubbleMouseUp:', err);
-      }
-    };
-
-    // Touch event handlers for iPad/mobile - call handlers directly
-    canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (e.touches.length === 0) return;
-      const touch = e.touches[0];
-      const rect = canvas.getBoundingClientRect();
-      const fakeEvent = {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        preventDefault: () => {}
-      };
-      self.handleBubbleMouseDown(fakeEvent);
-    });
-
-    canvas.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      if (e.touches.length === 0) return;
-      const touch = e.touches[0];
-      const rect = canvas.getBoundingClientRect();
-      const fakeEvent = {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        preventDefault: () => {}
-      };
-      self.handleBubbleMouseMove(fakeEvent);
-    });
-
-    canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      if (e.changedTouches.length === 0) return;
-      const touch = e.changedTouches[0];
-      const rect = canvas.getBoundingClientRect();
-      const fakeEvent = {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        preventDefault: () => {}
-      };
-      self.handleBubbleMouseUp(fakeEvent);
-    }, false);
-
-    console.log('✅ Event listeners ready');
+    // Pointer events cover mouse, finger and pen on iPad. Property handlers replace
+    // any earlier ones, so starting the game again does not stack listeners.
+    canvas.onpointerdown = (e) => { try { self.handleBubbleMouseDown(e); } catch (err) { console.error(err); } };
+    canvas.onpointermove = (e) => { try { self.handleBubbleMouseMove(e); } catch (err) { console.error(err); } };
+    canvas.onpointerup = (e) => { try { self.handleBubbleMouseUp(e); } catch (err) { console.error(err); } };
+    canvas.onpointercancel = () => { if (self.bubbleGameSession) self.bubbleGameSession.isDragging = false; };
 
     this.updateBubbleGame();
   },
 
-  handleBubbleMouseDown(e) {
-    console.log('🖱️🖱️🖱️ MOUSEDOWN HANDLER CALLED - THIS SHOULD PRINT 🖱️🖱️🖱️');
-    console.log('  - this:', typeof this, this?.constructor?.name);
-    console.log('  - Session exists?', !!this.bubbleGameSession);
-    console.log('  - gameRunning value:', this.bubbleGameSession?.gameRunning);
-
-    if (!this.bubbleGameSession) {
-      console.log('  ❌ NO SESSION - RETURNING EARLY');
-      return;
-    }
-
-    if (!this.bubbleGameSession.gameRunning) {
-      console.log('  ❌ gameRunning is FALSE - RETURNING EARLY');
-      return;
-    }
-
-    console.log('  ✅ PASSED ALL CHECKS - Setting isDragging = true');
+  // Convert a pointer position to canvas pixels (the canvas is scaled by CSS)
+  bubblePointFromEvent(e) {
     const canvas = document.getElementById('bubbleCanvas');
     const rect = canvas.getBoundingClientRect();
-
-    this.bubbleGameSession.isDragging = true;
-    this.bubbleGameSession.dragStartX = e.clientX - rect.left;
-    this.bubbleGameSession.dragStartY = e.clientY - rect.top;
-    console.log('  ✅ isDragging set to true at x=' + this.bubbleGameSession.dragStartX + ' y=' + this.bubbleGameSession.dragStartY);
-  },
-
-  handleBubbleMouseMove(e) {
-    if (!this.bubbleGameSession || !this.bubbleGameSession.isDragging) return;
-
-    const canvas = document.getElementById('bubbleCanvas');
-    const rect = canvas.getBoundingClientRect();
-    const currentX = e.clientX - rect.left;
-    const currentY = e.clientY - rect.top;
-
-    const dx = currentX - this.bubbleGameSession.projectileX;
-    const dy = currentY - this.bubbleGameSession.projectileY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // Redraw everything
-    this.drawBubbleGame();
-
-    if (distance > 0) {
-      const ctx = canvas.getContext('2d');
-      const slingshotX = this.bubbleGameSession.projectileX;
-      const slingshotY = this.bubbleGameSession.projectileY;
-
-      // Draw elastic bands from slingshot to pulled position
-      ctx.strokeStyle = 'rgba(200, 100, 150, 0.8)';
-      ctx.lineWidth = 3;
-      ctx.lineCap = 'round';
-
-      // Left elastic band
-      ctx.beginPath();
-      ctx.moveTo(slingshotX - 15, slingshotY - 20);
-      ctx.lineTo(currentX, currentY);
-      ctx.stroke();
-
-      // Right elastic band
-      ctx.beginPath();
-      ctx.moveTo(slingshotX + 15, slingshotY - 20);
-      ctx.lineTo(currentX, currentY);
-      ctx.stroke();
-
-      // Draw ball being pulled back
-      ctx.fillStyle = '#ff6b6b';
-      ctx.beginPath();
-      ctx.arc(currentX, currentY, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#cc5555';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Show aim trajectory with dotted line
-      ctx.strokeStyle = 'rgba(255, 200, 200, 0.6)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(currentX, currentY);
-      // Project line forward
-      const length = distance * 3;
-      const angle = Math.atan2(currentY - slingshotY, currentX - slingshotX);
-      ctx.lineTo(
-        currentX + Math.cos(angle) * length,
-        currentY + Math.sin(angle) * length
-      );
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-  },
-
-  handleBubbleMouseUp(e) {
-    if (!this.bubbleGameSession || !this.bubbleGameSession.isDragging) return;
-
-    const canvas = document.getElementById('bubbleCanvas');
-    const rect = canvas.getBoundingClientRect();
-    const releaseX = e.clientX - rect.left;
-    const releaseY = e.clientY - rect.top;
-
-    const dx = this.bubbleGameSession.projectileX - releaseX;
-    const dy = this.bubbleGameSession.projectileY - releaseY;
-
-    // Fire projectile with velocity based on drag distance
-    const velocityScale = 0.08;
-    this.bubbleGameSession.projectile = {
-      x: this.bubbleGameSession.projectileX,
-      y: this.bubbleGameSession.projectileY,
-      vx: dx * velocityScale,
-      vy: dy * velocityScale,
-      radius: 6
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height)
     };
+  },
 
-    this.bubbleGameSession.isDragging = false;
+  handleBubbleMouseDown(e) {
+    const s = this.bubbleGameSession;
+    if (!s || !s.gameRunning || s.projectile) return;
+    const canvas = document.getElementById('bubbleCanvas');
+    if (e.pointerId !== undefined && canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
+    if (e.preventDefault) e.preventDefault();
+    s.isDragging = true;
+    this.handleBubbleMouseMove(e);
+  },
+
+  // Pull the ball back from the slingshot; the ball follows the finger up to a maximum pull
+  handleBubbleMouseMove(e) {
+    const s = this.bubbleGameSession;
+    if (!s || !s.isDragging) return;
+    const p = this.bubblePointFromEvent(e);
+    const dx = p.x - s.projectileX;
+    const dy = p.y - s.projectileY;
+    const dist = Math.hypot(dx, dy);
+    const maxPull = 120;
+    const k = dist > maxPull ? maxPull / dist : 1;
+    s.pullX = s.projectileX + dx * k;
+    s.pullY = s.projectileY + dy * k;
+    this.drawBubbleGame();
+  },
+
+  // Release fires the ball in the opposite direction of the pull
+  handleBubbleMouseUp(e) {
+    const s = this.bubbleGameSession;
+    if (!s || !s.isDragging) return;
+    s.isDragging = false;
+    if (s.pullX === null || s.pullX === undefined) return;
+
+    const vx = (s.projectileX - s.pullX) * 0.08;
+    const vy = (s.projectileY - s.pullY) * 0.08;
+    s.pullX = null;
+    s.pullY = null;
+
+    // A tap with no real pull does not fire
+    if (Math.hypot(vx, vy) >= 0.3) {
+      s.projectile = { x: s.projectileX, y: s.projectileY, vx: vx, vy: vy, radius: 6 };
+    }
+    this.drawBubbleGame();
   },
 
   updateBubbleGame() {
@@ -2342,8 +2222,7 @@ const app = {
     }
 
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'var(--surface-0)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw bubbles - all same color (don't reveal which is correct)
     this.bubbleGameSession.bubbles.forEach(bubble => {
@@ -2403,10 +2282,45 @@ const app = {
     ctx.fillStyle = '#4a5568';
     ctx.fillRect(slingshotX - 8, slingshotY + 2, 16, 10);
 
-    // Resting ball in slingshot
+    const s = this.bubbleGameSession;
+    const pulling = s.isDragging && s.pullX !== null && s.pullX !== undefined;
+    const ballX = pulling ? s.pullX : slingshotX;
+    const ballY = pulling ? s.pullY : slingshotY - 2;
+
+    if (pulling) {
+      // Elastic bands from the forks to the pulled ball
+      ctx.strokeStyle = 'rgba(200, 100, 150, 0.9)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(slingshotX - 18, slingshotY - 22);
+      ctx.lineTo(ballX, ballY);
+      ctx.moveTo(slingshotX + 18, slingshotY - 22);
+      ctx.lineTo(ballX, ballY);
+      ctx.stroke();
+
+      // Dotted line showing where the ball will go, using the same physics as the shot
+      let x = slingshotX;
+      let y = slingshotY;
+      let vx = (slingshotX - ballX) * 0.08;
+      let vy = (slingshotY - ballY) * 0.08;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      for (let i = 0; i < 200; i++) {
+        x += vx;
+        y += vy;
+        vy += 0.15;
+        if (i % 4 === 0) {
+          ctx.beginPath();
+          ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        if (x < 0 || x > canvas.width || y > canvas.height) break;
+      }
+    }
+
+    // Ball (resting in the slingshot, or pulled back)
     ctx.fillStyle = '#ff6b6b';
     ctx.beginPath();
-    ctx.arc(slingshotX, slingshotY - 2, 7, 0, Math.PI * 2);
+    ctx.arc(ballX, ballY, 7, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.strokeStyle = '#cc5555';
