@@ -1685,7 +1685,7 @@ const app = {
   longDivNewQuestion() {
     const st = this.longDivState();
     const level = this.longDivLevelList()[st.level];
-    let q = { level: st.level, kind: level.kind, answered: false, misses: 0, correct: false };
+    let q = { level: st.level, kind: level.kind, answered: false, misses: 0, correct: false, coached: false };
 
     if (level.kind === 'quotient') {
       const divisor = this.longDivRandom(2, 9);
@@ -1743,7 +1743,8 @@ const app = {
       expected: q.kind === 'estimate' ? q.answer : q.quotient,
       remainder: q.hasRemainder ? q.remainder : null,
       answer: answer,
-      correct: ok
+      correct: ok,
+      coached: !!q.coached
     });
     if (st.log.length > 300) st.log.splice(0, st.log.length - 300);
 
@@ -1777,6 +1778,13 @@ const app = {
     st.maxLevel = Math.max(st.maxLevel, st.level);
     this.longDivNewQuestion();
     this.saveState();
+    this.renderLongDivision();
+  },
+
+  longDivToggleCoach() {
+    const q = this.longDivQ;
+    if (!q || q.answered) return;
+    q.coached = !q.coached;
     this.renderLongDivision();
   },
 
@@ -1849,7 +1857,10 @@ const app = {
 
       main = `
         <div style="padding: 8px 4px;">
-          ${videoLink ? `<div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">${videoLink}</div>` : ''}
+          <div style="display: flex; justify-content: ${q && !q.answered ? 'space-between' : 'flex-end'}; align-items: center; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
+            ${q && !q.answered ? `<button onclick="app.longDivToggleCoach()" style="${linkStyle}">Coaching: ${q.coached ? 'on' : 'off'}</button>` : ''}
+            ${videoLink || ''}
+          </div>
           ${body}${feedback}${hint}${nextButton}${next}
         </div>`;
     }
