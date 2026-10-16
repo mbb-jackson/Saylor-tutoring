@@ -475,6 +475,27 @@
         <div style="font-size: 16px; font-weight: 600;">Turd Splitter</div>
         <div style="font-size: 12px; opacity: 0.9;">Division</div>
       </div>
+      <div onclick="app.showLongDivision()" style="background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div style="font-size: 36px; margin-bottom: 0.5rem;">📐</div>
+        <div style="font-size: 16px; font-weight: 600;">Long Division</div>
+        <div style="font-size: 12px; opacity: 0.9;">Step by step</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LONG DIVISION -->
+  <div id="longDivScreen" class="screen">
+    <div style="max-width: 760px; margin: 0 auto; padding: 1.25rem 16px 3rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <button onclick="app.showHome()" style="padding: 8px 14px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 15px;">← Home</button>
+        <h2 style="margin: 0; font-size: 24px;">Long Division</h2>
+        <span id="longDivCoins" style="font-weight: 600; min-width: 80px; text-align: right;"></span>
+      </div>
+      <div id="longDivVideo" style="margin-bottom: 16px;"></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start;">
+        <div id="longDivTimeline"></div>
+        <div id="longDivPractice"></div>
+      </div>
     </div>
   </div>
 
@@ -1598,6 +1619,246 @@ const app = {
     }
 
     this.showDivisionSelection();
+  },
+
+  // ===== LONG DIVISION (standard algorithm) =====
+  // You decide when she moves on: MO = next level, More = another question at the same level.
+  longDivLevelList() {
+    return [
+      { id: 'video', label: 'Watch: no remainder', kind: 'video' },
+      { id: 'a', label: '2-digit ÷ 1-digit, no remainder', kind: 'quotient', lo: 10, hi: 99, remainder: false },
+      { id: 'b', label: '2-digit ÷ 1-digit, with remainder', kind: 'quotient', lo: 10, hi: 99, remainder: true },
+      { id: 'est', label: 'Estimate', kind: 'estimate' },
+      { id: 'c', label: '3-digit ÷ 1-digit, no remainder', kind: 'quotient', lo: 100, hi: 999, remainder: false },
+      { id: 'd', label: '3-digit ÷ 1-digit, with remainder', kind: 'quotient', lo: 100, hi: 999, remainder: true }
+    ];
+  },
+
+  // Video shown at the start of a level
+  longDivVideos: {
+    video: 'https://www.khanacademy.org/math/cc-fourth-grade-math/cc-4th-mult-div-topic/cc-4th-division/v/long-division-without-remainder',
+    b: 'https://www.khanacademy.org/math/cc-fourth-grade-math/cc-4th-mult-div-topic/cc-4th-remainders/v/division-3-more-long-division-and-remainder-examples'
+  },
+
+  // Coins per correct question (placeholder until decided)
+  longDivPoints() {
+    return 1;
+  },
+
+  longDivState() {
+    if (!this.state.longDiv) {
+      this.state.longDiv = { level: 0, maxLevel: 0, log: [] };
+    }
+    return this.state.longDiv;
+  },
+
+  showLongDivision() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('longDivScreen').classList.add('active');
+    const st = this.longDivState();
+    if (!this.longDivQ || this.longDivQ.level !== st.level) {
+      this.longDivNewQuestion();
+    }
+    this.renderLongDivision();
+  },
+
+  longDivRandom(lo, hi) {
+    return lo + Math.floor(Math.random() * (hi - lo + 1));
+  },
+
+  longDivNewQuestion() {
+    const st = this.longDivState();
+    const level = this.longDivLevelList()[st.level];
+    let q = { level: st.level, kind: level.kind, answered: false, misses: 0, correct: false };
+
+    if (level.kind === 'quotient') {
+      const divisor = this.longDivRandom(2, 9);
+      const remainder = level.remainder ? this.longDivRandom(1, divisor - 1) : 0;
+      const qLo = Math.ceil((level.lo - remainder) / divisor);
+      const qHi = Math.floor((level.hi - remainder) / divisor);
+      const quotient = this.longDivRandom(qLo, qHi);
+      q = Object.assign(q, {
+        divisor, quotient, remainder,
+        dividend: divisor * quotient + remainder,
+        hasRemainder: level.remainder
+      });
+    } else if (level.kind === 'estimate') {
+      // 4-digit dividend ÷ 1-digit, rounded to one significant digit: 5,572 ÷ 8 ≈ 700
+      const divisor = this.longDivRandom(2, 9);
+      const dividend = this.longDivRandom(1000, 9999);
+      const exact = dividend / divisor;
+      const p = Math.floor(Math.log10(exact));
+      let lead = Math.round(exact / Math.pow(10, p));
+      let power = p;
+      if (lead === 10) { lead = 1; power = p + 1; }
+      const correct = lead * Math.pow(10, power);
+      const choices = [correct / 10, correct, correct * 10, correct * 100].sort(() => Math.random() - 0.5);
+      q = Object.assign(q, { divisor, dividend, correct, choices });
+    }
+
+    this.longDivQ = q;
+  },
+
+  longDivCheck() {
+    const q = this.longDivQ;
+    if (!q || q.answered || q.kind !== 'quotient') return;
+    const qv = parseInt(document.getElementById('ldQuotient').value, 10);
+    const rv = q.hasRemainder ? parseInt(document.getElementById('ldRemainder').value, 10) : 0;
+    if (Number.isNaN(qv) || Number.isNaN(rv)) return; // blank or junk: not an answer
+    const ok = qv === q.quotient && rv === q.remainder;
+    this.longDivRecord(q, ok, { quotient: qv, remainder: q.hasRemainder ? rv : null });
+  },
+
+  longDivPick(index) {
+    const q = this.longDivQ;
+    if (!q || q.answered || q.kind !== 'estimate') return;
+    const value = q.choices[index];
+    this.longDivRecord(q, value === q.correct, { choice: 'ABCD'[index], value });
+  },
+
+  longDivRecord(q, ok, answer) {
+    const st = this.longDivState();
+    const level = this.longDivLevelList()[st.level];
+    st.log.push({
+      t: Date.now(),
+      level: level.id,
+      dividend: q.dividend,
+      divisor: q.divisor,
+      expected: q.kind === 'estimate' ? q.correct : q.quotient,
+      remainder: q.hasRemainder ? q.remainder : null,
+      answer: answer,
+      correct: ok
+    });
+    if (st.log.length > 300) st.log.splice(0, st.log.length - 300);
+
+    if (ok) {
+      q.answered = true;
+      q.correct = true;
+      this.coins += this.longDivPoints() * (1 + this.qualifierMultiplier);
+      this.updateCoinDisplay();
+      this.playCorrectSound();
+    } else {
+      q.misses++;
+      if (q.misses >= 2) q.answered = true; // after two misses, MO / More appear
+      this.playWrongSound();
+    }
+    this.saveState();
+    this.renderLongDivision();
+  },
+
+  longDivGo(index) {
+    const st = this.longDivState();
+    if (index > st.maxLevel) return; // can go back, not skip ahead
+    st.level = index;
+    this.longDivNewQuestion();
+    this.saveState();
+    this.renderLongDivision();
+  },
+
+  longDivMO() {
+    const st = this.longDivState();
+    const last = this.longDivLevelList().length - 1;
+    st.level = Math.min(st.level + 1, last);
+    st.maxLevel = Math.max(st.maxLevel, st.level);
+    this.longDivNewQuestion();
+    this.saveState();
+    this.renderLongDivision();
+  },
+
+  longDivMore() {
+    this.longDivNewQuestion();
+    this.renderLongDivision();
+  },
+
+  renderLongDivision() {
+    const st = this.longDivState();
+    const levels = this.longDivLevelList();
+    const q = this.longDivQ;
+    const cur = levels[st.level];
+    const card = 'background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 16px; padding: 20px;';
+
+    document.getElementById('longDivCoins').innerHTML = `${Math.round(this.coins * 10) / 10} <span class="gold-coin"></span>`;
+
+    // Timeline: passed levels ✓, current ▶, later levels locked until MO
+    document.getElementById('longDivTimeline').innerHTML = `
+      <div style="${card}">
+        <div style="font-weight: 600; margin-bottom: 12px;">Levels</div>
+        ${levels.map((lv, i) => {
+          const passed = i < st.maxLevel;
+          const current = i === st.level;
+          const locked = i > st.maxLevel;
+          const marker = passed ? '✓' : (current ? '▶' : String(i + 1));
+          const bg = current ? 'var(--fill-accent)' : (passed ? '#22a647' : 'var(--surface)');
+          const fg = (current || passed) ? 'white' : 'var(--text-secondary)';
+          return `<button onclick="app.longDivGo(${i})" ${locked ? 'disabled' : ''} style="display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 8px; border: 0.5px solid var(--border); border-radius: 10px; background: ${current ? 'var(--surface)' : 'transparent'}; color: var(--text-primary); cursor: ${locked ? 'default' : 'pointer'}; opacity: ${locked ? 0.45 : 1};">
+            <span style="flex: 0 0 30px; height: 30px; border-radius: 50%; background: ${bg}; color: ${fg}; display: inline-flex; align-items: center; justify-content: center; font-weight: 600;">${marker}</span>
+            <span style="font-size: 15px; font-weight: ${current ? 600 : 400};">${lv.label}</span>
+          </button>`;
+        }).join('')}
+      </div>`;
+
+    // Video at the start of a level
+    const videoUrl = this.longDivVideos[cur.id];
+    document.getElementById('longDivVideo').innerHTML = videoUrl ? `
+      <div style="${card}">
+        <div style="font-weight: 600; margin-bottom: 12px;">Watch first</div>
+        <a href="${videoUrl}" target="_blank" rel="noopener" style="display: block; padding: 26px; border-radius: 14px; background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; text-align: center; font-size: 22px; font-weight: 600; text-decoration: none;">▶ Watch the video</a>
+        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px; text-align: center;">Opens Khan Academy, then come back here</div>
+      </div>` : '';
+
+    // Practice area
+    let body = '';
+    let feedback = '';
+    let hint = '';
+    if (cur.kind === 'video') {
+      body = `<p style="font-size: 18px; margin: 0;">Watch the video together, then press <strong>MO</strong> to start the questions.</p>`;
+    } else if (q && q.kind === 'quotient') {
+      const dis = q.answered ? 'disabled' : '';
+      body = `
+        <div style="font-size: 14px; color: var(--text-secondary);">Divide.</div>
+        <div style="font-size: 40px; font-weight: 500; margin: 12px 0; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+          <span>${q.dividend} ÷ ${q.divisor} =</span>
+          <input id="ldQuotient" type="number" inputmode="numeric" ${dis} style="width: 110px; font-size: 36px; text-align: center; padding: 6px; border: 0.5px solid var(--border); border-radius: 10px;">
+          ${q.hasRemainder ? `<span style="font-size: 22px; color: var(--text-secondary);">remainder</span>
+          <input id="ldRemainder" type="number" inputmode="numeric" ${dis} style="width: 96px; font-size: 36px; text-align: center; padding: 6px; border: 0.5px solid var(--border); border-radius: 10px;">` : ''}
+        </div>
+        ${q.answered ? '' : `<div style="text-align: center;"><button class="submit" onclick="app.longDivCheck()" style="padding: 14px 32px; font-size: 18px;">Check</button></div>`}`;
+      if (q.misses > 0 && !q.correct) {
+        const product = q.divisor * q.quotient;
+        hint = `<div style="margin-top: 16px; font-size: 18px; color: var(--text-secondary); text-align: center;">
+          Check: ${q.divisor} × ${q.quotient} = ${product}${q.hasRemainder ? `<br>${q.dividend} − ${product} = ${q.remainder}` : ''}
+        </div>`;
+      }
+    } else if (q && q.kind === 'estimate') {
+      body = `
+        <div style="font-size: 14px; color: var(--text-secondary);">Estimate.</div>
+        <div style="font-size: 40px; font-weight: 500; margin: 12px 0 18px;">${q.dividend.toLocaleString('en-US')} ÷ ${q.divisor} ≈ ?</div>
+        <div style="display: grid; gap: 10px; max-width: 420px; margin: 0 auto;">
+          ${q.choices.map((v, i) => `<button ${q.answered ? 'disabled' : ''} onclick="app.longDivPick(${i})" style="text-align: left; padding: 12px 16px; font-size: 22px; border: 0.5px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text-primary); cursor: pointer;">
+            <span style="display: inline-block; width: 32px; height: 32px; line-height: 32px; text-align: center; border: 1.5px solid var(--text-secondary); border-radius: 50%; font-size: 15px; margin-right: 12px;">${'ABCD'[i]}</span>${v.toLocaleString('en-US')}
+          </button>`).join('')}
+        </div>`;
+    }
+
+    if (q && q.correct) feedback = `<div style="font-size: 40px; text-align: center; margin-top: 12px;">✅</div>`;
+    else if (q && q.misses > 0) feedback = `<div style="font-size: 18px; color: #ef4444; text-align: center; margin-top: 12px;">✗ Try again</div>`;
+
+    // MO / More: after each question is answered (or always on the video step)
+    const showNext = cur.kind === 'video' || (q && q.answered);
+    const nextButtons = !showNext ? '' : `
+      <div style="display: flex; gap: 12px; justify-content: center; margin-top: 22px;">
+        ${cur.kind === 'video' ? '' : `<button onclick="app.longDivMore()" style="padding: 12px 24px; font-size: 16px; background: var(--surface); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 10px; cursor: pointer;">More</button>`}
+        <button onclick="app.longDivMO()" style="padding: 12px 28px; font-size: 16px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 10px; cursor: pointer; font-weight: 600;">MO</button>
+      </div>`;
+
+    document.getElementById('longDivPractice').innerHTML = `
+      <div style="${card}">
+        <div style="font-weight: 600; margin-bottom: 8px;">${cur.label}</div>
+        ${body}
+        ${feedback}
+        ${hint}
+        ${nextButtons}
+      </div>`;
   },
 
   showHome() {
