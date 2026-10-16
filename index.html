@@ -1845,10 +1845,11 @@ const app = {
 
     // MO / More: after each question is answered (or always on the video step)
     const showNext = cur.kind === 'video' || (q && q.answered);
+    const linkStyle = 'background: none; border: none; padding: 4px 6px; color: var(--text-secondary); font-size: 13px; text-decoration: underline; cursor: pointer;';
     const nextButtons = !showNext ? '' : `
-      <div style="display: flex; gap: 12px; justify-content: center; margin-top: 22px;">
-        ${cur.kind === 'video' ? '' : `<button onclick="app.longDivMore()" style="padding: 12px 24px; font-size: 16px; background: var(--surface); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 10px; cursor: pointer;">More</button>`}
-        <button onclick="app.longDivMO()" style="padding: 12px 28px; font-size: 16px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 10px; cursor: pointer; font-weight: 600;">MO</button>
+      <div style="display: flex; gap: 14px; justify-content: flex-end; margin-top: 18px;">
+        ${cur.kind === 'video' ? '' : `<button onclick="app.longDivMore()" style="${linkStyle}">More</button>`}
+        <button onclick="app.longDivMO()" style="${linkStyle}">MO</button>
       </div>`;
 
     document.getElementById('longDivPractice').innerHTML = `
