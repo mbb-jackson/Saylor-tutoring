@@ -760,8 +760,9 @@ const coach = {
     let divRows = '';
     let divDone = 0;
     [2,3,4,5,6,7,8,9].forEach(n => {
-      const stage = (st['div_' + n] || {}).stageCompletions || [];
-      const done = stage.filter(x => x).length;
+      const rec = st['div_' + n] || {};
+      const flags = (rec.stageCompletions || []).filter(x => x).length;
+      const done = Math.min(2, Math.max(flags, rec.completions || 0));
       divDone += done;
       divRows += row(`${n}s division`, `${done}/2 stages`, misses[n] ? `${misses[n]} wrong answers` : '');
     });
