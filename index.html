@@ -1805,7 +1805,7 @@ const app = {
         </div>`;
     } else {
       const videoLink = this.longDivVideos[cur.id]
-        ? `<a href="${this.longDivVideos[cur.id]}" target="_blank" rel="noopener" style="font-size: 14px; color: var(--text-secondary);">▶ Watch the remainder video</a>` : '';
+        ? `<a href="${this.longDivVideos[cur.id]}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px; background: #FF0000; color: #fff; font-size: 15px; font-weight: 600; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"><span style="display: inline-block; width: 0; height: 0; border-left: 10px solid #fff; border-top: 6px solid transparent; border-bottom: 6px solid transparent;"></span>Watch the next video</a>` : '';
       let body = '';
       let feedback = '';
       let hint = '';
@@ -1813,7 +1813,6 @@ const app = {
         const dis = q.answered ? 'disabled' : '';
         const box = 'width: 84px; height: 64px; font-size: 34px; text-align: center; border: 1.5px solid #555; border-radius: 4px; background: transparent; color: inherit; font-family: inherit;';
         body = `
-          <div style="font-size: 18px; font-weight: 600;">Divide.</div>
           <div style="font-family: 'Times New Roman', Times, serif; font-size: 36px; margin: 18px 0 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 14px;">
             <span>${q.dividend} ÷ ${q.divisor} =</span>
             <input id="ldQuotient" type="text" inputmode="numeric" autocomplete="off" ${dis} style="${box}">
