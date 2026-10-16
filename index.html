@@ -713,9 +713,6 @@
         </div>
 
         <div class="practice-container">
-          <div class="attempt-label">
-            <span id="divisionNumberLabel"></span> — Stage <span id="divisionStageNum"></span> • Problem <span id="divisionProblemNum"></span>
-          </div>
 
           <div class="problem-section">
             <div id="divisionHint" style="display: none; font-size: 18px; color: var(--text-secondary); margin-bottom: 0.5rem;"></div>
@@ -3855,9 +3852,6 @@ const app = {
     const { problems, index, stage, divisor } = this.currentDivisionSession;
     const problem = problems[index];
 
-    document.getElementById('divisionNumberLabel').textContent = `${divisor}s Division`;
-    document.getElementById('divisionStageNum').textContent = stage;
-    document.getElementById('divisionProblemNum').textContent = index + 1;
     document.getElementById('divisionFeedback').textContent = '';
     document.getElementById('divisionFeedback').className = 'feedback';
     document.getElementById('divisionAnswer').value = '';
