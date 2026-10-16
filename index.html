@@ -1845,7 +1845,6 @@ const app = {
         <div style="margin-top: 18px;"><button onclick="app.longDivMore()" style="padding: 12px 32px; font-size: 18px; font-weight: 600; font-family: inherit; color: white; background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;">Next question</button></div>` : '';
       const next = !showNext ? '' : `
         <div style="display: flex; gap: 14px; justify-content: flex-end; margin-top: 18px;">
-          ${q && q.correct ? '' : `<button onclick="app.longDivMore()" style="${linkStyle}">More</button>`}
           <button onclick="app.longDivMO()" style="${linkStyle}">MO</button>
         </div>`;
 
