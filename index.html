@@ -1277,8 +1277,13 @@ const app = {
       storage.setState(localMeta);
       return;
     }
-    // Update app state with Firebase changes from other devices
-    this.state = data.turdTimes || {};
+    // Update app state with Firebase changes from other devices.
+    // If the incoming progress is identical to what is already in memory (this device's own save
+    // echoing back), keep the same object so any game still in progress updates the live copy.
+    const incoming = data.turdTimes || {};
+    if (!(this.state && JSON.stringify(incoming) === JSON.stringify(this.state))) {
+      this.state = incoming;
+    }
     this.coins = data.coins || 0;
     this.fastGameHistory = data.fastGameHistory || [];
     this.ranges2DigitHistory = data.ranges2DigitHistory || [];
