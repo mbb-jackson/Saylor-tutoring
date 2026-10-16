@@ -1855,6 +1855,11 @@ const app = {
         </div>`;
     }
     document.getElementById('longDivMain').innerHTML = main;
+    // Put the cursor in the first answer box for a new question (keeps the iPad keyboard ready)
+    if (q && !q.answered && q.kind === 'quotient') {
+      const first = document.getElementById('ldQuotient');
+      if (first) { try { first.focus(); } catch (e) {} }
+    }
 
     // Levels: small links. Passed ✓, current in bold, locked levels greyed out
     document.getElementById('longDivLevels').innerHTML = `
