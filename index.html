@@ -482,6 +482,14 @@
   <div id="turdScreen" class="screen">
     <!-- Game Selection Menu -->
     <div class="game-selection-screen" id="gameSelectionScreen">
+      <div id="bubbleModePicker" style="display: none; text-align: center; margin-bottom: 1.5rem;">
+        <p style="font-size: 18px; margin-bottom: 1rem;">Bubble Buster — pick one:</p>
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+          <button onclick="app.startBubbleBusterGame('mul')" style="padding: 16px 28px; font-size: 18px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">× Multiplication</button>
+          <button onclick="app.startBubbleBusterGame('div')" style="padding: 16px 28px; font-size: 18px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">÷ Division</button>
+        </div>
+        <button onclick="app.hideBubbleModePicker()" style="margin-top: 12px; padding: 8px 16px; font-size: 14px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 6px; cursor: pointer;">Cancel</button>
+      </div>
       <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 2rem; text-align: center;">You have <span style="font-weight: 600; color: var(--fill-accent);" id="homeCoinsLabel">0</span> coins, ready to earn more?</p>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 600px;">
         <div onclick="app.startTurdTimesGame()" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
@@ -499,7 +507,7 @@
           <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Fast Cash</div>
           <div style="font-size: 14px; opacity: 0.9;">Answer at your pace, earn coins</div>
         </div>
-        <div onclick="app.startBubbleBusterGame()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+        <div onclick="app.showBubbleModePicker()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
           <div style="font-size: 48px; margin-bottom: 1rem;">🫧</div>
           <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Bubble Buster</div>
           <div style="font-size: 14px; opacity: 0.9;">Shoot the right answer</div>
@@ -2040,13 +2048,23 @@ const app = {
     }
   },
 
-  startBubbleBusterGame() {
+  showBubbleModePicker() {
+    document.getElementById('bubbleModePicker').style.display = 'block';
+  },
+
+  hideBubbleModePicker() {
+    document.getElementById('bubbleModePicker').style.display = 'none';
+  },
+
+  startBubbleBusterGame(mode = 'mul') {
     this.trackSessionStart('bubbleBuster');
     console.log('🎮 STARTING BUBBLE BUSTER GAME');
+    this.hideBubbleModePicker();
     document.getElementById('gameSelectionScreen').style.display = 'none';
     document.getElementById('bubbleBusterGame').style.display = 'block';
 
     this.bubbleGameSession = {
+      mode: mode,
       correct: 0,
       total: 0,
       currentProblem: null,
@@ -2066,18 +2084,69 @@ const app = {
   },
 
   generateBubbleProblem() {
-    const num1 = Math.floor(Math.random() * 8) + 2; // 2-9
-    const num2 = Math.floor(Math.random() * 8) + 2; // 2-9
-    this.bubbleGameSession.currentProblem = {
-      a: num1,
-      b: num2,
-      product: num1 * num2
-    };
-
-    // Display the problem
-    document.getElementById('bubbleProblem').textContent = `${num1} × ${num2} = ?`;
+    if (this.bubbleGameSession.mode === 'div') {
+      // Division: divisors 8, 7, 6 and 4 come up most; 2, 3, 5 and 9 still appear
+      const focus = { 8: 4, 7: 3, 6: 3, 4: 3 };
+      const weights = [];
+      let total = 0;
+      for (let d = 2; d <= 9; d++) {
+        const w = focus[d] || 1;
+        weights.push([d, w]);
+        total += w;
+      }
+      let r = Math.random() * total;
+      let divisor = 9;
+      for (const [d, w] of weights) {
+        r -= w;
+        if (r < 0) { divisor = d; break; }
+      }
+      const quotient = Math.floor(Math.random() * 8) + 2; // 2-9
+      const dividend = divisor * quotient;
+      this.bubbleGameSession.currentProblem = { mode: 'div', a: divisor, b: quotient, product: dividend, answer: quotient };
+      document.getElementById('bubbleProblem').textContent = `${dividend} ÷ ${divisor} = ?`;
+    } else {
+      const num1 = Math.floor(Math.random() * 8) + 2; // 2-9
+      const num2 = Math.floor(Math.random() * 8) + 2; // 2-9
+      this.bubbleGameSession.currentProblem = {
+        mode: 'mul',
+        a: num1,
+        b: num2,
+        product: num1 * num2,
+        answer: num1 * num2
+      };
+      document.getElementById('bubbleProblem').textContent = `${num1} × ${num2} = ?`;
+    }
 
     this.createBubbles();
+  },
+
+  // Wrong choices for a quotient: near the answer first, so they are tricky but never 0 or negative
+  generateDivisionWrong(correct) {
+    const shuffle = arr => arr.sort(() => Math.random() - 0.5);
+    const pool = [];
+    for (let n = 1; n <= 12; n++) if (n !== correct) pool.push(n);
+    const near = shuffle(pool.filter(n => Math.abs(n - correct) <= 3));
+    const rest = shuffle(pool.filter(n => Math.abs(n - correct) > 3));
+    return near.concat(rest).slice(0, 4);
+  },
+
+  // Division bubble taps go to the division history; multiplication bubbles are not logged (as before)
+  recordBubbleAttempt(isCorrect, value) {
+    const session = this.bubbleGameSession;
+    if (!session || session.mode !== 'div') return;
+    const p = session.currentProblem;
+    this.divisionHistory.push({
+      timestamp: Date.now(),
+      divisor: p.a,
+      dividend: p.product,
+      quotient: p.answer,
+      userAnswer: value,
+      isCorrect: isCorrect,
+      stage: null,
+      hintShown: false,
+      game: 'bubbleBuster'
+    });
+    this.saveState();
   },
 
   createBubbles() {
@@ -2086,8 +2155,10 @@ const app = {
     const canvas = document.getElementById('bubbleCanvas');
     if (!canvas) return;
 
-    const correctAnswer = this.bubbleGameSession.currentProblem.product;
-    const wrongAnswers = this.generateWrongAnswers(correctAnswer);
+    const correctAnswer = this.bubbleGameSession.currentProblem.answer;
+    const wrongAnswers = this.bubbleGameSession.mode === 'div'
+      ? this.generateDivisionWrong(correctAnswer)
+      : this.generateWrongAnswers(correctAnswer);
 
     const allNumbers = [correctAnswer, ...wrongAnswers].sort(() => Math.random() - 0.5);
 
@@ -2266,6 +2337,7 @@ const app = {
             bubble.popTime = Date.now();
 
             // Update message and score
+            this.recordBubbleAttempt(bubble.isCorrect, bubble.number);
             if (bubble.isCorrect) {
               this.bubbleGameSession.correct++;
               document.getElementById('bubbleCorrect').textContent = this.bubbleGameSession.correct;
