@@ -489,6 +489,11 @@
           <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Turd Times a Charm</div>
           <div style="font-size: 14px; opacity: 0.9;">Master the tables — 5 rounds each</div>
         </div>
+        <div onclick="app.startFastDivisionMenu()" style="background: linear-gradient(135deg, #F4A261 0%, #F7B980 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+          <div style="font-size: 48px; margin-bottom: 0.5rem;">➗</div>
+          <div style="font-size: 22px; font-weight: 600;">Fast Division</div>
+          <div style="font-size: 14px; opacity: 0.9;">60-second division speed test</div>
+        </div>
         <div onclick="app.startFastGameMenu()" style="background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
           <div style="font-size: 48px; margin-bottom: 1rem;">💰</div>
           <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Fast Cash</div>
@@ -1596,6 +1601,12 @@ const app = {
     this.renderTurdMain();
   },
 
+  startFastDivisionMenu() {
+    document.getElementById('gameSelectionScreen').style.display = 'none';
+    document.getElementById('fastCatGame').style.display = 'block';
+    this.startFastGameTimer('div');
+  },
+
   startFastGameMenu() {
     document.getElementById('gameSelectionScreen').style.display = 'none';
     document.getElementById('fastCatGame').style.display = 'block';
@@ -1623,11 +1634,12 @@ const app = {
     this.showGameSelection();
   },
 
-  startFastGameTimer() {
+  startFastGameTimer(mode = 'mul') {
     this.trackSessionStart('fastCash');
 
     // Initialize Fast Cash game session (no time limit)
     this.fastGameSession = {
+      mode: mode,
       correct: 0,
       total: 0,
       problemTimeout: null,
@@ -1655,17 +1667,72 @@ const app = {
     if (this.fastGameSession.missedProblems.length > 0) {
       problem = this.fastGameSession.missedProblems.shift();
     } else {
-      const a = Math.floor(Math.random() * 8) + 2; // 2-9
-      const b = Math.floor(Math.random() * 8) + 2; // 2-9
-      problem = { a, b, product: a * b };
+      if (this.fastGameSession.mode === 'div') {
+        problem = this.makeFastDivisionProblem();
+      } else {
+        const a = Math.floor(Math.random() * 8) + 2; // 2-9
+        const b = Math.floor(Math.random() * 8) + 2; // 2-9
+        problem = { a, b, product: a * b };
+      }
     }
 
     this.fastGameSession.currentProblem = problem;
     this.fastGameSession.problemStartTime = Date.now();
-    document.getElementById('fastProblem').textContent = `${problem.a} × ${problem.b} = ?`;
+    document.getElementById('fastProblem').textContent = problem.mode === 'div'
+      ? `${problem.product} ÷ ${problem.a} = ?`
+      : `${problem.a} × ${problem.b} = ?`;
     document.getElementById('fastAnswer').value = '';
     document.getElementById('fastAnswer').focus();
     document.getElementById('fastFeedback').textContent = '';
+  },
+
+  // Division problem: a = divisor, b = quotient, product = dividend.
+  // 8s and any divisor she has missed before come up more often.
+  makeFastDivisionProblem() {
+    const misses = {};
+    (this.divisionHistory || []).forEach(h => {
+      if (!h.isCorrect) misses[h.divisor] = (misses[h.divisor] || 0) + 1;
+    });
+    const weights = [];
+    let total = 0;
+    for (let d = 2; d <= 9; d++) {
+      const w = 1 + (d === 8 ? 2 : 0) + Math.min(3, misses[d] || 0);
+      weights.push([d, w]);
+      total += w;
+    }
+    let r = Math.random() * total;
+    let divisor = 9;
+    for (const [d, w] of weights) {
+      r -= w;
+      if (r < 0) { divisor = d; break; }
+    }
+    const quotient = Math.floor(Math.random() * 8) + 2; // 2-9
+    return { mode: 'div', a: divisor, b: quotient, product: divisor * quotient };
+  },
+
+  // Expected answer: the quotient for division, the product for multiplication
+  fastExpected(problem) {
+    return problem.mode === 'div' ? problem.b : problem.product;
+  },
+
+  // Division attempts go to the division history (dashboard, Division Misses); multiplication as before
+  recordFastAttempt(problem, userAnswer, timeTaken, isCorrect) {
+    if (problem.mode !== 'div') {
+      this.recordProblemAttempt(problem.a, problem.b, problem.product, userAnswer, timeTaken, isCorrect);
+      return;
+    }
+    this.divisionHistory.push({
+      timestamp: Date.now(),
+      divisor: problem.a,
+      dividend: problem.product,
+      quotient: problem.b,
+      userAnswer: Number.isNaN(userAnswer) ? null : userAnswer,
+      isCorrect: isCorrect,
+      stage: null,
+      hintShown: false,
+      game: 'fastCash'
+    });
+    this.saveState();
   },
 
   startProblemTimer() {
@@ -1684,12 +1751,14 @@ const app = {
 
     const problem = this.fastGameSession.currentProblem;
     const userAnswer = parseInt(input);
+    if (Number.isNaN(userAnswer)) return; // letters or junk: not an answer, not a miss
     const timeTaken = (Date.now() - this.fastGameSession.problemStartTime) / 1000;
 
     // Clear the problem timer since user answered
     clearTimeout(this.fastGameSession.problemTimeout);
 
-    const isCorrect = userAnswer === problem.product;
+    const expected = this.fastExpected(problem);
+    const isCorrect = userAnswer === expected;
 
     if (isCorrect) {
       // Correct answer
@@ -1703,7 +1772,7 @@ const app = {
       document.getElementById('fastCorrect').textContent = this.fastGameSession.correct;
       document.getElementById('fastFeedback').textContent = '✅';
       this.playCorrectSound();
-      this.recordProblemAttempt(problem.a, problem.b, problem.product, userAnswer, timeTaken, true);
+      this.recordFastAttempt(problem, userAnswer, timeTaken, true);
       this.fastGameSession.currentRetries = 0;
 
       // Move to next problem after brief delay
@@ -1721,12 +1790,12 @@ const app = {
 
       // After 3 retries, offer to move on
       if (this.fastGameSession.currentRetries >= 3) {
-        document.getElementById('fastFeedback').textContent = `✗ ${problem.product} — Use Skip to move on`;
+        document.getElementById('fastFeedback').textContent = `✗ ${expected} — Use Skip to move on`;
         this.fastGameSession.missedProblems.push(problem);
       }
 
       // Record the attempt
-      this.recordProblemAttempt(problem.a, problem.b, problem.product, userAnswer, timeTaken, false);
+      this.recordFastAttempt(problem, userAnswer, timeTaken, false);
 
       // Clear input for retry
       document.getElementById('fastAnswer').value = '';
@@ -1765,15 +1834,14 @@ const app = {
 
     // Record as skipped (time taken but not answered)
     const timeTaken = (Date.now() - this.fastGameSession.problemStartTime) / 1000;
-    this.recordProblemAttempt(problem.a, problem.b, problem.product, -1, timeTaken, false);
+    this.recordFastAttempt(problem, -1, timeTaken, false);
 
-    // Add to missed problems for later
-    this.fastGameSession.missedProblems.push(problem);
+    // Move to next problem first, then queue the skipped one for later
+    // (queuing first made generateFastProblem pull the same problem straight back)
     this.fastGameSession.total++;
     this.fastGameSession.currentRetries = 0;
-
-    // Move to next problem
     this.generateFastProblem();
+    this.fastGameSession.missedProblems.push(problem);
     this.startProblemTimer();
   },
 
