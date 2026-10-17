@@ -506,6 +506,7 @@
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
         <button onclick="app.showHome()" style="padding: 8px 14px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 15px;">← Home</button>
         <span style="font-weight: 600;">Function Junction</span>
+        <span id="fmCoins" style="font-weight: 600;"></span>
       </div>
       <div id="fmMain"></div>
     </div>
@@ -1790,6 +1791,13 @@ const app = {
     if (ok) {
       q.answered = true;
       q.correct = true;
+      // 1 point per correct answer, 2 on a challenge; qualifier bonus on top. Test site only for now.
+      const earned = (q.hard ? 2 : 1) * (1 + this.qualifierMultiplier);
+      if (typeof TEST_MODE !== 'undefined' && TEST_MODE) {
+        this.coins += earned;
+        st.log[st.log.length - 1].points = earned;
+        this.updateCoinDisplay();
+      }
       this.playCorrectSound();
       this.saveState();
       this.fmRender();
@@ -1826,6 +1834,8 @@ const app = {
     const callout = (q.hard && typeof TEST_MODE !== 'undefined' && TEST_MODE)
       ? `<div style="display: inline-block; margin-bottom: 14px; padding: 6px 16px; border-radius: 999px; background: linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333; font-weight: 700; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">⭐ Challenge: double points!</div>`
       : '';
+    const coinEl = document.getElementById('fmCoins');
+    if (coinEl) coinEl.innerHTML = `${Math.round(this.coins * 10) / 10} <span class="gold-coin"></span>`;
     document.getElementById('fmMain').innerHTML = `
       <div style="padding: 8px 4px; text-align: center;">
         <div style="background: linear-gradient(135deg, #BFF0EA 0%, #FFD0C4 100%); color: #222; border-radius: 20px; padding: 28px 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
