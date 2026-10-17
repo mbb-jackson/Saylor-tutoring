@@ -1802,7 +1802,7 @@ const app = {
   fmRender() {
     const q = this.fmQ;
     if (!q) return;
-    const box = 'width: 120px; height: 72px; font-size: 36px; text-align: center; border: 1.5px solid #555; border-radius: 12px; background: transparent; color: inherit; font-family: inherit;';
+    const box = 'width: 120px; height: 72px; font-size: 36px; text-align: center; border: 1.5px solid #555; border-radius: 12px; background: #fff; color: #222; font-family: inherit;';
     let feedback = '';
     if (q.correct) {
       feedback = '<div style="font-size: 44px; text-align: center; margin-top: 12px;">✅</div>';
@@ -1813,7 +1813,7 @@ const app = {
         </div>`;
     }
     document.getElementById('fmMain').innerHTML = `
-      <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 20px; padding: 28px 22px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+      <div style="background: linear-gradient(135deg, #E3F8F6 0%, #FDE8F0 100%); color: #222; border-radius: 20px; padding: 28px 22px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
         <div style="font-size: 16px; color: var(--text-secondary); margin-bottom: 6px;">Rule</div>
         <div style="font-family: 'Times New Roman', Times, serif; font-size: 40px; margin-bottom: 22px;">${this.fmRule(q)}</div>
         <div style="font-family: 'Times New Roman', Times, serif; font-size: 34px; margin-bottom: 10px;"><span style="color: #E0457B; font-weight: 700;">n = ${q.x}</span></div>
