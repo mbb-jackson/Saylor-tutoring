@@ -1713,6 +1713,13 @@ const app = {
     return this.fmQ;
   },
 
+  fmRule(q) {
+    // The rule is written with n as the input; she never solves for anything
+    if (q.op === '×') return `f(n) = ${q.n} × n`;
+    if (q.op === '÷') return `f(n) = n ÷ ${q.n}`;
+    return `f(n) = n + ${q.n}`;
+  },
+
   fmSteps(q) {
     return `${q.x} → ${q.op} ${q.n} = ${q.expected}`;
   },
@@ -1785,8 +1792,8 @@ const app = {
     document.getElementById('fmMain').innerHTML = `
       <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 20px; padding: 28px 22px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
         <div style="font-size: 16px; color: var(--text-secondary); margin-bottom: 6px;">Rule</div>
-        <div style="font-family: 'Times New Roman', Times, serif; font-size: 40px; margin-bottom: 22px;">f(x) = x ${q.op} ${q.n}</div>
-        <div style="font-family: 'Times New Roman', Times, serif; font-size: 34px; margin-bottom: 10px;">Find f(${q.x})</div>
+        <div style="font-family: 'Times New Roman', Times, serif; font-size: 40px; margin-bottom: 22px;">${this.fmRule(q)}</div>
+        <div style="font-family: 'Times New Roman', Times, serif; font-size: 34px; margin-bottom: 10px;">n = ${q.x}</div>
         <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 18px;">
           <span style="font-size: 30px; font-family: 'Times New Roman', Times, serif;">f(${q.x}) =</span>
           <input id="fmAnswer" type="text" inputmode="numeric" autocomplete="off" ${q.answered ? 'disabled' : ''} onkeydown="if (event.key === 'Enter') app.fmCheck()" style="${box}">
