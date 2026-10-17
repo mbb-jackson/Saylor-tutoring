@@ -1693,8 +1693,16 @@ const app = {
     if (level.kind === 'quotient') {
       const divisor = this.longDivRandom(2, 9);
       const remainder = level.remainder ? this.longDivRandom(1, divisor - 1) : 0;
-      const qLo = Math.ceil((level.lo - remainder) / divisor);
-      const qHi = Math.floor((level.hi - remainder) / divisor);
+      let qLo = Math.ceil((level.lo - remainder) / divisor);
+      let qHi = Math.floor((level.hi - remainder) / divisor);
+      // About 3 in 4 have a 2-digit answer; the rest are easy 1-digit answers
+      if (Math.random() < 0.75) {
+        const tLo = Math.max(qLo, 10), tHi = Math.min(qHi, 99);
+        if (tHi >= tLo) { qLo = tLo; qHi = tHi; }
+      } else {
+        const tLo = Math.max(qLo, 1), tHi = Math.min(qHi, 9);
+        if (tHi >= tLo) { qLo = tLo; qHi = tHi; }
+      }
       const quotient = this.longDivRandom(qLo, qHi);
       q = Object.assign(q, {
         divisor, quotient, remainder,
