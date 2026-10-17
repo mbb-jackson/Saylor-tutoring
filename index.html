@@ -1685,29 +1685,43 @@ const app = {
   },
 
   fmNewProblem() {
-    const rules = [
+    const single = [
       { op: '×', n: 2 }, { op: '×', n: 3 }, { op: '×', n: 4 }, { op: '×', n: 5 }, { op: '×', n: 8 },
       { op: '÷', n: 2 }, { op: '÷', n: 3 }, { op: '÷', n: 4 },
       { op: '+', n: 1 }, { op: '+', n: 2 }, { op: '+', n: 3 }, { op: '+', n: 4 }, { op: '+', n: 5 }
     ];
     // 3s and 8s come up twice as often: those are her weak facts
-    const pool = rules.flatMap(r => (r.n === 3 || r.n === 8) ? [r, r] : [r]);
-    const rule = pool[Math.floor(Math.random() * pool.length)];
-    let x;
-    let expected;
-    if (rule.op === '×') {
-      x = this.longDivRandom(1, 10);
-      expected = x * rule.n;
-    } else if (rule.op === '÷') {
-      // inputs are multiples of the divisor, so every answer is a whole number
-      x = rule.n * this.longDivRandom(1, 10);
-      expected = x / rule.n;
-    } else {
-      x = this.longDivRandom(1, 20);
-      expected = x + rule.n;
+    const pool = single.flatMap(r => (r.n === 3 || r.n === 8) ? [r, r] : [r]);
+    const pick = () => pool[Math.floor(Math.random() * pool.length)];
+
+    // Half the problems are one step, half are two steps (e.g. n ÷ 3 + 7)
+    let found = null;
+    for (let tries = 0; tries < 300 && !found; tries++) {
+      const ops = [pick()];
+      if (Math.random() < 0.5) ops.push(pick());
+      // a division first step needs an input that divides evenly
+      const x = ops[0].op === '÷' ? ops[0].n * this.longDivRandom(1, 10) : this.longDivRandom(1, 10);
+      let v = x;
+      let ok = true;
+      for (const o of ops) {
+        if (o.op === '÷') {
+          if (v % o.n !== 0) { ok = false; break; }
+          v = v / o.n;
+        } else if (o.op === '×') {
+          v = v * o.n;
+        } else {
+          v = v + o.n;
+        }
+      }
+      if (ok) found = { ops, x, expected: v };
     }
+    if (!found) found = { ops: [{ op: '×', n: 2 }], x: 3, expected: 6 };
+
     this.fmQ = {
-      op: rule.op, n: rule.n, x, expected,
+      ops: found.ops,
+      x: found.x,
+      expected: found.expected,
+      label: found.ops.map(o => o.op + ' ' + o.n).join(', '),
       misses: 0, answered: false, correct: false
     };
     return this.fmQ;
@@ -1715,13 +1729,21 @@ const app = {
 
   fmRule(q) {
     // The rule is written with n as the input; she never solves for anything
-    if (q.op === '×') return `f(n) = ${q.n} × n`;
-    if (q.op === '÷') return `f(n) = n ÷ ${q.n}`;
-    return `f(n) = n + ${q.n}`;
+    if (q.ops.length === 1 && q.ops[0].op === '×') return `f(n) = ${q.ops[0].n} × n`;
+    return 'f(n) = n ' + q.ops.map(o => `${o.op} ${o.n}`).join(' ');
   },
 
   fmSteps(q) {
-    return `${q.x} → ${q.op} ${q.n} = ${q.expected}`;
+    // e.g. "4 → × 2 = 8 → + 3 = 11"
+    let v = q.x;
+    const parts = [String(q.x)];
+    q.ops.forEach(o => {
+      if (o.op === '÷') v = v / o.n;
+      else if (o.op === '×') v = v * o.n;
+      else v = v + o.n;
+      parts.push(`${o.op} ${o.n} = ${v}`);
+    });
+    return parts.join(' → ');
   },
 
   showFunctionMachine() {
@@ -1745,7 +1767,7 @@ const app = {
     const st = this.fmState();
     st.log.push({
       t: Date.now(),
-      rule: q.op + ' ' + q.n,
+      rule: q.label,
       input: q.x,
       expected: q.expected,
       answer: value,
