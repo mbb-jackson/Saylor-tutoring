@@ -1706,12 +1706,17 @@ const app = {
           v = v / o.n;
         } else if (o.op === '×') {
           v = v * o.n;
+        } else if (o.op === '−') {
+          if (v - o.n < 0) return null; // no negative answers
+          v = v - o.n;
         } else {
           v = v + o.n;
         }
       }
       return v;
     };
+    // Test site: the second step is always + or −
+    const pickSecond = () => ({ op: Math.random() < 0.5 ? '+' : '−', n: this.longDivRandom(1, 9) });
     const make = (ops, x, hard) => {
       const expected = apply(ops, x);
       return expected === null ? null : { ops, x, expected, hard: !!hard };
@@ -1723,7 +1728,7 @@ const app = {
       for (let tries = 0; tries < 300 && !found; tries++) {
         const n = this.longDivRandom(2, 9);
         const x = this.longDivRandom(11, 39);
-        found = twoOpsOnly ? make([{ op: '×', n }, pickFrom(anyOp)], x, true) : make([{ op: '×', n }], x, true);
+        found = twoOpsOnly ? make([{ op: '×', n }, pickSecond()], x, true) : make([{ op: '×', n }], x, true);
       }
     }
     // Otherwise: mostly multiplication and division
@@ -1731,7 +1736,7 @@ const app = {
       const first = pickFrom(multDiv);
       // a division first step needs an input that divides evenly
       const x = first.op === '÷' ? first.n * this.longDivRandom(1, 10) : this.longDivRandom(1, 10);
-      const ops = (twoOpsOnly || Math.random() < 0.4) ? [first, pickFrom(anyOp)] : [first];
+      const ops = twoOpsOnly ? [first, pickSecond()] : (Math.random() < 0.4 ? [first, pickFrom(anyOp)] : [first]);
       found = make(ops, x, false);
     }
     if (!found) found = { ops: [{ op: '×', n: 2 }], x: 3, expected: 6, hard: false };
@@ -1761,6 +1766,7 @@ const app = {
     q.ops.forEach(o => {
       if (o.op === '÷') v = v / o.n;
       else if (o.op === '×') v = v * o.n;
+      else if (o.op === '−') v = v - o.n;
       else v = v + o.n;
       parts.push(`${o.op} ${o.n} = ${v}`);
     });
