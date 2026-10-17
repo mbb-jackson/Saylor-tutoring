@@ -1700,7 +1700,7 @@ const app = {
     if (Math.random() < 0.2) {
       const n = this.longDivRandom(2, 9);
       const x = this.longDivRandom(11, 39);
-      found = { ops: [{ op: '×', n }], x, expected: x * n };
+      found = { ops: [{ op: '×', n }], x, expected: x * n, hard: true };
     }
 
     // Otherwise: mostly multiplication and division, with some addition as a second step
@@ -1730,6 +1730,7 @@ const app = {
       x: found.x,
       expected: found.expected,
       label: found.ops.map(o => o.op + ' ' + o.n).join(', '),
+      hard: !!found.hard,
       misses: 0, answered: false, correct: false
     };
     return this.fmQ;
@@ -1777,6 +1778,7 @@ const app = {
     st.log.push({
       t: Date.now(),
       rule: q.label,
+      hard: !!q.hard,
       input: q.x,
       expected: q.expected,
       answer: value,
@@ -1820,9 +1822,14 @@ const app = {
           <div style="margin-top: 8px; font-size: 20px; color: var(--text-secondary);">${this.fmSteps(q)}</div>
         </div>`;
     }
+    // Test site only for now: the double-points callout shows on harder problems
+    const callout = (q.hard && typeof TEST_MODE !== 'undefined' && TEST_MODE)
+      ? `<div style="display: inline-block; margin-bottom: 14px; padding: 6px 16px; border-radius: 999px; background: linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333; font-weight: 700; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">⭐ Challenge: double points!</div>`
+      : '';
     document.getElementById('fmMain').innerHTML = `
       <div style="padding: 8px 4px; text-align: center;">
         <div style="background: linear-gradient(135deg, #BFF0EA 0%, #FFD0C4 100%); color: #222; border-radius: 20px; padding: 28px 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+          ${callout}
           <div style="font-family: 'Times New Roman', Times, serif; font-size: 40px; margin-bottom: 22px;">${this.fmRule(q)}</div>
           <div style="font-family: 'Times New Roman', Times, serif; font-size: 34px; margin-bottom: 10px;"><span style="color: #E0457B; font-weight: 700;">n = ${q.x}</span></div>
           <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 18px;">
