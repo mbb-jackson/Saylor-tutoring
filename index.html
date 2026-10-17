@@ -1696,25 +1696,13 @@ const app = {
     const anyOp = weighted(all);
     const pickFrom = pool => pool[Math.floor(Math.random() * pool.length)];
 
-    let found;
-    // About 2 in 10: a harder one, 2-digit × 1-digit
-    if (Math.random() < 0.2) {
-      const n = this.longDivRandom(2, 9);
-      const x = this.longDivRandom(11, 39);
-      found = { ops: [{ op: '×', n }], x, expected: x * n, hard: true };
-    }
-
-    // Otherwise: mostly multiplication and division, with some addition as a second step
-    for (let tries = 0; tries < 300 && !found; tries++) {
-      const ops = [pickFrom(multDiv)];
-      if (Math.random() < 0.4) ops.push(pickFrom(anyOp));
-      // a division first step needs an input that divides evenly
-      const x = ops[0].op === '÷' ? ops[0].n * this.longDivRandom(1, 10) : this.longDivRandom(1, 10);
+    // Test site: every problem has two operations. Live site: unchanged until you approve it.
+    const twoOpsOnly = typeof TEST_MODE !== 'undefined' && TEST_MODE;
+    const apply = (ops, x) => {
       let v = x;
-      let ok = true;
       for (const o of ops) {
         if (o.op === '÷') {
-          if (v % o.n !== 0) { ok = false; break; }
+          if (v % o.n !== 0) return null;
           v = v / o.n;
         } else if (o.op === '×') {
           v = v * o.n;
@@ -1722,9 +1710,31 @@ const app = {
           v = v + o.n;
         }
       }
-      if (ok) found = { ops, x, expected: v };
+      return v;
+    };
+    const make = (ops, x, hard) => {
+      const expected = apply(ops, x);
+      return expected === null ? null : { ops, x, expected, hard: !!hard };
+    };
+
+    let found = null;
+    // About 2 in 10: a harder one, 2-digit × 1-digit
+    if (Math.random() < 0.2) {
+      for (let tries = 0; tries < 300 && !found; tries++) {
+        const n = this.longDivRandom(2, 9);
+        const x = this.longDivRandom(11, 39);
+        found = twoOpsOnly ? make([{ op: '×', n }, pickFrom(anyOp)], x, true) : make([{ op: '×', n }], x, true);
+      }
     }
-    if (!found) found = { ops: [{ op: '×', n: 2 }], x: 3, expected: 6 };
+    // Otherwise: mostly multiplication and division
+    for (let tries = 0; tries < 300 && !found; tries++) {
+      const first = pickFrom(multDiv);
+      // a division first step needs an input that divides evenly
+      const x = first.op === '÷' ? first.n * this.longDivRandom(1, 10) : this.longDivRandom(1, 10);
+      const ops = (twoOpsOnly || Math.random() < 0.4) ? [first, pickFrom(anyOp)] : [first];
+      found = make(ops, x, false);
+    }
+    if (!found) found = { ops: [{ op: '×', n: 2 }], x: 3, expected: 6, hard: false };
 
     this.fmQ = {
       ops: found.ops,
