@@ -2038,7 +2038,8 @@ const app = {
             ${videoLink || ''}
             ${q && !q.answered ? `<button onclick="app.longDivToggleCoach()" style="padding: 8px 16px; font-size: 14px; font-weight: 600; font-family: inherit; color: white; background: ${q.coached ? 'linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333' : 'linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%)'}; border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;">Coaching: ${q.coached ? 'on' : 'off'}</button>` : ''}
           </div>
-          ${body}${feedback}${hint}${next}
+          ${body ? `<div style="background: linear-gradient(135deg, #E3F8F6 0%, #FDE8F0 100%); border-radius: 20px; padding: 24px 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">${body}</div>` : ''}
+          ${feedback}${hint}${next}
         </div>`;
     }
     document.getElementById('longDivMain').innerHTML = main;
