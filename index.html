@@ -480,6 +480,12 @@
         <div style="font-size: 16px; font-weight: 600;">Long Division</div>
         <div style="font-size: 12px; opacity: 0.9;">Step by step</div>
       </div>
+      <div id="fmHomeCard" onclick="app.showFunctionMachine()" style="display: none; background: linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div style="font-size: 36px; margin-bottom: 0.5rem;">⚙️</div>
+        <div style="font-size: 16px; font-weight: 600;">Function Machine</div>
+        <div style="font-size: 12px; opacity: 0.9;">Find the output</div>
+      </div>
+      <script>if (new URLSearchParams(window.location.search).has("test")) document.getElementById("fmHomeCard").style.display = "";</script>
     </div>
   </div>
 
@@ -492,6 +498,17 @@
       </div>
       <div id="longDivMain"></div>
       <div id="longDivLevels" style="margin-top: 28px;"></div>
+    </div>
+  </div>
+
+  <!-- FUNCTION MACHINE (test page only for now) -->
+  <div id="fmScreen" class="screen">
+    <div style="max-width: 560px; margin: 0 auto; padding: 1.25rem 16px 3rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+        <button onclick="app.showHome()" style="padding: 8px 14px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 15px;">← Home</button>
+        <span style="font-weight: 600;">Function Machine</span>
+      </div>
+      <div id="fmMain"></div>
     </div>
   </div>
 
@@ -1658,6 +1675,129 @@ const app = {
   // Coins per correct question (placeholder until decided)
   longDivPoints() {
     return 2; // points per correct long division question, before the qualifier bonus
+  },
+
+  fmState() {
+    if (!this.state.functionMachine) {
+      this.state.functionMachine = { log: [] };
+    }
+    return this.state.functionMachine;
+  },
+
+  fmNewProblem() {
+    const rules = [
+      { op: '×', n: 2 }, { op: '×', n: 3 }, { op: '×', n: 4 }, { op: '×', n: 5 }, { op: '×', n: 8 },
+      { op: '÷', n: 2 }, { op: '÷', n: 3 }, { op: '÷', n: 4 },
+      { op: '+', n: 1 }, { op: '+', n: 2 }, { op: '+', n: 3 }, { op: '+', n: 4 }, { op: '+', n: 5 }
+    ];
+    // 3s and 8s come up twice as often: those are her weak facts
+    const pool = rules.flatMap(r => (r.n === 3 || r.n === 8) ? [r, r] : [r]);
+    const rule = pool[Math.floor(Math.random() * pool.length)];
+    let x;
+    let expected;
+    if (rule.op === '×') {
+      x = this.longDivRandom(1, 10);
+      expected = x * rule.n;
+    } else if (rule.op === '÷') {
+      // inputs are multiples of the divisor, so every answer is a whole number
+      x = rule.n * this.longDivRandom(1, 10);
+      expected = x / rule.n;
+    } else {
+      x = this.longDivRandom(1, 20);
+      expected = x + rule.n;
+    }
+    this.fmQ = {
+      op: rule.op, n: rule.n, x, expected,
+      misses: 0, answered: false, correct: false
+    };
+    return this.fmQ;
+  },
+
+  fmSteps(q) {
+    return `${q.x} → ${q.op} ${q.n} = ${q.expected}`;
+  },
+
+  showFunctionMachine() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('fmScreen').classList.add('active');
+    this.fmState(); // makes sure the log exists even with no history yet
+    if (!this.fmQ) this.fmNewProblem();
+    this.fmRender();
+  },
+
+  fmCheck() {
+    const q = this.fmQ;
+    if (!q || q.answered) return;
+    const input = document.getElementById('fmAnswer');
+    const raw = input ? String(input.value).trim() : '';
+    if (raw === '') return; // blank: nothing to check, not a miss
+    const value = Number(raw);
+    if (!Number.isFinite(value)) return; // letters or junk: ignored, not a miss
+
+    const ok = value === q.expected;
+    const st = this.fmState();
+    st.log.push({
+      t: Date.now(),
+      rule: q.op + ' ' + q.n,
+      input: q.x,
+      expected: q.expected,
+      answer: value,
+      correct: ok,
+      attempt: q.misses
+    });
+    if (st.log.length > 300) st.log.splice(0, st.log.length - 300);
+
+    if (ok) {
+      q.answered = true;
+      q.correct = true;
+      this.playCorrectSound();
+      this.saveState();
+      this.fmRender();
+      // Show the tick briefly, then the next problem
+      const done = q;
+      setTimeout(() => {
+        if (this.fmQ === done) {
+          this.fmNewProblem();
+          this.fmRender();
+        }
+      }, 1200);
+    } else {
+      q.misses++;
+      this.playWrongSound();
+      this.saveState();
+      this.fmRender();
+    }
+  },
+
+  fmRender() {
+    const q = this.fmQ;
+    if (!q) return;
+    const box = 'width: 120px; height: 72px; font-size: 36px; text-align: center; border: 1.5px solid #555; border-radius: 12px; background: transparent; color: inherit; font-family: inherit;';
+    let feedback = '';
+    if (q.correct) {
+      feedback = '<div style="font-size: 44px; text-align: center; margin-top: 12px;">✅</div>';
+    } else if (q.misses > 0) {
+      feedback = `<div style="margin-top: 16px; text-align: center;">
+          <div style="font-size: 18px; color: #ef4444; font-weight: 600;">Not quite. Try again.</div>
+          <div style="margin-top: 8px; font-size: 20px; color: var(--text-secondary);">${this.fmSteps(q)}</div>
+        </div>`;
+    }
+    document.getElementById('fmMain').innerHTML = `
+      <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 20px; padding: 28px 22px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div style="font-size: 16px; color: var(--text-secondary); margin-bottom: 6px;">Rule</div>
+        <div style="font-family: 'Times New Roman', Times, serif; font-size: 40px; margin-bottom: 22px;">f(x) = x ${q.op} ${q.n}</div>
+        <div style="font-family: 'Times New Roman', Times, serif; font-size: 34px; margin-bottom: 10px;">Find f(${q.x})</div>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 18px;">
+          <span style="font-size: 30px; font-family: 'Times New Roman', Times, serif;">f(${q.x}) =</span>
+          <input id="fmAnswer" type="text" inputmode="numeric" autocomplete="off" ${q.answered ? 'disabled' : ''} onkeydown="if (event.key === 'Enter') app.fmCheck()" style="${box}">
+        </div>
+        ${q.answered ? '' : `<div style="margin-top: 20px;"><button onclick="app.fmCheck()" style="padding: 12px 32px; font-size: 18px; font-weight: 600; font-family: inherit; color: white; background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;">Submit</button></div>`}
+        ${feedback}
+      </div>`;
+    if (!q.answered) {
+      const first = document.getElementById('fmAnswer');
+      if (first) { try { first.focus(); } catch (e) {} }
+    }
   },
 
   longDivState() {
