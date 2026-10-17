@@ -4543,7 +4543,7 @@ const app = {
           <option value="0.25">1.25x</option>
           <option value="0.5">1.5x</option>
           <option value="0.75">1.75x</option>
-          <option value="2">2x</option>
+          <option value="1">2x</option>
         </select>
       </div>
       <div style="margin-bottom: 2rem; padding: 1rem; background: var(--surface-2); border-radius: 6px;">
@@ -4575,7 +4575,7 @@ const app = {
   setQualifier(value) {
     this.qualifierMultiplier = value;
     const timestamp = new Date().toLocaleString();
-    const labels = { '0': 'None', '0.25': '1.25x', '0.5': '1.5x', '0.75': '1.75x', '2': '2x' };
+    const labels = { '0': 'None', '0.25': '1.25x', '0.5': '1.5x', '0.75': '1.75x', '1': '2x' };
     this.qualifierLog.push({ timestamp, value, label: labels[value.toString()] });
     this.saveState();
     this.renderQualifierLog();
