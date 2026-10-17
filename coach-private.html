@@ -813,7 +813,47 @@ const coach = {
           ${rangeRows}
         </div>
       </div>
-      ${this.longDivHtml(st)}`;
+      ${this.longDivHtml(st)}
+      ${this.functionJunctionHtml(st)}`;
+  },
+
+  functionJunctionHtml(st) {
+    const log = (st.functionMachine || {}).log || [];
+    const row = (label, value) => `
+      <div style="display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);"><span>${label}</span><span style="font-weight:600;">${value}</span></div>`;
+    if (!log.length) {
+      return `<div style="margin-top:22px; font-weight:600; margin-bottom:6px;">Function Junction</div><div style="color:var(--text-secondary);">No attempts yet</div>`;
+    }
+    const correct = log.filter(e => e.correct).length;
+    const firstTries = log.filter(e => (e.attempt || 0) === 0);
+    const firstCorrect = firstTries.filter(e => e.correct).length;
+    const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '—';
+
+    // Per rule: attempts, correct
+    const byRule = {};
+    log.forEach(e => {
+      const k = e.rule || 'unknown';
+      if (!byRule[k]) byRule[k] = { n: 0, c: 0 };
+      byRule[k].n++;
+      if (e.correct) byRule[k].c++;
+    });
+    const ruleRows = Object.keys(byRule).sort().map(k => `
+      <tr>
+        <td style="padding:6px 8px 6px 0; border-bottom:0.5px solid var(--border);">${k}</td>
+        <td style="padding:6px 8px; border-bottom:0.5px solid var(--border);">${byRule[k].n}</td>
+        <td style="padding:6px 0 6px 8px; border-bottom:0.5px solid var(--border);">${pct(byRule[k].c, byRule[k].n)}</td>
+      </tr>`).join('');
+
+    return `
+      <div style="margin-top:22px; font-weight:600; margin-bottom:6px;">Function Junction</div>
+      ${row('Attempts', log.length)}
+      ${row('Percent right (all tries)', pct(correct, log.length))}
+      ${row('Percent right (first try)', pct(firstCorrect, firstTries.length) + ` <span style="font-weight:400; color:var(--text-secondary); font-size:13px;">${firstCorrect} of ${firstTries.length}</span>`)}
+      <div style="font-weight:600; margin:16px 0 6px;">By rule</div>
+      <div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:14px;">
+        <tr style="text-align:left; color:var(--text-secondary);"><th style="padding:6px 8px 6px 0;">Rule</th><th style="padding:6px 8px;">Attempts</th><th style="padding:6px 0 6px 8px;">Percent right</th></tr>
+        ${ruleRows}
+      </table></div>`;
   },
 
   longDivHtml(st) {
