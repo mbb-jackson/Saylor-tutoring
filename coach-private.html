@@ -797,6 +797,8 @@ const coach = {
     const rangeRows = setLabels.map(([k, label]) => row(label, `${(st[k] || {}).completions || 0} done`)).join('');
 
     document.getElementById('progressSection').innerHTML = `
+      ${this.unitPathHtml(st)}
+      <div style="margin-top:28px; font-weight:600; font-size:17px;">Other details</div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;">
         <div>
           <div style="font-weight:600; margin-bottom:6px;">Division — ${divDone}/16 stages</div>
@@ -815,6 +817,75 @@ const coach = {
       </div>
       ${this.longDivHtml(st)}
       ${this.functionJunctionHtml(st)}`;
+  },
+
+  // Learning path view: one section per unit, with practice by date and a unit check line
+  unitPathHtml(st) {
+    const d = this.data || {};
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '—';
+    const cellL = 'padding:6px 8px 6px 0; border-bottom:0.5px solid var(--border);';
+    const cellR = 'padding:6px 8px; border-bottom:0.5px solid var(--border);';
+
+    // Attempts as {t, n, ok}: n problems, ok of them right
+    const multAttempts = (d.fastGameHistory || []).map(h => ({ t: h.timestamp, n: 1, ok: h.isCorrect ? 1 : 0 }));
+    const twoDigit = (d.ranges2DigitHistory || []).map(h => ({ t: h.timestamp, n: h.problems || 0, ok: h.correct || 0 }));
+    const divFacts = (d.divisionHistory || []).map(h => ({ t: h.timestamp, n: 1, ok: h.isCorrect ? 1 : 0 }));
+    // Long division: first tries only; coached problems count as problems but not as right
+    const ldFirst = ((st.longDiv || {}).log || []).filter(e => (e.attempt || 0) === 0);
+    const ldLevels = levels => ldFirst.filter(e => levels.includes(e.level))
+      .map(e => ({ t: e.t, n: 1, ok: (e.correct && !e.coached) ? 1 : 0 }));
+
+    const units = [
+      { n: 1, name: 'Place value and rounding', when: 'Oct 20', src: [] },
+      { n: 2, name: 'Multi-digit addition and subtraction', when: 'Oct 27', src: [] },
+      { n: 3, name: 'Multiplication: 1-digit × 4-digit, 2-digit × 1-digit', when: 'Nov 3', src: [...multAttempts, ...twoDigit] },
+      { n: 4, name: '2-digit × 2-digit', when: 'Nov 10', src: [] },
+      { n: 5, name: 'Division: 2-digit ÷ 1-digit', when: 'Nov 17', src: [...divFacts, ...ldLevels(['a', 'b', 'est'])] },
+      { n: 6, name: 'Division: 3- and 4-digit ÷ 1-digit, with remainders', when: 'Nov 24', src: ldLevels(['c', 'd']) },
+      { n: 7, name: 'Division: 2-digit ÷ 2-digit; word problems', when: 'Dec 1', src: [] },
+      { n: 8, name: 'Factors, multiples, divisibility', when: 'Dec 8', src: [] },
+      { n: 9, name: 'Fractions: equivalence, comparing, mixed numbers', when: 'Dec 15', src: [] },
+      { n: 10, name: 'Fractions: add and subtract; fraction × whole number', when: 'Dec 22', src: [] },
+      { n: 11, name: 'Decimals: tenths and hundredths', when: 'Dec 29', src: [] },
+      { n: 12, name: 'Measurement and geometry; final check', when: 'Jan 5', src: [] }
+    ];
+
+    const unitHtml = u => {
+      const head = `<div style="margin-top:20px; font-weight:600;">Unit ${u.n}: ${esc(u.name)} <span style="font-weight:400; color:var(--text-secondary); font-size:13px;">(from ${u.when})</span></div>`;
+      const checkLine = `<div style="padding:8px 0; font-size:14px;"><span style="color:var(--text-secondary);">Unit check:</span> <span style="font-weight:600;">not recorded yet</span></div>`;
+      if (!u.src.length) {
+        return head + `<div style="color:var(--text-secondary); font-size:14px; padding:6px 0;">Not tracked in the app yet.</div>` + checkLine;
+      }
+      const total = u.src.reduce((s, a) => s + a.n, 0);
+      const right = u.src.reduce((s, a) => s + a.ok, 0);
+      const days = {};
+      u.src.forEach(a => {
+        const key = new Date(a.t).toLocaleDateString('en-CA');
+        if (!days[key]) days[key] = { key, label: new Date(a.t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }), n: 0, ok: 0 };
+        days[key].n += a.n;
+        days[key].ok += a.ok;
+      });
+      const rows = Object.values(days).sort((x, y) => x.key < y.key ? -1 : 1).map(r => `
+        <tr>
+          <td style="${cellL}">${r.label}</td>
+          <td style="${cellR}">${r.n}</td>
+          <td style="${cellR}">${r.ok} / ${r.n}</td>
+          <td style="${cellR}">${pct(r.ok, r.n)}</td>
+        </tr>`).join('');
+      return head
+        + `<div style="padding:6px 0; font-size:14px;">Done: <b>${total}</b> problems, <b>${pct(right, total)}</b> right</div>`
+        + `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:14px;">
+            <tr style="text-align:left; color:var(--text-secondary);"><th style="padding:6px 8px 6px 0;">Date</th><th style="padding:6px 8px;">Problems</th><th style="padding:6px 8px;">Right</th><th style="padding:6px 8px;">Percent</th></tr>
+            ${rows}
+          </table></div>`
+        + checkLine;
+    };
+
+    return `
+      <div style="font-weight:600; font-size:17px;">Learning path</div>
+      <div style="color:var(--text-secondary); font-size:13px; margin-top:4px;">Multiplication and division facts count every attempt. Long division counts first tries. Unit checks are not recorded in the app yet.</div>
+      ${units.map(unitHtml).join('')}`;
   },
 
   functionJunctionHtml(st) {
