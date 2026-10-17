@@ -1813,13 +1813,14 @@ const app = {
         </div>`;
     }
     document.getElementById('fmMain').innerHTML = `
-      <div style="background: linear-gradient(135deg, #E3F8F6 0%, #FDE8F0 100%); color: #222; border-radius: 20px; padding: 28px 22px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-        <div style="font-size: 16px; color: var(--text-secondary); margin-bottom: 6px;">Rule</div>
-        <div style="font-family: 'Times New Roman', Times, serif; font-size: 40px; margin-bottom: 22px;">${this.fmRule(q)}</div>
-        <div style="font-family: 'Times New Roman', Times, serif; font-size: 34px; margin-bottom: 10px;"><span style="color: #E0457B; font-weight: 700;">n = ${q.x}</span></div>
-        <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 18px;">
-          <span style="font-size: 30px; font-family: 'Times New Roman', Times, serif;">f(<span style="color: #E0457B; font-weight: 700;">${q.x}</span>) =</span>
-          <input id="fmAnswer" type="text" inputmode="numeric" autocomplete="off" ${q.answered ? 'disabled' : ''} onkeydown="if (event.key === 'Enter') app.fmCheck()" style="${box}">
+      <div style="padding: 8px 4px; text-align: center;">
+        <div style="background: linear-gradient(135deg, #E3F8F6 0%, #FDE8F0 100%); color: #222; border-radius: 20px; padding: 28px 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+          <div style="font-family: 'Times New Roman', Times, serif; font-size: 40px; margin-bottom: 22px;">${this.fmRule(q)}</div>
+          <div style="font-family: 'Times New Roman', Times, serif; font-size: 34px; margin-bottom: 10px;"><span style="color: #E0457B; font-weight: 700;">n = ${q.x}</span></div>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 18px;">
+            <span style="font-size: 30px; font-family: 'Times New Roman', Times, serif;">f(<span style="color: #E0457B; font-weight: 700;">${q.x}</span>) =</span>
+            <input id="fmAnswer" type="text" inputmode="numeric" autocomplete="off" ${q.answered ? 'disabled' : ''} onkeydown="if (event.key === 'Enter') app.fmCheck()" style="${box}">
+          </div>
         </div>
         ${q.answered ? '' : `<div style="margin-top: 20px;"><button onclick="app.fmCheck()" style="padding: 12px 32px; font-size: 18px; font-weight: 600; font-family: inherit; color: white; background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;">Submit</button></div>`}
         ${feedback}
