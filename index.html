@@ -475,16 +475,12 @@
         <div style="font-size: 16px; font-weight: 600;">Turd Splitter</div>
         <div style="font-size: 12px; opacity: 0.9;">Division</div>
       </div>
-      <div id="longDivHomeCard" onclick="app.showLongDivision()" style="background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+      <div id="longDivHomeCard" onclick="app.showLongDivision()" style="display: none; background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
         <div style="font-size: 36px; margin-bottom: 0.5rem;">📐</div>
         <div style="font-size: 16px; font-weight: 600;">Long Division</div>
         <div style="font-size: 12px; opacity: 0.9;">Step by step</div>
       </div>
-      <div id="fmHomeCard" onclick="app.showFunctionMachine()" style="background: linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-        <div style="font-size: 36px; margin-bottom: 0.5rem;">🚂</div>
-        <div style="font-size: 16px; font-weight: 600;">Function Junction</div>
-        <div style="font-size: 12px; opacity: 0.9;">Find the output</div>
-      </div>
+      <script>if (new URLSearchParams(window.location.search).has("test")) document.getElementById("longDivHomeCard").style.display = "";</script>
     </div>
   </div>
 
@@ -497,18 +493,6 @@
       </div>
       <div id="longDivMain"></div>
       <div id="longDivLevels" style="margin-top: 28px;"></div>
-    </div>
-  </div>
-
-  <!-- FUNCTION MACHINE (test page only for now) -->
-  <div id="fmScreen" class="screen">
-    <div style="max-width: 560px; margin: 0 auto; padding: 1.25rem 16px 3rem;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
-        <button onclick="app.showHome()" style="padding: 8px 14px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 15px;">← Home</button>
-        <span style="font-weight: 600;">Function Junction</span>
-        <span id="fmCoins" style="font-weight: 600;"></span>
-      </div>
-      <div id="fmMain"></div>
     </div>
   </div>
 
@@ -1677,197 +1661,6 @@ const app = {
     return 2; // points per correct long division question, before the qualifier bonus
   },
 
-  fmState() {
-    if (!this.state.functionMachine) {
-      this.state.functionMachine = { log: [] };
-    }
-    return this.state.functionMachine;
-  },
-
-  fmNewProblem() {
-    const all = [
-      { op: '×', n: 2 }, { op: '×', n: 3 }, { op: '×', n: 4 }, { op: '×', n: 5 }, { op: '×', n: 8 },
-      { op: '÷', n: 2 }, { op: '÷', n: 3 }, { op: '÷', n: 4 },
-      { op: '+', n: 1 }, { op: '+', n: 2 }, { op: '+', n: 3 }, { op: '+', n: 4 }, { op: '+', n: 5 }
-    ];
-    // 3s and 8s come up twice as often: those are her weak facts
-    const weighted = list => list.flatMap(r => (r.n === 3 || r.n === 8) ? [r, r] : [r]);
-    const multDiv = weighted(all.filter(r => r.op !== '+'));
-    const anyOp = weighted(all);
-    const pickFrom = pool => pool[Math.floor(Math.random() * pool.length)];
-
-    // Every problem has two operations; the second step is + or −
-    const apply = (ops, x) => {
-      let v = x;
-      for (const o of ops) {
-        if (o.op === '÷') {
-          if (v % o.n !== 0) return null;
-          v = v / o.n;
-        } else if (o.op === '×') {
-          v = v * o.n;
-        } else if (o.op === '−') {
-          if (v - o.n < 0) return null; // no negative answers
-          v = v - o.n;
-        } else {
-          v = v + o.n;
-        }
-      }
-      return v;
-    };
-    const pickSecond = () => ({ op: Math.random() < 0.5 ? '+' : '−', n: this.longDivRandom(1, 9) });
-    const make = (ops, x, hard) => {
-      const expected = apply(ops, x);
-      return expected === null ? null : { ops, x, expected, hard: !!hard };
-    };
-
-    let found = null;
-    // About 2 in 10: a harder one, 2-digit × 1-digit
-    if (Math.random() < 0.2) {
-      for (let tries = 0; tries < 300 && !found; tries++) {
-        const n = this.longDivRandom(2, 9);
-        const x = this.longDivRandom(11, 39);
-        found = make([{ op: '×', n }, pickSecond()], x, true);
-      }
-    }
-    // Otherwise: mostly multiplication and division
-    for (let tries = 0; tries < 300 && !found; tries++) {
-      const first = pickFrom(multDiv);
-      // a division first step needs an input that divides evenly
-      const x = first.op === '÷' ? first.n * this.longDivRandom(1, 10) : this.longDivRandom(1, 10);
-      const ops = [first, pickSecond()];
-      found = make(ops, x, false);
-    }
-    if (!found) found = { ops: [{ op: '×', n: 2 }], x: 3, expected: 6, hard: false };
-
-    this.fmQ = {
-      ops: found.ops,
-      x: found.x,
-      expected: found.expected,
-      label: found.ops.map(o => o.op + ' ' + o.n).join(', '),
-      hard: !!found.hard,
-      misses: 0, answered: false, correct: false
-    };
-    return this.fmQ;
-  },
-
-  fmRule(q) {
-    // The rule is written with n as the input; n is shown in one colour everywhere it appears
-    const N = '<span style="color: #E0457B; font-weight: 700;">n</span>';
-    if (q.ops.length === 1 && q.ops[0].op === '×') return `f(${N}) = ${q.ops[0].n} × ${N}`;
-    return `f(${N}) = ${N} ` + q.ops.map(o => `${o.op} ${o.n}`).join(' ');
-  },
-
-  fmSteps(q) {
-    // e.g. "4 → × 2 = 8 → + 3 = 11"
-    let v = q.x;
-    const parts = [String(q.x)];
-    q.ops.forEach(o => {
-      if (o.op === '÷') v = v / o.n;
-      else if (o.op === '×') v = v * o.n;
-      else if (o.op === '−') v = v - o.n;
-      else v = v + o.n;
-      parts.push(`${o.op} ${o.n} = ${v}`);
-    });
-    return parts.join(' → ');
-  },
-
-  showFunctionMachine() {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('fmScreen').classList.add('active');
-    this.fmState(); // makes sure the log exists even with no history yet
-    if (!this.fmQ) this.fmNewProblem();
-    this.fmRender();
-  },
-
-  fmCheck() {
-    const q = this.fmQ;
-    if (!q || q.answered) return;
-    const input = document.getElementById('fmAnswer');
-    const raw = input ? String(input.value).trim() : '';
-    if (raw === '') return; // blank: nothing to check, not a miss
-    const value = Number(raw);
-    if (!Number.isFinite(value)) return; // letters or junk: ignored, not a miss
-
-    const ok = value === q.expected;
-    const st = this.fmState();
-    st.log.push({
-      t: Date.now(),
-      rule: q.label,
-      hard: !!q.hard,
-      input: q.x,
-      expected: q.expected,
-      answer: value,
-      correct: ok,
-      attempt: q.misses
-    });
-    if (st.log.length > 300) st.log.splice(0, st.log.length - 300);
-
-    if (ok) {
-      q.answered = true;
-      q.correct = true;
-      // 1.5 points per correct answer, 3 on a challenge; qualifier bonus on top
-      const earned = (q.hard ? 3 : 1.5) * (1 + this.qualifierMultiplier);
-      this.coins += earned;
-      st.log[st.log.length - 1].points = earned;
-      this.updateCoinDisplay();
-      this.playCorrectSound();
-      this.saveState();
-      this.fmRender();
-      // Show the tick briefly, then the next problem
-      const done = q;
-      setTimeout(() => {
-        if (this.fmQ === done) {
-          this.fmNewProblem();
-          this.fmRender();
-        }
-      }, 1200);
-    } else {
-      q.misses++;
-      this.playWrongSound();
-      this.saveState();
-      this.fmRender();
-    }
-  },
-
-  fmRender() {
-    const q = this.fmQ;
-    if (!q) return;
-    const box = 'width: 120px; height: 72px; font-size: 36px; text-align: center; border: 1.5px solid #555; border-radius: 12px; background: #fff; color: #222; font-family: inherit;';
-    let feedback = '';
-    if (q.correct) {
-      feedback = '<div style="font-size: 44px; text-align: center; margin-top: 12px;">✅</div>';
-    } else if (q.misses > 0) {
-      feedback = `<div style="margin-top: 16px; text-align: center;">
-          <div style="font-size: 18px; color: #ef4444; font-weight: 600;">Not quite. Try again.</div>
-          <div style="margin-top: 8px; font-size: 20px; color: var(--text-secondary);">${this.fmSteps(q)}</div>
-        </div>`;
-    }
-    // Challenge callout on harder problems
-    const callout = q.hard
-      ? `<div style="display: inline-block; margin-bottom: 14px; padding: 6px 16px; border-radius: 999px; background: linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333; font-weight: 700; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">⭐ Challenge: double points!</div>`
-      : '';
-    const coinEl = document.getElementById('fmCoins');
-    if (coinEl) coinEl.innerHTML = `${Math.round(this.coins * 10) / 10} <span class="gold-coin"></span>`;
-    document.getElementById('fmMain').innerHTML = `
-      <div style="padding: 8px 4px; text-align: center;">
-        <div style="background: linear-gradient(135deg, #BFF0EA 0%, #FFD0C4 100%); color: #222; border-radius: 20px; padding: 28px 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-          ${callout}
-          <div style="font-family: 'Times New Roman', Times, serif; font-size: 40px; margin-bottom: 22px;">${this.fmRule(q)}</div>
-          <div style="font-family: 'Times New Roman', Times, serif; font-size: 34px; margin-bottom: 10px;"><span style="color: #E0457B; font-weight: 700;">n = ${q.x}</span></div>
-          <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 18px;">
-            <span style="font-size: 30px; font-family: 'Times New Roman', Times, serif;">f(<span style="color: #E0457B; font-weight: 700;">${q.x}</span>) =</span>
-            <input id="fmAnswer" type="text" inputmode="numeric" autocomplete="off" ${q.answered ? 'disabled' : ''} onkeydown="if (event.key === 'Enter') app.fmCheck()" style="${box}">
-          </div>
-        </div>
-        ${q.answered ? '' : `<div style="margin-top: 20px;"><button onclick="app.fmCheck()" style="padding: 12px 32px; font-size: 18px; font-weight: 600; font-family: inherit; color: white; background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;">Submit</button></div>`}
-        ${feedback}
-      </div>`;
-    if (!q.answered) {
-      const first = document.getElementById('fmAnswer');
-      if (first) { try { first.focus(); } catch (e) {} }
-    }
-  },
-
   longDivState() {
     if (!this.state.longDiv) {
       this.state.longDiv = { level: 0, maxLevel: 0, log: [] };
@@ -2075,8 +1868,7 @@ const app = {
             ${videoLink || ''}
             ${q && !q.answered ? `<button onclick="app.longDivToggleCoach()" style="padding: 8px 16px; font-size: 14px; font-weight: 600; font-family: inherit; color: white; background: ${q.coached ? 'linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333' : 'linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%)'}; border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;">Coaching: ${q.coached ? 'on' : 'off'}</button>` : ''}
           </div>
-          ${body ? `<div style="background: linear-gradient(135deg, #BFF0EA 0%, #FFD0C4 100%); border-radius: 20px; padding: 24px 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">${body}</div>` : ''}
-          ${feedback}${hint}${next}
+          ${body}${feedback}${hint}${next}
         </div>`;
     }
     document.getElementById('longDivMain').innerHTML = main;
