@@ -475,12 +475,11 @@
         <div style="font-size: 16px; font-weight: 600;">Turd Splitter</div>
         <div style="font-size: 12px; opacity: 0.9;">Division</div>
       </div>
-      <div id="longDivHomeCard" onclick="app.showLongDivision()" style="display: none; background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+      <div id="longDivHomeCard" onclick="app.showLongDivision()" style="background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
         <div style="font-size: 36px; margin-bottom: 0.5rem;">📐</div>
         <div style="font-size: 16px; font-weight: 600;">Long Division</div>
         <div style="font-size: 12px; opacity: 0.9;">Step by step</div>
       </div>
-      <script>if (new URLSearchParams(window.location.search).has("test")) document.getElementById("longDivHomeCard").style.display = "";</script>
     </div>
   </div>
 
@@ -1664,6 +1663,10 @@ const app = {
   longDivState() {
     if (!this.state.longDiv) {
       this.state.longDiv = { level: 0, maxLevel: 0, log: [] };
+    }
+    // Firebase drops empty lists when it saves, so the log can be missing: recreate it
+    if (!Array.isArray(this.state.longDiv.log)) {
+      this.state.longDiv.log = [];
     }
     return this.state.longDiv;
   },
