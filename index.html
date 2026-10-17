@@ -1696,8 +1696,7 @@ const app = {
     const anyOp = weighted(all);
     const pickFrom = pool => pool[Math.floor(Math.random() * pool.length)];
 
-    // Test site: every problem has two operations. Live site: unchanged until you approve it.
-    const twoOpsOnly = typeof TEST_MODE !== 'undefined' && TEST_MODE;
+    // Every problem has two operations; the second step is + or −
     const apply = (ops, x) => {
       let v = x;
       for (const o of ops) {
@@ -1715,7 +1714,6 @@ const app = {
       }
       return v;
     };
-    // Test site: the second step is always + or −
     const pickSecond = () => ({ op: Math.random() < 0.5 ? '+' : '−', n: this.longDivRandom(1, 9) });
     const make = (ops, x, hard) => {
       const expected = apply(ops, x);
@@ -1728,7 +1726,7 @@ const app = {
       for (let tries = 0; tries < 300 && !found; tries++) {
         const n = this.longDivRandom(2, 9);
         const x = this.longDivRandom(11, 39);
-        found = twoOpsOnly ? make([{ op: '×', n }, pickSecond()], x, true) : make([{ op: '×', n }], x, true);
+        found = make([{ op: '×', n }, pickSecond()], x, true);
       }
     }
     // Otherwise: mostly multiplication and division
@@ -1736,7 +1734,7 @@ const app = {
       const first = pickFrom(multDiv);
       // a division first step needs an input that divides evenly
       const x = first.op === '÷' ? first.n * this.longDivRandom(1, 10) : this.longDivRandom(1, 10);
-      const ops = twoOpsOnly ? [first, pickSecond()] : (Math.random() < 0.4 ? [first, pickFrom(anyOp)] : [first]);
+      const ops = [first, pickSecond()];
       found = make(ops, x, false);
     }
     if (!found) found = { ops: [{ op: '×', n: 2 }], x: 3, expected: 6, hard: false };
@@ -1807,13 +1805,11 @@ const app = {
     if (ok) {
       q.answered = true;
       q.correct = true;
-      // 1 point per correct answer, 2 on a challenge; qualifier bonus on top. Test site only for now.
-      const earned = (q.hard ? 2 : 1) * (1 + this.qualifierMultiplier);
-      if (typeof TEST_MODE !== 'undefined' && TEST_MODE) {
-        this.coins += earned;
-        st.log[st.log.length - 1].points = earned;
-        this.updateCoinDisplay();
-      }
+      // 1.5 points per correct answer, 3 on a challenge; qualifier bonus on top
+      const earned = (q.hard ? 3 : 1.5) * (1 + this.qualifierMultiplier);
+      this.coins += earned;
+      st.log[st.log.length - 1].points = earned;
+      this.updateCoinDisplay();
       this.playCorrectSound();
       this.saveState();
       this.fmRender();
@@ -1846,8 +1842,8 @@ const app = {
           <div style="margin-top: 8px; font-size: 20px; color: var(--text-secondary);">${this.fmSteps(q)}</div>
         </div>`;
     }
-    // Test site only for now: the double-points callout shows on harder problems
-    const callout = (q.hard && typeof TEST_MODE !== 'undefined' && TEST_MODE)
+    // Challenge callout on harder problems
+    const callout = q.hard
       ? `<div style="display: inline-block; margin-bottom: 14px; padding: 6px 16px; border-radius: 999px; background: linear-gradient(135deg, #FFD93D 0%, #FFEB6B 100%); color: #333; font-weight: 700; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">⭐ Challenge: double points!</div>`
       : '';
     const coinEl = document.getElementById('fmCoins');
