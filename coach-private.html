@@ -932,7 +932,8 @@ const coach = {
     const log = ld.log || [];
     const names = { a: '2÷1, no remainder', b: '2÷1, with remainder', est: 'Estimate', c: '3÷1, no remainder', d: '3÷1, with remainder' };
     const levelName = id => names[id] || id;
-    const levelList = ['a', 'b', 'est', 'c', 'd'];
+    // Level positions follow the order the app saved them in (orderV 2 = current order)
+    const levelList = ld.orderV === 2 ? ['a', 'est', 'c', 'b', 'd'] : ['a', 'b', 'est', 'c', 'd'];
     const furthest = ld.maxLevel;
     const cur = ld.level;
     const curName = levelList[cur] ? levelName(levelList[cur]) : 'Video';

@@ -1639,20 +1639,22 @@ const app = {
   // ===== LONG DIVISION (standard algorithm) =====
   // You decide when she moves on: MO = next level, More = another question at the same level.
   longDivLevelList() {
-    return [
-      { id: 'video', label: 'Video', short: 'Video', kind: 'video' },
-      { id: 'a', label: '2-digit ÷ 1-digit, no remainder', short: '2÷1', kind: 'quotient', lo: 10, hi: 99, remainder: false },
-      { id: 'b', label: '2-digit ÷ 1-digit, with remainder', short: '2÷1 remainder', kind: 'quotient', lo: 10, hi: 99, remainder: true },
-      { id: 'est', label: 'Estimate', short: 'Estimate', kind: 'estimate' },
-      { id: 'c', label: '3-digit ÷ 1-digit, no remainder', short: '3÷1', kind: 'quotient', lo: 100, hi: 999, remainder: false },
-      { id: 'd', label: '3-digit ÷ 1-digit, with remainder', short: '3÷1 remainder', kind: 'quotient', lo: 100, hi: 999, remainder: true }
-    ];
+    // Order: no-remainder division first (2÷1, estimate, 3÷1), then remainders (2÷1, 3÷1)
+    const all = {
+      video: { id: 'video', label: 'Video', short: 'Video', kind: 'video' },
+      a: { id: 'a', label: '2-digit ÷ 1-digit, no remainder', short: '2÷1', kind: 'quotient', lo: 10, hi: 99, remainder: false },
+      est: { id: 'est', label: 'Estimate', short: 'Estimate', kind: 'estimate' },
+      c: { id: 'c', label: '3-digit ÷ 1-digit, no remainder', short: '3÷1', kind: 'quotient', lo: 100, hi: 999, remainder: false },
+      b: { id: 'b', label: '2-digit ÷ 1-digit, with remainder', short: '2÷1 remainder', kind: 'quotient', lo: 10, hi: 99, remainder: true },
+      d: { id: 'd', label: '3-digit ÷ 1-digit, with remainder', short: '3÷1 remainder', kind: 'quotient', lo: 100, hi: 999, remainder: true }
+    };
+    return ['video', 'a', 'est', 'c', 'b', 'd'].map(id => all[id]);
   },
 
   // Video shown at the start of a level
   longDivVideos: {
     video: 'https://www.khanacademy.org/math/cc-fourth-grade-math/cc-4th-mult-div-topic/cc-4th-division/v/long-division-without-remainder',
-    b: 'https://www.khanacademy.org/math/cc-fourth-grade-math/cc-4th-mult-div-topic/cc-4th-remainders/v/division-3-more-long-division-and-remainder-examples'
+    d: 'https://www.khanacademy.org/math/cc-fourth-grade-math/cc-4th-mult-div-topic/cc-4th-remainders/v/division-3-more-long-division-and-remainder-examples'
   },
 
   // Coins per correct question (placeholder until decided)
@@ -1668,7 +1670,24 @@ const app = {
     if (!Array.isArray(this.state.longDiv.log)) {
       this.state.longDiv.log = [];
     }
+    this.longDivConvertOrder(this.state.longDiv);
     return this.state.longDiv;
+  },
+
+  // Saved level positions were stored for the old order (remainders before 3-digit).
+  // Convert once by level name, and keep the furthest level reached. orderV marks the new order.
+  longDivConvertOrder(ld) {
+    if (ld.orderV === 2) return;
+    const oldOrder = ['video', 'a', 'b', 'est', 'c', 'd'];
+    const newOrder = ['video', 'a', 'est', 'c', 'b', 'd'];
+    const pos = (i) => (Number.isInteger(i) && i >= 0 && i < oldOrder.length) ? i : 0;
+    const oldLevel = pos(ld.level);
+    const oldMax = pos(ld.maxLevel);
+    let furthest = 0;
+    for (let i = 0; i <= oldMax; i++) furthest = Math.max(furthest, newOrder.indexOf(oldOrder[i]));
+    ld.level = newOrder.indexOf(oldOrder[oldLevel]);
+    ld.maxLevel = Math.max(furthest, ld.level);
+    ld.orderV = 2;
   },
 
   showLongDivision() {
