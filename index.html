@@ -1711,10 +1711,9 @@ const app = {
     let q = { level: st.level, kind: level.kind, answered: false, misses: 0, correct: false, coached: false };
 
     if (level.id === 'a') {
-      // 2÷1, no remainder: every answer is 2-digit and not a multiple of 2, 5 or 11 (so also not 10).
-      // Dividing by 2 is too easy, so divisors start at 3.
+      // 2÷1, no remainder: every answer is 2-digit and not a multiple of 2, 5 or 11 (so also not 10)
       const pairs = [];
-      for (let d = 3; d <= 9; d++) {
+      for (let d = 2; d <= 9; d++) {
         for (let qq = 10; qq <= 99; qq++) {
           const dv = d * qq;
           if (dv < 10 || dv > 99) continue;
