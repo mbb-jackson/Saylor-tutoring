@@ -509,7 +509,7 @@
       </div>
       <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 2rem; text-align: center;">You have <span style="font-weight: 600; color: var(--fill-accent);" id="homeCoinsLabel">0</span> coins, ready to earn more?</p>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 600px;">
-        <div onclick="app.startTurdTimesGame()" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+        <div style="background: #C9C9C9; color: #555; padding: 2rem; border-radius: 16px; text-align: center; cursor: default; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
           <div style="font-size: 48px; margin-bottom: 1rem;">🐢</div>
           <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Turd Times a Charm</div>
           <div style="font-size: 14px; opacity: 0.9;">Master the tables — 5 rounds each</div>
@@ -1998,6 +1998,13 @@ const app = {
     this.startProblemTimer();
   },
 
+  // Multiplication factor 2–9. 8 is drawn with the given weight; the other factors share the rest equally
+  pickFactor(eightWeight) {
+    const others = [2, 3, 4, 5, 6, 7, 9];
+    if (Math.random() * (others.length + eightWeight) < eightWeight) return 8;
+    return others[Math.floor(Math.random() * others.length)];
+  },
+
   generateFastProblem() {
     // Use missed problem if available, otherwise generate new
     let problem;
@@ -2008,8 +2015,9 @@ const app = {
       if (this.fastGameSession.mode === 'div') {
         problem = this.makeFastDivisionProblem();
       } else {
-        const a = Math.floor(Math.random() * 8) + 2; // 2-9
-        const b = Math.floor(Math.random() * 8) + 2; // 2-9
+        // Fast Cash multiplication: 8s heavily
+        const a = this.pickFactor(4);
+        const b = this.pickFactor(4);
         problem = { a, b, product: a * b };
       }
     }
@@ -2438,8 +2446,9 @@ const app = {
       this.bubbleGameSession.currentProblem = { mode: 'div', a: divisor, b: quotient, product: dividend, answer: quotient };
       document.getElementById('bubbleProblem').textContent = `${dividend} ÷ ${divisor} = ?`;
     } else {
-      const num1 = Math.floor(Math.random() * 8) + 2; // 2-9
-      const num2 = Math.floor(Math.random() * 8) + 2; // 2-9
+      // Bubble Buster multiplication: 8s more often, but not entirely
+      const num1 = this.pickFactor(2);
+      const num2 = this.pickFactor(2);
       this.bubbleGameSession.currentProblem = {
         mode: 'mul',
         a: num1,
