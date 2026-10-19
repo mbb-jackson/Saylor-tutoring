@@ -2016,9 +2016,9 @@ const app = {
       if (this.fastGameSession.mode === 'div') {
         problem = this.makeFastDivisionProblem();
       } else {
-        // Fast Cash multiplication: 8s heavily
-        const a = this.pickFactor(4);
-        const b = this.pickFactor(4);
+        // Fast Cash multiplication: about 3 in 10 problems have an 8
+        const a = this.pickFactor(1.4);
+        const b = this.pickFactor(1.4);
         problem = { a, b, product: a * b };
       }
     }
@@ -2447,9 +2447,9 @@ const app = {
       this.bubbleGameSession.currentProblem = { mode: 'div', a: divisor, b: quotient, product: dividend, answer: quotient };
       document.getElementById('bubbleProblem').textContent = `${dividend} ÷ ${divisor} = ?`;
     } else {
-      // Bubble Buster multiplication: 8s more often, but not entirely
-      const num1 = this.pickFactor(2);
-      const num2 = this.pickFactor(2);
+      // Bubble Buster multiplication: about 3 in 10 problems have an 8
+      const num1 = this.pickFactor(1.4);
+      const num2 = this.pickFactor(1.4);
       this.bubbleGameSession.currentProblem = {
         mode: 'mul',
         a: num1,
