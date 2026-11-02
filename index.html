@@ -618,9 +618,9 @@
         <div style="background: var(--surface-2); padding: 2.5rem 2rem; border-radius: 16px; max-width: 460px; margin: 0 auto;">
           <div style="font-size: 72px; margin-bottom: 1rem;">🏆</div>
           <p style="font-size: 16px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 1rem 0;">
-            All 81 facts (1×1 to 9×9), one run.<br>
-            Finish under 3:00 with at most one miss on any number.<br>
-            Every run is recorded.
+            All 81 facts (1×1 to 9×9), one run, no misses.<br>
+            Under 4:00 wins 250 coins. Under 3:00 wins 500 coins.<br>
+            One miss and you start over. Every run is recorded.
           </p>
           <p id="megaPrizeNote" style="font-size: 16px; font-weight: 600; margin: 0 0 1.5rem 0;"></p>
           <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 1rem;">
@@ -649,7 +649,7 @@
           <div id="megaResultTime" style="font-size: 56px; font-weight: 700; margin-bottom: 0.5rem;">0.0s</div>
           <div style="font-size: 16px; margin-bottom: 1rem;">Misses: <span id="megaResultMisses">0</span></div>
           <div id="megaResultCoins" style="font-size: 40px; font-weight: 700; min-height: 48px; margin-bottom: 1rem;"></div>
-          <button onclick="app.startMegaGame()" style="padding: 16px 32px; font-size: 16px; background: #333; color: #FFD93D; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Run Again</button>
+          <button onclick="app.startMegaGame()" style="padding: 16px 32px; font-size: 16px; background: #333; color: #FFD93D; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Start over</button>
         </div>
       </div>
     </div>
@@ -1271,6 +1271,7 @@ const app = {
   qualifierLog: [],
   megaRuns: [],
   megaWon: false,
+  megaTiers: { four: false, three: false },
 
   prizes: [
     { name: 'Double Ice Cream', icon: '🍦', cost: 100, claimed: 0 },
@@ -1328,6 +1329,7 @@ const app = {
     this.qualifierLog = data.qualifierLog || [];
     this.megaRuns = data.megaRuns || [];
     this.megaWon = data.megaWon || false;
+    this.megaTiers = data.megaTiers || { four: false, three: false };
     this.timeSessions = data.timeSessions || [];
     this.gistId = data.gistId || '';
     this.assessmentHistory = data.assessmentHistory || [];
@@ -1377,6 +1379,7 @@ const app = {
     this.qualifierLog = data.qualifierLog || [];
     this.megaRuns = data.megaRuns || [];
     this.megaWon = data.megaWon || false;
+    this.megaTiers = data.megaTiers || { four: false, three: false };
     this.timeSessions = data.timeSessions || [];
     this.gistId = data.gistId || '';
     this.assessmentHistory = data.assessmentHistory || [];
@@ -1427,6 +1430,7 @@ const app = {
       qualifierLog: this.qualifierLog,
       megaRuns: this.megaRuns,
       megaWon: this.megaWon,
+      megaTiers: this.megaTiers,
       timeSessions: this.timeSessions,
       gistId: this.gistId,
       assessmentHistory: this.assessmentHistory || [],
@@ -1459,6 +1463,7 @@ const app = {
       qualifierLog: this.qualifierLog,
       megaRuns: this.megaRuns,
       megaWon: this.megaWon,
+      megaTiers: this.megaTiers,
       timeSessions: this.timeSessions,
       exportedAt: new Date().toISOString()
     };
@@ -1527,6 +1532,7 @@ const app = {
       qualifierLog: this.qualifierLog,
       megaRuns: this.megaRuns,
       megaWon: this.megaWon,
+      megaTiers: this.megaTiers,
       timeSessions: this.timeSessions,
       lastSync: new Date().toISOString()
     };
@@ -2217,9 +2223,9 @@ const app = {
     document.getElementById('megaMenu').style.display = 'block';
     document.getElementById('megaPlay').style.display = 'none';
     document.getElementById('megaResults').style.display = 'none';
-    document.getElementById('megaPrizeNote').innerHTML = this.megaWon
-      ? 'Mega Prize already won. Runs still count for speed.'
-      : 'First clean run wins 200 <span class="gold-coin"></span>';
+    const t = this.megaTiers || {};
+    document.getElementById('megaPrizeNote').innerHTML =
+      `Under 4:00: 250 ${t.four ? '✅' : ''} &nbsp;·&nbsp; Under 3:00: 500 ${t.three ? '✅' : ''}`;
     this.renderMegaHistory();
   },
 
@@ -2323,21 +2329,23 @@ const app = {
       }
       this.megaNextProblem();
     } else {
+      // One miss ends the run: she starts over
       s.misses++;
       s.missedKeys.add(key);
-      s.retries.push({ fact: f, due: s.served + 3 + Math.floor(Math.random() * 3) });
-      s.locked = true;
-      document.getElementById('megaFeedback').textContent = `Not quite: ${f.a} × ${f.b} = ${product}`;
-      this.megaUpdateProgress();
-      setTimeout(() => {
-        if (this.megaSession !== s || s.finished) return;
-        s.locked = false;
-        this.megaNextProblem();
-      }, 1200);
+      this.finishMegaGame(true);
     }
   },
 
-  finishMegaGame() {
+  // Pays each tier once: under 4:00 = 250 coins, under 3:00 = 500 coins. Clean runs only.
+  megaAward(seconds, clean) {
+    const tiers = Object.assign({ four: false, three: false }, this.megaTiers || {});
+    let coins = 0;
+    if (clean && seconds <= 240 && !tiers.four) { tiers.four = true; coins += 250; }
+    if (clean && seconds <= 180 && !tiers.three) { tiers.three = true; coins += 500; }
+    return { coins, tiers };
+  },
+
+  finishMegaGame(aborted = false) {
     const s = this.megaSession;
     if (!s || s.finished) return;
     s.finished = true;
@@ -2345,23 +2353,12 @@ const app = {
 
     const seconds = Math.round((Date.now() - s.startTime) / 100) / 10;
 
-    // Count missed facts per number. A fact like 3×8 counts against both 3 and 8.
-    const perNumber = {};
-    s.missedKeys.forEach(k => {
-      const [a, b] = k.split('×').map(Number);
-      perNumber[a] = (perNumber[a] || 0) + 1;
-      if (b !== a) perNumber[b] = (perNumber[b] || 0) + 1;
-    });
-    const numberRuleOk = Math.max(0, ...Object.values(perNumber)) <= 1;
-    const fastEnough = seconds <= 180;
-    const passed = fastEnough && numberRuleOk;
-
-    let awarded = 0;
-    if (passed && !this.megaWon) {
-      awarded = 200;
-      this.coins += awarded;
-      this.megaWon = true;
-    }
+    const clean = !aborted && s.misses === 0;
+    const passed = clean && seconds <= 240;
+    const award = this.megaAward(seconds, clean);
+    const awarded = award.coins;
+    this.coins += awarded;
+    this.megaTiers = award.tiers;
 
     this.megaRuns.push({
       ts: Date.now(),
@@ -2379,10 +2376,13 @@ const app = {
     document.getElementById('megaResults').style.display = 'block';
     document.getElementById('megaResultTime').textContent = seconds.toFixed(1) + 's';
     document.getElementById('megaResultMisses').textContent = s.misses;
-    document.getElementById('megaResultVerdict').textContent = passed
-      ? (awarded ? 'MEGA PRIZE!' : 'Clean run!')
-      : (!fastEnough ? 'Over 3:00. Try again!' : 'Too many misses on one number. Try again!');
-    document.getElementById('megaResultCoins').innerHTML = awarded ? '+200 <span class="gold-coin"></span>' : '';
+    let verdict;
+    if (aborted) verdict = 'One miss. Start over!';
+    else if (!passed) verdict = 'Clean, but over 4:00. Start over and go faster!';
+    else if (awarded) verdict = seconds <= 180 ? 'MEGA PRIZE! Under 3:00!' : 'Under 4:00!';
+    else verdict = 'Clean run! Try for under 3:00 for 500.';
+    document.getElementById('megaResultVerdict').textContent = verdict;
+    document.getElementById('megaResultCoins').innerHTML = awarded ? `+${awarded} <span class="gold-coin"></span>` : '';
 
     if (awarded) {
       this.showMegaWin();
