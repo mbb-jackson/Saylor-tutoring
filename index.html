@@ -640,6 +640,11 @@
           <button class="submit" onclick="app.megaSubmit()" style="padding: 14px 32px; font-size: 16px;">Check</button>
         </div>
         <div id="megaProgress" style="margin-top: 1.5rem; font-size: 16px; color: var(--text-secondary);"></div>
+        <div id="megaMissChoice" style="display: none; margin-top: 1.5rem;">
+          <div style="font-size: 18px; font-weight: 600; margin-bottom: 1rem;">One wrong. For the prize, start over.</div>
+          <button onclick="app.finishMegaGame(true)" style="padding: 14px 24px; font-size: 16px; background: #333; color: #FFD93D; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 4px;">Start over</button>
+          <button onclick="app.megaKeepGoing()" style="padding: 14px 24px; font-size: 16px; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; margin: 4px;">Keep going (no coins)</button>
+        </div>
       </div>
 
       <div id="megaResults" style="display: none; text-align: center;">
@@ -2242,6 +2247,7 @@ const app = {
   startMegaGame() {
     if (this.megaSession) clearInterval(this.megaSession.clock);
     this.trackSessionStart('megaPrize');
+    document.getElementById('megaMissChoice').style.display = 'none';
 
     const facts = [];
     for (let a = 1; a <= 9; a++) {
@@ -2303,6 +2309,14 @@ const app = {
     this.megaUpdateProgress();
   },
 
+  megaKeepGoing() {
+    const s = this.megaSession;
+    if (!s || s.finished) return;
+    document.getElementById('megaMissChoice').style.display = 'none';
+    s.locked = false;
+    this.megaNextProblem();
+  },
+
   megaUpdateProgress() {
     const s = this.megaSession;
     if (!s) return;
@@ -2329,10 +2343,14 @@ const app = {
       }
       this.megaNextProblem();
     } else {
-      // One miss ends the run: she starts over
+      // A miss: she chooses Start over (prize run) or Keep going (no coins)
       s.misses++;
       s.missedKeys.add(key);
-      this.finishMegaGame(true);
+      s.retries.push({ fact: f, due: s.served + 3 + Math.floor(Math.random() * 3) });
+      s.locked = true;
+      document.getElementById('megaFeedback').textContent = `Not quite: ${f.a} × ${f.b} = ${product}`;
+      this.megaUpdateProgress();
+      document.getElementById('megaMissChoice').style.display = 'block';
     }
   },
 
@@ -2378,6 +2396,7 @@ const app = {
     document.getElementById('megaResultMisses').textContent = s.misses;
     let verdict;
     if (aborted) verdict = 'One miss. Start over!';
+    else if (!clean) verdict = 'Finished with misses. No coins this run.';
     else if (!passed) verdict = 'Clean, but over 4:00. Start over and go faster!';
     else if (awarded) verdict = seconds <= 180 ? 'MEGA PRIZE! Under 3:00!' : 'Under 4:00!';
     else verdict = 'Clean run! Try for under 3:00 for 500.';
