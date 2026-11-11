@@ -478,7 +478,7 @@
       <div onclick="app.showFractions()" style="background: linear-gradient(135deg, #F4A261 0%, #F7B980 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
         <div style="font-size: 36px; margin-bottom: 0.5rem;">🍕</div>
         <div style="font-size: 16px; font-weight: 600;">Fractions</div>
-        <div style="font-size: 12px; opacity: 0.9;">Factors first</div>
+        <div style="font-size: 12px; opacity: 0.9;">Factor pairs</div>
       </div>
       <div id="longDivHomeCard" onclick="app.showLongDivision()" style="background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
         <div style="font-size: 36px; margin-bottom: 0.5rem;">📐</div>
@@ -499,7 +499,7 @@
       <div style="display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 600px;">
         <div onclick="app.startFactorPairs()" style="background: linear-gradient(135deg, #F4A261 0%, #F7B980 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
           <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Factor Pairs</div>
-          <div style="font-size: 14px; opacity: 0.9;">Find the partner: factor × ? = number</div>
+          <div style="font-size: 14px; opacity: 0.9;">Three sets of 10 problems · 5 coins each</div>
         </div>
       </div>
     </div>
@@ -525,11 +525,13 @@
         </div>
         <div class="practice-container">
           <div class="problem-section">
-            <div id="fpHint" style="display: none; font-size: 18px; color: var(--text-secondary); margin-bottom: 0.5rem;"></div>
+            <div id="fpCount" style="font-size: 16px; color: var(--text-secondary); margin-bottom: 0.5rem;"></div>
             <div class="problem" id="fpProblem"></div>
             <div class="feedback" id="fpFeedback"></div>
             <div class="input-group">
-              <input type="number" id="fpAnswer" placeholder="?" inputmode="numeric">
+              <input type="number" id="fpFactorA" placeholder="?" inputmode="numeric" style="width: 80px;">
+              <span style="font-size: 22px; margin: 0 8px;">×</span>
+              <input type="number" id="fpFactorB" placeholder="?" inputmode="numeric" style="width: 80px;">
               <button class="submit" onclick="app.submitFactorPair()">Check</button>
             </div>
           </div>
@@ -915,7 +917,7 @@
               <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-secondary);">Problem</th>
               <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--text-secondary);">Attempts</th>
               <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--text-secondary);">Missed</th>
-              <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-secondary);">Missed after hint</th>
+              <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-secondary);">Last set</th>
             </tr>
           </thead>
           <tbody id="fpMissesBody">
@@ -1725,13 +1727,12 @@ const app = {
   },
 
   // ===== FRACTIONS: FACTOR PAIRS =====
-  // Each round is 8 numbers, one factor per number, the partner is the answer.
-  // Every attempt is written to factorPairsHistory (saved with the rest of progress).
-  factorPairsRanges: [
-    { id: 'fp_1', label: 'Factor Pairs 1', numbers: [6, 8, 9, 10, 12, 14, 15, 16], hintAlways: true, coinReward: 12 },
-    { id: 'fp_2', label: 'Factor Pairs 2', numbers: [18, 20, 21, 24, 27, 28, 30, 32], hintAlways: false, coinReward: 12 },
-    { id: 'fp_3', label: 'Factor Pairs 3', numbers: [36, 40, 42, 45, 48, 50, 54, 56], hintAlways: false, coinReward: 12 },
-    { id: 'fp_4', label: 'Factor Pairs 4', numbers: [60, 63, 64, 72, 80, 84, 88, 96], hintAlways: false, coinReward: 12 }
+  // Three sets of 10 problems. Each problem: N = [ ] × [ ]. Any correct pair is accepted.
+  // 5 coins per problem answered correctly. Every attempt is written to factorPairsHistory.
+  factorPairsSets: [
+    { id: 'fp_set_1', label: 'Set 1', problems: 10, coinPerProblem: 5 },
+    { id: 'fp_set_2', label: 'Set 2', problems: 10, coinPerProblem: 5 },
+    { id: 'fp_set_3', label: 'Set 3', problems: 10, coinPerProblem: 5 }
   ],
   currentFactorPairsSession: null,
   factorPairsHistory: [],
@@ -1763,21 +1764,21 @@ const app = {
     container.innerHTML = '';
     let totalDone = 0;
 
-    this.factorPairsRanges.forEach(range => {
-      if (!this.state[range.id]) this.state[range.id] = { completions: 0 };
-      const done = Math.min(2, this.state[range.id].completions || 0);
+    this.factorPairsSets.forEach(set => {
+      if (!this.state[set.id]) this.state[set.id] = { completions: 0 };
+      const done = this.state[set.id].completions >= 1 ? 1 : 0;
       totalDone += done;
 
       const card = document.createElement('div');
       card.className = 'stack-card';
-      card.setAttribute('data-factor-range', range.id);
-      card.onclick = () => this.startFactorPairsPractice(range.id);
+      card.setAttribute('data-factor-set', set.id);
+      card.onclick = () => this.startFactorPairsSet(set.id);
       card.innerHTML = `
-        <div class="stack-number">${range.label.replace('Factor Pairs ', '')}</div>
-        <div class="stack-progress">${done === 2 ? '✓' : `${done}/2`}</div>
-        <div class="stack-reward"><span class="gold-coin"></span> × 12</div>
+        <div class="stack-number">${set.label}</div>
+        <div class="stack-progress">${done ? '✓' : '0/1'}</div>
+        <div class="stack-reward"><span class="gold-coin"></span> up to ${set.problems * set.coinPerProblem}</div>
       `;
-      if (done >= 2) {
+      if (done) {
         card.style.backgroundColor = '#e8e8e8';
         card.style.pointerEvents = 'none';
         card.style.cursor = 'default';
@@ -1785,81 +1786,61 @@ const app = {
       container.appendChild(card);
     });
 
-    const total = this.factorPairsRanges.length * 2;
-    document.getElementById('fpOverallProgress').textContent = `${totalDone}/${total} complete`;
+    const total = this.factorPairsSets.length;
+    document.getElementById('fpOverallProgress').textContent = `${totalDone}/${total} sets complete`;
     document.getElementById('fpOverallFill').style.width = `${Math.round((totalDone / total) * 100)}%`;
   },
 
-  generateFactorPairProblems(range, round) {
-    const problems = [];
-    range.numbers.forEach(n => {
-      const factors = [];
-      for (let a = 2; a < n; a++) if (n % a === 0) factors.push(a);
-      if (factors.length === 0) return;
-      const factor = factors[Math.floor(Math.random() * factors.length)];
-      problems.push({ number: n, factor: factor, partner: n / factor, round: round });
-    });
-    return problems.sort(() => Math.random() - 0.5);
+  // Random composite numbers, no repeats within a set
+  generateFactorPairSet(count) {
+    const pool = [];
+    for (let n = 4; n <= 100; n++) {
+      let prime = true;
+      for (let d = 2; d * d <= n; d++) if (n % d === 0) { prime = false; break; }
+      if (!prime) pool.push(n);
+    }
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, count).map(n => ({ number: n }));
   },
 
-  startFactorPairsPractice(rangeId) {
-    const range = this.factorPairsRanges.find(r => r.id === rangeId);
-    const state = this.state[rangeId];
-    if (!range || !state || state.completions >= 2) return;
+  startFactorPairsSet(setId) {
+    const set = this.factorPairsSets.find(s => s.id === setId);
+    const state = this.state[setId];
+    if (!set || !state || state.completions >= 1) return;
 
-    const round = state.completions + 1;
     this.currentFactorPairsSession = {
-      rangeId: rangeId,
-      range: range,
-      problems: this.generateFactorPairProblems(range, round),
+      setId: setId,
+      set: set,
+      problems: this.generateFactorPairSet(set.problems),
       index: 0,
-      round: round,
-      currentProblemRetries: 0,
-      hintIndex: null
+      correctCount: 0,
+      retries: 0
     };
     this.renderFpPractice();
-  },
-
-  fpHintVisible() {
-    const session = this.currentFactorPairsSession;
-    if (!session) return false;
-    const alwaysOn = session.range.hintAlways && session.round === 1;
-    return alwaysOn || session.hintIndex === session.index;
   },
 
   renderFpPractice() {
     document.getElementById('fpMainScreen').style.display = 'none';
     document.getElementById('fpPracticeScreen').style.display = 'block';
-    const session = this.currentFactorPairsSession;
-    const problem = session.problems[session.index];
+    const s = this.currentFactorPairsSession;
+    const problem = s.problems[s.index];
 
     document.getElementById('fpFeedback').textContent = '';
     document.getElementById('fpFeedback').className = 'feedback';
-    document.getElementById('fpAnswer').value = '';
-    document.getElementById('fpAnswer').focus();
-    // The question asks for the partner: factor × ? = number
-    document.getElementById('fpProblem').textContent = `${problem.factor} × ? = ${problem.number}`;
-    this.showFpHint();
+    document.getElementById('fpFactorA').value = '';
+    document.getElementById('fpFactorB').value = '';
+    document.getElementById('fpFactorA').focus();
+    document.getElementById('fpCount').textContent = `Question ${Math.min(s.correctCount + 1, s.set.problems)} of ${s.set.problems}`;
+    document.getElementById('fpProblem').textContent = `${problem.number} = ? × ?`;
   },
 
-  showFpHint() {
-    const session = this.currentFactorPairsSession;
-    const problem = session.problems[session.index];
-    const hint = document.getElementById('fpHint');
-    if (problem && this.fpHintVisible()) {
-      hint.textContent = `Hint: ${problem.factor} × ${problem.partner} = ${problem.number}`;
-      hint.style.display = 'block';
-    } else {
-      hint.textContent = '';
-      hint.style.display = 'none';
-    }
-  },
-
-  finishFactorPairsRound(session) {
+  finishFactorPairsSet(s) {
     // Re-read the state: saveState() can swap in a fresh copy of progress
-    const current = this.state[session.rangeId];
-    current.completions = Math.min(2, (current.completions || 0) + 1);
-    this.coins += session.range.coinReward * (1 + this.qualifierMultiplier);
+    const current = this.state[s.setId];
+    current.completions = 1;
     this.saveState();
     this.updateCoinDisplay();
     this.checkForUnlockedPrizes();
@@ -1870,84 +1851,80 @@ const app = {
   },
 
   submitFactorPair() {
-    const raw = document.getElementById('fpAnswer').value.trim();
-    if (!raw) return;
+    const s = this.currentFactorPairsSession;
+    if (!s || s.index >= s.problems.length) return; // set already finished
+    const rawA = document.getElementById('fpFactorA').value.trim();
+    const rawB = document.getElementById('fpFactorB').value.trim();
+    if (!rawA || !rawB) return;
 
-    const session = this.currentFactorPairsSession;
-    if (!session || session.index >= session.problems.length) return; // round already finished
-    const problem = session.problems[session.index];
-    const parsed = Number(raw);
-    const userAnswer = Number.isFinite(parsed) ? parsed : null;
-    const hintVisible = this.fpHintVisible();
+    const problem = s.problems[s.index];
+    const a = Number(rawA);
+    const b = Number(rawB);
+    const isCorrect = Number.isInteger(a) && Number.isInteger(b) && a >= 1 && b >= 1 && a * b === problem.number;
     const fb = document.getElementById('fpFeedback');
 
-    const record = (isCorrect) => {
-      this.factorPairsHistory.push({
-        timestamp: Date.now(),
-        rangeId: session.rangeId,
-        number: problem.number,
-        factor: problem.factor,
-        partner: problem.partner,
-        userAnswer: userAnswer,
-        isCorrect: isCorrect,
-        round: session.round,
-        hintShown: hintVisible
-      });
-    };
+    this.factorPairsHistory.push({
+      timestamp: Date.now(),
+      setId: s.setId,
+      number: problem.number,
+      factorA: Number.isFinite(a) ? a : null,
+      factorB: Number.isFinite(b) ? b : null,
+      isCorrect: isCorrect,
+      attempt: s.retries + 1
+    });
 
     const requeue = () => {
-      const remaining = session.problems.slice(session.index + 1);
+      const remaining = s.problems.slice(s.index + 1);
       const pos = Math.floor(Math.random() * (remaining.length + 1));
       remaining.splice(pos, 0, problem);
-      session.problems.splice(session.index + 1, session.problems.length - session.index - 1, ...remaining);
+      s.problems.splice(s.index + 1, s.problems.length - s.index - 1, ...remaining);
     };
 
-    if (userAnswer === problem.partner) {
-      record(true);
+    if (isCorrect) {
       const emojis = ['👍', '✅', '🎯', '🌟', '💪', '👏', '🚀', '⭐'];
       fb.textContent = emojis[Math.floor(Math.random() * emojis.length)];
       fb.className = 'feedback correct';
       this.createCelebration('🎉');
       this.playCorrectSound();
+      // Coins once per problem, even if it comes back later in the set after a miss
+      if (!problem.credited) {
+        problem.credited = true;
+        this.coins += s.set.coinPerProblem * (1 + this.qualifierMultiplier);
+        s.correctCount++;
+        this.updateCoinDisplay();
+      }
+      if (s.retries > 0) requeue();
+      s.index++;
+      s.retries = 0;
       this.saveState();
-
-      if (session.currentProblemRetries > 0) requeue();
-      session.index++;
-      session.currentProblemRetries = 0;
-      session.hintIndex = null;
-
-      if (session.index >= session.problems.length) {
-        this.finishFactorPairsRound(session);
+      if (s.index >= s.problems.length) {
+        this.finishFactorPairsSet(s);
       } else {
         setTimeout(() => this.renderFpPractice(), 600);
       }
       return;
     }
 
-    // Wrong answer (includes a non-number entry): hint appears, same problem stays up
-    record(false);
+    // Wrong: same question stays up; three misses move on and bring it back later in the set
     fb.innerHTML = `<span style="font-size: 40px;">✗</span>`;
     fb.className = 'feedback wrong';
     this.playWrongSound();
-    session.hintIndex = session.index;
-    this.showFpHint();
+    s.retries++;
     this.saveState();
-    session.currentProblemRetries++;
 
-    if (session.currentProblemRetries >= 3) {
-      // Three misses: move on, and bring this problem back later in the round
+    if (s.retries >= 3) {
       requeue();
-      session.index++;
-      session.currentProblemRetries = 0;
-      session.hintIndex = null;
-      if (session.index >= session.problems.length) {
-        this.finishFactorPairsRound(session);
+      s.index++;
+      s.retries = 0;
+      if (s.index >= s.problems.length) {
+        this.finishFactorPairsSet(s);
       } else {
         setTimeout(() => this.renderFpPractice(), 1500);
       }
     } else {
-      document.getElementById('fpAnswer').value = '';
-      document.getElementById('fpAnswer').focus();
+      document.getElementById('fpFactorA').value = '';
+      document.getElementById('fpFactorB').value = '';
+      document.getElementById('fpFactorA').focus();
     }
   },
 
@@ -3600,13 +3577,11 @@ const app = {
     const fpBody = document.getElementById('fpMissesBody');
     const fpStats = {};
     (this.factorPairsHistory || []).forEach(a => {
-      const key = `${a.factor} × ? = ${a.number}`;
-      if (!fpStats[key]) fpStats[key] = { problem: key, attempts: 0, missed: 0, missedAfterHint: 0 };
+      const key = `${a.number} = ? × ?`;
+      if (!fpStats[key]) fpStats[key] = { problem: key, attempts: 0, missed: 0, set: a.setId };
       fpStats[key].attempts++;
-      if (!a.isCorrect) {
-        fpStats[key].missed++;
-        if (a.hintShown) fpStats[key].missedAfterHint++;
-      }
+      fpStats[key].set = a.setId;
+      if (!a.isCorrect) fpStats[key].missed++;
     });
     const fpRows = Object.values(fpStats).filter(r => r.missed > 0).sort((x, y) => y.missed - x.missed || x.problem.localeCompare(y.problem)).slice(0, 15);
     if (fpBody) {
@@ -3618,7 +3593,7 @@ const app = {
             <td style="padding: 12px; text-align: left;">${r.problem}</td>
             <td style="padding: 12px; text-align: center; color: var(--text-secondary);">${r.attempts}</td>
             <td style="padding: 12px; text-align: center; font-weight: 500; color: #ff6b6b;">${r.missed}</td>
-            <td style="padding: 12px; text-align: right; font-weight: 500;">${r.missedAfterHint}</td>
+            <td style="padding: 12px; text-align: right; font-weight: 500;">${r.set.replace('fp_set_', 'Set ')}</td>
           </tr>
         `).join('');
       }
@@ -4889,8 +4864,8 @@ const app = {
       }
     });
 
-    // Factor Pairs answer input
-    document.getElementById('fpAnswer').addEventListener('keypress', function(e) {
+    // Factor Pairs answer inputs
+    document.getElementById('fpFactorB').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         self.submitFactorPair();
       }
