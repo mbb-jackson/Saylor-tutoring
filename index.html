@@ -1766,7 +1766,7 @@ const app = {
   },
 
   fpMakeQuestion(kind, n) {
-    if (kind === 'table' || kind === 'unicorns') {
+    if (kind === 'table' || kind === 'cats') {
       // Up to 4 factor pairs, each cell randomly given or blank; at least one blank
       const rows = this.fpShuffle(this.fpPairs(n).slice()).slice(0, 4).sort((x, y) => x[0] - y[0]);
       const blanks = [];
@@ -1851,7 +1851,7 @@ const app = {
       { kind: 'table', number: 50, rows: [[1, 50], [2, 25], [5, 10]], blanks: [[0, 0], [1, 0], [2, 1]] },
       { kind: 'choose', number: 49, options: [[1, 49], [2, 23], [3, 13], [4, 11], [7, 7]], correctIdx: [0, 4] },
       { kind: 'rectangle', number: 15, options: [[1, 15], [2, 7], [3, 5], [4, 4]], correctIdx: [0, 2] },
-      { kind: 'unicorns', number: 56, rows: [[1, 56], [2, 28], [4, 14], [7, 8]], blanks: [[1, 1], [2, 0], [3, 1]] },
+      { kind: 'cats', number: 56, rows: [[1, 56], [2, 28], [4, 14], [7, 8]], blanks: [[1, 1], [2, 0], [3, 1]] },
       { kind: 'table', number: 88, rows: [[1, 88], [2, 44], [4, 22], [8, 11]], blanks: [[1, 1], [2, 0], [3, 0]] },
       { kind: 'choose', number: 26, options: [[1, 26], [2, 13], [3, 12], [4, 6], [5, 5]], correctIdx: [0, 1] },
       { kind: 'rectangle', number: 8, options: [[1, 8], [2, 4], [2, 6], [4, 4]], correctIdx: [0, 1] },
@@ -1863,16 +1863,19 @@ const app = {
     const set = this.factorPairsSets.find(s => s.id === setId);
     const state = this.state[setId];
     if (!set || !state || state.completions >= 1) return;
-    const kinds = ['table', 'unicorns', 'choose', 'rectangle'];
+    const kinds = ['table', 'cats', 'choose', 'rectangle'];
     const questions = [];
     if (setId === 'fp_set_1') {
       this.fpKhanSetOne().forEach(q => questions.push(q));
     } else {
+      const order = this.fpShuffle(kinds.slice());
       for (let i = 0; i < set.problems; i++) {
-        const kind = kinds[Math.floor(Math.random() * kinds.length)];
-        questions.push(this.fpMakeQuestion(kind, this.fpCompositeNumber()));
+        questions.push(this.fpMakeQuestion(order[i % order.length], this.fpCompositeNumber()));
       }
     }
+    // easiest first: smaller numbers first, then the simpler question types
+    const rank = { table: 0, cats: 1, choose: 2, rectangle: 3 };
+    questions.sort((a, b) => (a.number - b.number) || (rank[a.kind] - rank[b.kind]));
     this.currentFactorPairsSession = { setId: setId, set: set, problems: questions, index: 0, correctCount: 0, retries: 0, selected: new Set() };
     this.renderFpPractice();
   },
@@ -1880,11 +1883,11 @@ const app = {
   fpQuestionHtml(q) {
     const FP_OPT_STYLE = 'display: flex; align-items: center; width: 100%; margin: 8px 0; padding: 12px; font-size: 18px; text-align: left; color: #1a1a1a; border-radius: 10px; border: 1.5px solid #9aa0a6; background: #ffffff; cursor: pointer;';
     const FP_BOX_STYLE = 'display: inline-flex; align-items: center; justify-content: center; flex: 0 0 26px; width: 26px; height: 26px; margin-right: 12px; border: 2px solid #5f6368; border-radius: 6px; background: #ffffff; color: #ffffff; font-size: 18px; font-weight: 700;';
-    if (q.kind === 'table' || q.kind === 'unicorns') {
-      const isUni = q.kind === 'unicorns';
-      const heads = isUni ? ['Number of fields', 'Unicorns per field'] : ['First factor', 'Second factor'];
-      const intro = isUni
-        ? `There are <b>${q.number}</b> unicorns at magic camp. Every unicorn is in a field, and each field has the same number of unicorns. Use what you know about factor pairs to complete the table.`
+    if (q.kind === 'table' || q.kind === 'cats') {
+      const isCat = q.kind === 'cats';
+      const heads = isCat ? ['Number of rooms', 'Cats per room'] : ['First factor', 'Second factor'];
+      const intro = isCat
+        ? `There are <b>${q.number}</b> cats at the cat café. The cats are put into rooms, and every room has the same number of cats. Use what you know about factor pairs to complete the table.`
         : `Complete the table to find all the factor pairs of <b>${q.number}</b>.`;
       const isBlank = (r, c) => q.blanks.some(b => b[0] === r && b[1] === c);
       const rowsHtml = q.rows.map((row, r) => `
@@ -1906,14 +1909,14 @@ const app = {
       const opts = q.options.map((p, i) => `
         <button type="button" class="fp-opt" data-opt="${i}" style="${FP_OPT_STYLE}">
           <span class="fp-box" style="${FP_BOX_STYLE}"></span><span style="font-weight: 700; margin-right: 10px;">${String.fromCharCode(65 + i)}</span>${p[0]} cm and ${p[1]} cm</button>`).join('');
-      return `<div style="font-size: 16px; margin-bottom: 0.5rem;">A rectangle has an area of <b>${q.number}</b> square centimeters.</div>
+      return `<div style="font-size: 16px; margin-bottom: 0.5rem;">Mittens's cat bed has an area of <b>${q.number}</b> square centimeters.</div>
         <div style="font-size: 16px; margin-bottom: 0.5rem;">Which of the following could be the rectangle's length and width? (Area = length × width)</div>
         <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.5rem;">Choose all answers that apply:</div>${opts}`;
     }
     const opts = q.options.map((p, i) => `
       <button type="button" class="fp-opt" data-opt="${i}" style="${FP_OPT_STYLE}">
         <span class="fp-box" style="${FP_BOX_STYLE}"></span><span style="font-weight: 700; margin-right: 10px;">${String.fromCharCode(65 + i)}</span>${p[0]} and ${p[1]}</button>`).join('');
-    return `<div style="font-size: 16px; margin-bottom: 0.5rem;">Which of the following are factor pairs for <b>${q.number}</b>?</div>
+    return `<div style="font-size: 16px; margin-bottom: 0.5rem;">Mittens has <b>${q.number}</b> cats to line up in equal rows. Which of the following are factor pairs for <b>${q.number}</b>?</div>
       <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.5rem;">Choose all answers that apply:</div>${opts}`;
   },
 
@@ -1968,7 +1971,7 @@ const app = {
     let isCorrect = false;
     let detail = null;
 
-    if (q.kind === 'table' || q.kind === 'unicorns') {
+    if (q.kind === 'table' || q.kind === 'cats') {
       const inputs = Array.from(document.querySelectorAll('#fpBody input[data-cell]'));
       if (inputs.length === 0) return; // question not on screen: nothing recorded
       if (inputs.some(i => i.value.trim() === '')) return; // blank: nothing recorded
@@ -3701,7 +3704,7 @@ const app = {
     const fpBody = document.getElementById('fpMissesBody');
     const fpStats = {};
     (this.factorPairsHistory || []).forEach(a => {
-      const label = { table: 'Factor pair table', unicorns: 'Unicorn table', choose: 'Which are factor pairs', rectangle: 'Rectangle area' }[a.kind] || 'Factor pairs';
+      const label = { table: 'Factor pair table', cats: 'Cat table', unicorns: 'Cat table', choose: 'Which are factor pairs', rectangle: 'Rectangle area' }[a.kind] || 'Factor pairs';
       const key = `${label}: ${a.number}`;
       if (!fpStats[key]) fpStats[key] = { problem: key, attempts: 0, missed: 0, set: a.setId };
       fpStats[key].attempts++;
