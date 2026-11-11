@@ -526,12 +526,9 @@
         <div class="practice-container">
           <div class="problem-section">
             <div id="fpCount" style="font-size: 16px; color: var(--text-secondary); margin-bottom: 0.5rem;"></div>
-            <div class="problem" id="fpProblem"></div>
-            <div class="feedback" id="fpFeedback"></div>
-            <div class="input-group">
-              <input type="number" id="fpFactorA" placeholder="?" inputmode="numeric" style="width: 80px;">
-              <span style="font-size: 22px; margin: 0 8px;">×</span>
-              <input type="number" id="fpFactorB" placeholder="?" inputmode="numeric" style="width: 80px;">
+            <div id="fpBody"></div>
+            <div class="feedback" id="fpFeedback" style="margin-top: 1rem;"></div>
+            <div style="text-align: center; margin-top: 1rem;">
               <button class="submit" onclick="app.submitFactorPair()">Check</button>
             </div>
           </div>
@@ -1726,9 +1723,13 @@ const app = {
     this.showDivisionSelection();
   },
 
-  // ===== FRACTIONS: FACTOR PAIRS =====
-  // Three sets of 10 problems. Each problem: N = [ ] × [ ]. Any correct pair is accepted.
-  // 5 coins per problem answered correctly. Every attempt is written to factorPairsHistory.
+  // ===== FRACTIONS: FACTOR PAIRS (Khan Academy question types) =====
+  // Three sets of 10 mixed questions. Types copy the Khan Academy factor pairs exercise:
+  //  table     "Complete the table to find all the factor pairs of N" (blank cells)
+  //  unicorns  "Number of fields | Unicorns per field" table (same pairs, different headers)
+  //  choose    "Which of the following are factor pairs for N? Choose all answers that apply"
+  //  rectangle "A rectangle has an area of N square centimeters..." choose all that apply
+  // 5 coins per question, credited once. Every attempt is written to factorPairsHistory.
   factorPairsSets: [
     { id: 'fp_set_1', label: 'Set 1', problems: 10, coinPerProblem: 5 },
     { id: 'fp_set_2', label: 'Set 2', problems: 10, coinPerProblem: 5 },
@@ -1736,6 +1737,55 @@ const app = {
   ],
   currentFactorPairsSession: null,
   factorPairsHistory: [],
+
+  fpPairs(n) {
+    const pairs = [];
+    for (let a = 1; a * a <= n; a++) if (n % a === 0) pairs.push([a, n / a]);
+    return pairs;
+  },
+
+  fpShuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  },
+
+  fpCompositeNumber() {
+    const pool = [];
+    for (let n = 6; n <= 100; n++) {
+      let prime = true;
+      for (let d = 2; d * d <= n; d++) if (n % d === 0) { prime = false; break; }
+      if (!prime) pool.push(n);
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+  },
+
+  fpMakeQuestion(kind, n) {
+    if (kind === 'table' || kind === 'unicorns') {
+      // Up to 4 factor pairs, each cell randomly given or blank; at least one blank
+      const rows = this.fpShuffle(this.fpPairs(n).slice()).slice(0, 4).sort((x, y) => x[0] - y[0]);
+      const blanks = [];
+      rows.forEach((row, r) => [0, 1].forEach(c => { if (Math.random() < 0.5) blanks.push([r, c]); }));
+      if (blanks.length === 0) blanks.push([0, Math.floor(Math.random() * 2)]);
+      return { kind: kind, number: n, rows: rows, blanks: blanks };
+    }
+    // choose / rectangle: 1 to 3 correct pairs plus wrong pairs, 5 options total
+    const correct = this.fpShuffle(this.fpPairs(n).slice()).slice(0, 1 + Math.floor(Math.random() * 3));
+    const options = correct.map(p => p.slice());
+    const seen = new Set(options.map(p => p.join('x')));
+    while (options.length < 5) {
+      const a = 2 + Math.floor(Math.random() * 11);
+      const b = 2 + Math.floor(Math.random() * 23);
+      if (a * b === n || seen.has(`${a}x${b}`)) continue;
+      seen.add(`${a}x${b}`);
+      options.push([a, b]);
+    }
+    const shuffled = this.fpShuffle(options.slice());
+    const correctKeys = new Set(correct.map(p => p.join('x')));
+    return { kind: kind, number: n, options: shuffled, correctIdx: shuffled.map((p, i) => correctKeys.has(p.join('x')) ? i : -1).filter(i => i >= 0) };
+  },
 
   showFractions() {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1768,7 +1818,6 @@ const app = {
       if (!this.state[set.id]) this.state[set.id] = { completions: 0 };
       const done = this.state[set.id].completions >= 1 ? 1 : 0;
       totalDone += done;
-
       const card = document.createElement('div');
       card.className = 'stack-card';
       card.setAttribute('data-factor-set', set.id);
@@ -1791,54 +1840,81 @@ const app = {
     document.getElementById('fpOverallFill').style.width = `${Math.round((totalDone / total) * 100)}%`;
   },
 
-  // Random composite numbers, no repeats within a set
-  generateFactorPairSet(count) {
-    const pool = [];
-    for (let n = 4; n <= 100; n++) {
-      let prime = true;
-      for (let d = 2; d * d <= n; d++) if (n % d === 0) { prime = false; break; }
-      if (!prime) pool.push(n);
-    }
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    return pool.slice(0, count).map(n => ({ number: n }));
-  },
-
   startFactorPairsSet(setId) {
     const set = this.factorPairsSets.find(s => s.id === setId);
     const state = this.state[setId];
     if (!set || !state || state.completions >= 1) return;
-
-    this.currentFactorPairsSession = {
-      setId: setId,
-      set: set,
-      problems: this.generateFactorPairSet(set.problems),
-      index: 0,
-      correctCount: 0,
-      retries: 0
-    };
+    const kinds = ['table', 'unicorns', 'choose', 'rectangle'];
+    const questions = [];
+    for (let i = 0; i < set.problems; i++) {
+      const kind = kinds[Math.floor(Math.random() * kinds.length)];
+      questions.push(this.fpMakeQuestion(kind, this.fpCompositeNumber()));
+    }
+    this.currentFactorPairsSession = { setId: setId, set: set, problems: questions, index: 0, correctCount: 0, retries: 0, selected: new Set() };
     this.renderFpPractice();
+  },
+
+  fpQuestionHtml(q) {
+    if (q.kind === 'table' || q.kind === 'unicorns') {
+      const isUni = q.kind === 'unicorns';
+      const heads = isUni ? ['Number of fields', 'Unicorns per field'] : ['First factor', 'Second factor'];
+      const intro = isUni
+        ? `There are <b>${q.number}</b> unicorns at magic camp. Every unicorn is in a field, and each field has the same number of unicorns. Use what you know about factor pairs to complete the table.`
+        : `Complete the table to find all the factor pairs of <b>${q.number}</b>.`;
+      const isBlank = (r, c) => q.blanks.some(b => b[0] === r && b[1] === c);
+      const rowsHtml = q.rows.map((row, r) => `
+        <tr style="border-bottom: 0.5px solid var(--border);">
+          ${[0, 1].map(c => `<td style="padding: 10px; text-align: center;">${isBlank(r, c)
+            ? `<input type="number" inputmode="numeric" data-cell="${r}-${c}" style="width: 70px; font-size: 18px; text-align: center;">`
+            : `<span style="font-size: 18px;">${row[c]}</span>`}</td>`).join('')}
+        </tr>`).join('');
+      return `<div style="font-size: 16px; margin-bottom: 1rem;">${intro}</div>
+        <table style="margin: 0 auto; border-collapse: collapse; min-width: 260px;">
+          <thead><tr style="border-bottom: 1px solid var(--border);">
+            <th style="padding: 8px; font-weight: 600; color: var(--text-secondary);">${heads[0]}</th>
+            <th style="padding: 8px; font-weight: 600; color: var(--text-secondary);">${heads[1]}</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>`;
+    }
+    if (q.kind === 'rectangle') {
+      const opts = q.options.map((p, i) => `
+        <button type="button" class="fp-opt" data-opt="${i}" style="display: block; width: 100%; margin: 8px 0; padding: 12px; font-size: 18px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--surface-2); cursor: pointer;">
+          <span style="font-weight: 700; margin-right: 10px;">${String.fromCharCode(65 + i)}</span>${p[0]} cm and ${p[1]} cm</button>`).join('');
+      return `<div style="font-size: 16px; margin-bottom: 0.5rem;">A rectangle has an area of <b>${q.number}</b> square centimeters.</div>
+        <div style="font-size: 16px; margin-bottom: 0.5rem;">Which of the following could be the rectangle's length and width? (Area = length × width)</div>
+        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.5rem;">Choose all answers that apply:</div>${opts}`;
+    }
+    const opts = q.options.map((p, i) => `
+      <button type="button" class="fp-opt" data-opt="${i}" style="display: block; width: 100%; margin: 8px 0; padding: 12px; font-size: 18px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--surface-2); cursor: pointer;">
+        <span style="font-weight: 700; margin-right: 10px;">${String.fromCharCode(65 + i)}</span>${p[0]} and ${p[1]}</button>`).join('');
+    return `<div style="font-size: 16px; margin-bottom: 0.5rem;">Which of the following are factor pairs for <b>${q.number}</b>?</div>
+      <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.5rem;">Choose all answers that apply:</div>${opts}`;
   },
 
   renderFpPractice() {
     document.getElementById('fpMainScreen').style.display = 'none';
     document.getElementById('fpPracticeScreen').style.display = 'block';
     const s = this.currentFactorPairsSession;
-    const problem = s.problems[s.index];
-
+    const q = s.problems[s.index];
+    s.selected = new Set();
     document.getElementById('fpFeedback').textContent = '';
     document.getElementById('fpFeedback').className = 'feedback';
-    document.getElementById('fpFactorA').value = '';
-    document.getElementById('fpFactorB').value = '';
-    document.getElementById('fpFactorA').focus();
     document.getElementById('fpCount').textContent = `Question ${Math.min(s.correctCount + 1, s.set.problems)} of ${s.set.problems}`;
-    document.getElementById('fpProblem').textContent = `${problem.number} = ? × ?`;
+    const body = document.getElementById('fpBody');
+    body.innerHTML = this.fpQuestionHtml(q);
+    body.querySelectorAll('.fp-opt').forEach(btn => {
+      btn.onclick = () => {
+        const i = Number(btn.getAttribute('data-opt'));
+        if (s.selected.has(i)) { s.selected.delete(i); btn.style.background = 'var(--surface-2)'; btn.style.borderColor = 'var(--border)'; }
+        else { s.selected.add(i); btn.style.background = 'var(--fill-accent)'; btn.style.color = 'var(--on-accent)'; btn.style.borderColor = 'var(--fill-accent)'; }
+      };
+    });
+    const first = body.querySelector('input');
+    if (first) first.focus();
   },
 
   finishFactorPairsSet(s) {
-    // Re-read the state: saveState() can swap in a fresh copy of progress
     const current = this.state[s.setId];
     current.completions = 1;
     this.saveState();
@@ -1852,31 +1928,45 @@ const app = {
 
   submitFactorPair() {
     const s = this.currentFactorPairsSession;
-    if (!s || s.index >= s.problems.length) return; // set already finished
-    const rawA = document.getElementById('fpFactorA').value.trim();
-    const rawB = document.getElementById('fpFactorB').value.trim();
-    if (!rawA || !rawB) return;
-
-    const problem = s.problems[s.index];
-    const a = Number(rawA);
-    const b = Number(rawB);
-    const isCorrect = Number.isInteger(a) && Number.isInteger(b) && a >= 1 && b >= 1 && a * b === problem.number;
+    if (!s || s.index >= s.problems.length) return;
+    const q = s.problems[s.index];
     const fb = document.getElementById('fpFeedback');
+    let isCorrect = false;
+    let detail = null;
 
-    this.factorPairsHistory.push({
+    if (q.kind === 'table' || q.kind === 'unicorns') {
+      const inputs = Array.from(document.querySelectorAll('#fpBody input[data-cell]'));
+      if (inputs.some(i => i.value.trim() === '')) return; // blank: nothing recorded
+      const missed = [];
+      inputs.forEach(inp => {
+        const [r, c] = inp.getAttribute('data-cell').split('-').map(Number);
+        const ok = Number(inp.value) === q.rows[r][c];
+        inp.style.borderColor = ok ? '#2a9d55' : '#ff6b6b';
+        if (!ok) missed.push(`${r + 1}-${c + 1}`);
+      });
+      isCorrect = missed.length === 0;
+      detail = { missedCells: missed };
+    } else {
+      if (s.selected.size === 0) return; // nothing chosen: nothing recorded
+      const chosen = Array.from(s.selected).sort((a, b) => a - b);
+      const want = q.correctIdx.slice().sort((a, b) => a - b);
+      isCorrect = chosen.length === want.length && chosen.every((v, i) => v === want[i]);
+      detail = { chosen: chosen.map(i => String.fromCharCode(65 + i)) };
+    }
+
+    this.factorPairsHistory.push(Object.assign({
       timestamp: Date.now(),
       setId: s.setId,
-      number: problem.number,
-      factorA: Number.isFinite(a) ? a : null,
-      factorB: Number.isFinite(b) ? b : null,
+      kind: q.kind,
+      number: q.number,
       isCorrect: isCorrect,
       attempt: s.retries + 1
-    });
+    }, detail));
 
     const requeue = () => {
       const remaining = s.problems.slice(s.index + 1);
       const pos = Math.floor(Math.random() * (remaining.length + 1));
-      remaining.splice(pos, 0, problem);
+      remaining.splice(pos, 0, q);
       s.problems.splice(s.index + 1, s.problems.length - s.index - 1, ...remaining);
     };
 
@@ -1886,9 +1976,8 @@ const app = {
       fb.className = 'feedback correct';
       this.createCelebration('🎉');
       this.playCorrectSound();
-      // Coins once per problem, even if it comes back later in the set after a miss
-      if (!problem.credited) {
-        problem.credited = true;
+      if (!q.credited) {
+        q.credited = true;
         this.coins += s.set.coinPerProblem * (1 + this.qualifierMultiplier);
         s.correctCount++;
         this.updateCoinDisplay();
@@ -1897,15 +1986,11 @@ const app = {
       s.index++;
       s.retries = 0;
       this.saveState();
-      if (s.index >= s.problems.length) {
-        this.finishFactorPairsSet(s);
-      } else {
-        setTimeout(() => this.renderFpPractice(), 600);
-      }
+      if (s.index >= s.problems.length) this.finishFactorPairsSet(s);
+      else setTimeout(() => this.renderFpPractice(), 600);
       return;
     }
 
-    // Wrong: same question stays up; three misses move on and bring it back later in the set
     fb.innerHTML = `<span style="font-size: 40px;">✗</span>`;
     fb.className = 'feedback wrong';
     this.playWrongSound();
@@ -1916,16 +2001,10 @@ const app = {
       requeue();
       s.index++;
       s.retries = 0;
-      if (s.index >= s.problems.length) {
-        this.finishFactorPairsSet(s);
-      } else {
-        setTimeout(() => this.renderFpPractice(), 1500);
-      }
-    } else {
-      document.getElementById('fpFactorA').value = '';
-      document.getElementById('fpFactorB').value = '';
-      document.getElementById('fpFactorA').focus();
+      if (s.index >= s.problems.length) this.finishFactorPairsSet(s);
+      else setTimeout(() => this.renderFpPractice(), 1500);
     }
+    // otherwise the same question stays up for another try
   },
 
   backToFpMain() {
@@ -3577,7 +3656,8 @@ const app = {
     const fpBody = document.getElementById('fpMissesBody');
     const fpStats = {};
     (this.factorPairsHistory || []).forEach(a => {
-      const key = `${a.number} = ? × ?`;
+      const label = { table: 'Factor pair table', unicorns: 'Unicorn table', choose: 'Which are factor pairs', rectangle: 'Rectangle area' }[a.kind] || 'Factor pairs';
+      const key = `${label}: ${a.number}`;
       if (!fpStats[key]) fpStats[key] = { problem: key, attempts: 0, missed: 0, set: a.setId };
       fpStats[key].attempts++;
       fpStats[key].set = a.setId;
@@ -4864,12 +4944,6 @@ const app = {
       }
     });
 
-    // Factor Pairs answer inputs
-    document.getElementById('fpFactorB').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        self.submitFactorPair();
-      }
-    });
   },
 
   addAdminButton() {
