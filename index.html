@@ -1923,6 +1923,7 @@ const app = {
     const s = this.currentFactorPairsSession;
     const q = s.problems[s.index];
     s.selected = new Set();
+    s.busy = false;
     document.getElementById('fpFeedback').textContent = '';
     document.getElementById('fpFeedback').className = 'feedback';
     document.getElementById('fpCount').textContent = `Question ${Math.min(s.correctCount + 1, s.set.problems)} of ${s.set.problems}`;
@@ -1961,7 +1962,7 @@ const app = {
 
   submitFactorPair() {
     const s = this.currentFactorPairsSession;
-    if (!s || s.index >= s.problems.length) return;
+    if (!s || s.busy || s.index >= s.problems.length) return;
     const q = s.problems[s.index];
     const fb = document.getElementById('fpFeedback');
     let isCorrect = false;
@@ -1969,6 +1970,7 @@ const app = {
 
     if (q.kind === 'table' || q.kind === 'unicorns') {
       const inputs = Array.from(document.querySelectorAll('#fpBody input[data-cell]'));
+      if (inputs.length === 0) return; // question not on screen: nothing recorded
       if (inputs.some(i => i.value.trim() === '')) return; // blank: nothing recorded
       const missed = [];
       inputs.forEach(inp => {
@@ -2003,6 +2005,7 @@ const app = {
       s.problems.splice(s.index + 1, s.problems.length - s.index - 1, ...remaining);
     };
 
+    s.busy = true;
     if (isCorrect) {
       const emojis = ['👍', '✅', '🎯', '🌟', '💪', '👏', '🚀', '⭐'];
       fb.textContent = emojis[Math.floor(Math.random() * emojis.length)];
@@ -2037,7 +2040,16 @@ const app = {
       if (s.index >= s.problems.length) this.finishFactorPairsSet(s);
       else setTimeout(() => this.renderFpPractice(), 1500);
     }
-    // otherwise the same question stays up for another try
+    // otherwise the same question stays up: clear the old picks so the next try starts clean
+    s.busy = false;
+    s.selected = new Set();
+    document.querySelectorAll('#fpBody .fp-opt').forEach(btn => {
+      btn.style.borderColor = '#9aa0a6';
+      btn.style.background = '#ffffff';
+      btn.setAttribute('aria-pressed', 'false');
+      const box = btn.querySelector('.fp-box');
+      if (box) { box.style.background = '#ffffff'; box.style.borderColor = '#5f6368'; box.textContent = ''; }
+    });
   },
 
   backToFpMain() {
