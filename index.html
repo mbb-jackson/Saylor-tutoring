@@ -1889,15 +1889,15 @@ const app = {
       const isBlank = (r, c) => q.blanks.some(b => b[0] === r && b[1] === c);
       const rowsHtml = q.rows.map((row, r) => `
         <tr style="border-bottom: 0.5px solid var(--border);">
-          ${[0, 1].map(c => `<td style="padding: 10px; text-align: center;">${isBlank(r, c)
-            ? `<input type="number" inputmode="numeric" data-cell="${r}-${c}" style="width: 70px; font-size: 18px; text-align: center;">`
-            : `<span style="font-size: 18px;">${row[c]}</span>`}</td>`).join('')}
+          ${[0, 1].map(c => `<td style="padding: 6px; text-align: center; border: 1.5px solid #5f6368;">${isBlank(r, c)
+            ? `<input type="number" inputmode="numeric" data-cell="${r}-${c}" style="width: 90px; height: 44px; box-sizing: border-box; font-size: 18px; text-align: center; border: 2px solid #5f6368; border-radius: 6px; background: #ffffff; color: #1a1a1a;">`
+            : `<span style="display: inline-block; width: 90px; height: 44px; line-height: 44px; font-size: 18px;">${row[c]}</span>`}</td>`).join('')}
         </tr>`).join('');
       return `<div style="font-size: 16px; margin-bottom: 1rem;">${intro}</div>
-        <table style="margin: 0 auto; border-collapse: collapse; min-width: 260px;">
+        <table style="margin: 0 auto; border-collapse: collapse; min-width: 260px; border: 1.5px solid #5f6368;">
           <thead><tr style="border-bottom: 1px solid var(--border);">
-            <th style="padding: 8px; font-weight: 600; color: var(--text-secondary);">${heads[0]}</th>
-            <th style="padding: 8px; font-weight: 600; color: var(--text-secondary);">${heads[1]}</th>
+            <th style="padding: 8px; font-weight: 600; color: #5f6368; border: 1.5px solid #5f6368;">${heads[0]}</th>
+            <th style="padding: 8px; font-weight: 600; color: #5f6368; border: 1.5px solid #5f6368;">${heads[1]}</th>
           </tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>`;
