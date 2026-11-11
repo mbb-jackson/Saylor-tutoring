@@ -475,10 +475,65 @@
         <div style="font-size: 16px; font-weight: 600;">Turd Splitter</div>
         <div style="font-size: 12px; opacity: 0.9;">Division</div>
       </div>
+      <div onclick="app.showFractions()" style="background: linear-gradient(135deg, #F4A261 0%, #F7B980 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div style="font-size: 36px; margin-bottom: 0.5rem;">🍕</div>
+        <div style="font-size: 16px; font-weight: 600;">Fractions</div>
+        <div style="font-size: 12px; opacity: 0.9;">Factors first</div>
+      </div>
       <div id="longDivHomeCard" onclick="app.showLongDivision()" style="background: linear-gradient(135deg, #4ECDC4 0%, #6FE7D9 100%); color: white; padding: 1.5rem; border-radius: 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
         <div style="font-size: 36px; margin-bottom: 0.5rem;">📐</div>
         <div style="font-size: 16px; font-weight: 600;">Long Division</div>
         <div style="font-size: 12px; opacity: 0.9;">Step by step</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FRACTIONS (Factor Pairs section) -->
+  <div id="fractionsScreen" class="screen">
+    <div id="fractionsSelectionScreen">
+      <div class="back-btn">
+        <button onclick="app.showHome()">← Back</button>
+      </div>
+      <h2 style="margin-bottom: 1rem; font-size: 24px;">Fractions</h2>
+      <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 2rem; text-align: center;">Section 1: Factors</p>
+      <div style="display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 600px;">
+        <div onclick="app.startFactorPairs()" style="background: linear-gradient(135deg, #F4A261 0%, #F7B980 100%); color: white; padding: 2rem; border-radius: 16px; text-align: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Factor Pairs</div>
+          <div style="font-size: 14px; opacity: 0.9;">Find the partner: factor × ? = number</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="fpGame" style="display: none;">
+      <div class="back-btn">
+        <button onclick="app.backToFractions()">← Back</button>
+      </div>
+      <h2 style="margin-bottom: 2rem; font-size: 24px;">Factor Pairs</h2>
+      <div id="fpMainScreen">
+        <div class="stacks" id="fpStacksContainer"></div>
+        <div class="stats">
+          <div id="fpOverallProgress"></div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="fpOverallFill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fpPracticeScreen" style="display: none;">
+        <div class="back-btn">
+          <button onclick="app.backToFpMain()">← Back</button>
+        </div>
+        <div class="practice-container">
+          <div class="problem-section">
+            <div id="fpHint" style="display: none; font-size: 18px; color: var(--text-secondary); margin-bottom: 0.5rem;"></div>
+            <div class="problem" id="fpProblem"></div>
+            <div class="feedback" id="fpFeedback"></div>
+            <div class="input-group">
+              <input type="number" id="fpAnswer" placeholder="?" inputmode="numeric">
+              <button class="submit" onclick="app.submitFactorPair()">Check</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -846,6 +901,25 @@
           </thead>
           <tbody id="slowestProblemsBody">
             <tr><td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No data yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+      <h3 style="font-size: 18px; margin-bottom: 1rem;">Factor Pair Misses (where to focus)</h3>
+      <div style="background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border); background: var(--surface-1);">
+              <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-secondary);">Problem</th>
+              <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--text-secondary);">Attempts</th>
+              <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--text-secondary);">Missed</th>
+              <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-secondary);">Missed after hint</th>
+            </tr>
+          </thead>
+          <tbody id="fpMissesBody">
+            <tr><td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No data yet</td></tr>
           </tbody>
         </table>
       </div>
@@ -1330,6 +1404,7 @@ const app = {
     this.fastGameHistory = data.fastGameHistory || [];
     this.ranges2DigitHistory = data.ranges2DigitHistory || [];
     this.divisionHistory = data.divisionHistory || [];
+    this.factorPairsHistory = data.factorPairsHistory || [];
     this.qualifierMultiplier = data.qualifierMultiplier || 0;
     this.qualifierLog = data.qualifierLog || [];
     this.megaRuns = data.megaRuns || [];
@@ -1380,6 +1455,7 @@ const app = {
     this.fastGameHistory = data.fastGameHistory || [];
     this.ranges2DigitHistory = data.ranges2DigitHistory || [];
     this.divisionHistory = data.divisionHistory || [];
+    this.factorPairsHistory = data.factorPairsHistory || [];
     this.qualifierMultiplier = data.qualifierMultiplier || 0;
     this.qualifierLog = data.qualifierLog || [];
     this.megaRuns = data.megaRuns || [];
@@ -1431,6 +1507,7 @@ const app = {
       fastGameHistory: this.fastGameHistory,
       ranges2DigitHistory: this.ranges2DigitHistory,
       divisionHistory: this.divisionHistory,
+      factorPairsHistory: this.factorPairsHistory,
       qualifierMultiplier: this.qualifierMultiplier,
       qualifierLog: this.qualifierLog,
       megaRuns: this.megaRuns,
@@ -1645,6 +1722,238 @@ const app = {
     }
 
     this.showDivisionSelection();
+  },
+
+  // ===== FRACTIONS: FACTOR PAIRS =====
+  // Each round is 8 numbers, one factor per number, the partner is the answer.
+  // Every attempt is written to factorPairsHistory (saved with the rest of progress).
+  factorPairsRanges: [
+    { id: 'fp_1', label: 'Factor Pairs 1', numbers: [6, 8, 9, 10, 12, 14, 15, 16], hintAlways: true, coinReward: 12 },
+    { id: 'fp_2', label: 'Factor Pairs 2', numbers: [18, 20, 21, 24, 27, 28, 30, 32], hintAlways: false, coinReward: 12 },
+    { id: 'fp_3', label: 'Factor Pairs 3', numbers: [36, 40, 42, 45, 48, 50, 54, 56], hintAlways: false, coinReward: 12 },
+    { id: 'fp_4', label: 'Factor Pairs 4', numbers: [60, 63, 64, 72, 80, 84, 88, 96], hintAlways: false, coinReward: 12 }
+  ],
+  currentFactorPairsSession: null,
+  factorPairsHistory: [],
+
+  showFractions() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('fractionsScreen').classList.add('active');
+    document.getElementById('fractionsSelectionScreen').style.display = 'block';
+    document.getElementById('fpGame').style.display = 'none';
+    this.currentFactorPairsSession = null;
+    this.updateCoinDisplay();
+  },
+
+  startFactorPairs() {
+    document.getElementById('fractionsSelectionScreen').style.display = 'none';
+    document.getElementById('fpGame').style.display = 'block';
+    this.renderFpMain();
+  },
+
+  backToFractions() {
+    this.currentFactorPairsSession = null;
+    this.showFractions();
+  },
+
+  renderFpMain() {
+    document.getElementById('fpMainScreen').style.display = 'block';
+    document.getElementById('fpPracticeScreen').style.display = 'none';
+    const container = document.getElementById('fpStacksContainer');
+    container.innerHTML = '';
+    let totalDone = 0;
+
+    this.factorPairsRanges.forEach(range => {
+      if (!this.state[range.id]) this.state[range.id] = { completions: 0 };
+      const done = Math.min(2, this.state[range.id].completions || 0);
+      totalDone += done;
+
+      const card = document.createElement('div');
+      card.className = 'stack-card';
+      card.setAttribute('data-factor-range', range.id);
+      card.onclick = () => this.startFactorPairsPractice(range.id);
+      card.innerHTML = `
+        <div class="stack-number">${range.label.replace('Factor Pairs ', '')}</div>
+        <div class="stack-progress">${done === 2 ? '✓' : `${done}/2`}</div>
+        <div class="stack-reward"><span class="gold-coin"></span> × 12</div>
+      `;
+      if (done >= 2) {
+        card.style.backgroundColor = '#e8e8e8';
+        card.style.pointerEvents = 'none';
+        card.style.cursor = 'default';
+      }
+      container.appendChild(card);
+    });
+
+    const total = this.factorPairsRanges.length * 2;
+    document.getElementById('fpOverallProgress').textContent = `${totalDone}/${total} complete`;
+    document.getElementById('fpOverallFill').style.width = `${Math.round((totalDone / total) * 100)}%`;
+  },
+
+  generateFactorPairProblems(range, round) {
+    const problems = [];
+    range.numbers.forEach(n => {
+      const factors = [];
+      for (let a = 2; a < n; a++) if (n % a === 0) factors.push(a);
+      if (factors.length === 0) return;
+      const factor = factors[Math.floor(Math.random() * factors.length)];
+      problems.push({ number: n, factor: factor, partner: n / factor, round: round });
+    });
+    return problems.sort(() => Math.random() - 0.5);
+  },
+
+  startFactorPairsPractice(rangeId) {
+    const range = this.factorPairsRanges.find(r => r.id === rangeId);
+    const state = this.state[rangeId];
+    if (!range || !state || state.completions >= 2) return;
+
+    const round = state.completions + 1;
+    this.currentFactorPairsSession = {
+      rangeId: rangeId,
+      range: range,
+      problems: this.generateFactorPairProblems(range, round),
+      index: 0,
+      round: round,
+      currentProblemRetries: 0,
+      hintIndex: null
+    };
+    this.renderFpPractice();
+  },
+
+  fpHintVisible() {
+    const session = this.currentFactorPairsSession;
+    if (!session) return false;
+    const alwaysOn = session.range.hintAlways && session.round === 1;
+    return alwaysOn || session.hintIndex === session.index;
+  },
+
+  renderFpPractice() {
+    document.getElementById('fpMainScreen').style.display = 'none';
+    document.getElementById('fpPracticeScreen').style.display = 'block';
+    const session = this.currentFactorPairsSession;
+    const problem = session.problems[session.index];
+
+    document.getElementById('fpFeedback').textContent = '';
+    document.getElementById('fpFeedback').className = 'feedback';
+    document.getElementById('fpAnswer').value = '';
+    document.getElementById('fpAnswer').focus();
+    // The question asks for the partner: factor × ? = number
+    document.getElementById('fpProblem').textContent = `${problem.factor} × ? = ${problem.number}`;
+    this.showFpHint();
+  },
+
+  showFpHint() {
+    const session = this.currentFactorPairsSession;
+    const problem = session.problems[session.index];
+    const hint = document.getElementById('fpHint');
+    if (problem && this.fpHintVisible()) {
+      hint.textContent = `Hint: ${problem.factor} × ${problem.partner} = ${problem.number}`;
+      hint.style.display = 'block';
+    } else {
+      hint.textContent = '';
+      hint.style.display = 'none';
+    }
+  },
+
+  finishFactorPairsRound(session) {
+    // Re-read the state: saveState() can swap in a fresh copy of progress
+    const current = this.state[session.rangeId];
+    current.completions = Math.min(2, (current.completions || 0) + 1);
+    this.coins += session.range.coinReward * (1 + this.qualifierMultiplier);
+    this.saveState();
+    this.updateCoinDisplay();
+    this.checkForUnlockedPrizes();
+    this.createCoinEarn();
+    this.playCoinSound();
+    this.createDancingCat();
+    setTimeout(() => this.backToFpMain(), 1600);
+  },
+
+  submitFactorPair() {
+    const raw = document.getElementById('fpAnswer').value.trim();
+    if (!raw) return;
+
+    const session = this.currentFactorPairsSession;
+    if (!session || session.index >= session.problems.length) return; // round already finished
+    const problem = session.problems[session.index];
+    const parsed = Number(raw);
+    const userAnswer = Number.isFinite(parsed) ? parsed : null;
+    const hintVisible = this.fpHintVisible();
+    const fb = document.getElementById('fpFeedback');
+
+    const record = (isCorrect) => {
+      this.factorPairsHistory.push({
+        timestamp: Date.now(),
+        rangeId: session.rangeId,
+        number: problem.number,
+        factor: problem.factor,
+        partner: problem.partner,
+        userAnswer: userAnswer,
+        isCorrect: isCorrect,
+        round: session.round,
+        hintShown: hintVisible
+      });
+    };
+
+    const requeue = () => {
+      const remaining = session.problems.slice(session.index + 1);
+      const pos = Math.floor(Math.random() * (remaining.length + 1));
+      remaining.splice(pos, 0, problem);
+      session.problems.splice(session.index + 1, session.problems.length - session.index - 1, ...remaining);
+    };
+
+    if (userAnswer === problem.partner) {
+      record(true);
+      const emojis = ['👍', '✅', '🎯', '🌟', '💪', '👏', '🚀', '⭐'];
+      fb.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      fb.className = 'feedback correct';
+      this.createCelebration('🎉');
+      this.playCorrectSound();
+      this.saveState();
+
+      if (session.currentProblemRetries > 0) requeue();
+      session.index++;
+      session.currentProblemRetries = 0;
+      session.hintIndex = null;
+
+      if (session.index >= session.problems.length) {
+        this.finishFactorPairsRound(session);
+      } else {
+        setTimeout(() => this.renderFpPractice(), 600);
+      }
+      return;
+    }
+
+    // Wrong answer (includes a non-number entry): hint appears, same problem stays up
+    record(false);
+    fb.innerHTML = `<span style="font-size: 40px;">✗</span>`;
+    fb.className = 'feedback wrong';
+    this.playWrongSound();
+    session.hintIndex = session.index;
+    this.showFpHint();
+    this.saveState();
+    session.currentProblemRetries++;
+
+    if (session.currentProblemRetries >= 3) {
+      // Three misses: move on, and bring this problem back later in the round
+      requeue();
+      session.index++;
+      session.currentProblemRetries = 0;
+      session.hintIndex = null;
+      if (session.index >= session.problems.length) {
+        this.finishFactorPairsRound(session);
+      } else {
+        setTimeout(() => this.renderFpPractice(), 1500);
+      }
+    } else {
+      document.getElementById('fpAnswer').value = '';
+      document.getElementById('fpAnswer').focus();
+    }
+  },
+
+  backToFpMain() {
+    this.currentFactorPairsSession = null;
+    this.renderFpMain();
   },
 
   // ===== LONG DIVISION (standard algorithm) =====
@@ -3287,6 +3596,34 @@ const app = {
       `).join('');
     }
 
+    // Factor pair misses: every attempt is in factorPairsHistory
+    const fpBody = document.getElementById('fpMissesBody');
+    const fpStats = {};
+    (this.factorPairsHistory || []).forEach(a => {
+      const key = `${a.factor} × ? = ${a.number}`;
+      if (!fpStats[key]) fpStats[key] = { problem: key, attempts: 0, missed: 0, missedAfterHint: 0 };
+      fpStats[key].attempts++;
+      if (!a.isCorrect) {
+        fpStats[key].missed++;
+        if (a.hintShown) fpStats[key].missedAfterHint++;
+      }
+    });
+    const fpRows = Object.values(fpStats).filter(r => r.missed > 0).sort((x, y) => y.missed - x.missed || x.problem.localeCompare(y.problem)).slice(0, 15);
+    if (fpBody) {
+      if (fpRows.length === 0) {
+        fpBody.innerHTML = '<tr><td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No factor pair misses yet</td></tr>';
+      } else {
+        fpBody.innerHTML = fpRows.map(r => `
+          <tr style="border-bottom: 0.5px solid var(--border);">
+            <td style="padding: 12px; text-align: left;">${r.problem}</td>
+            <td style="padding: 12px; text-align: center; color: var(--text-secondary);">${r.attempts}</td>
+            <td style="padding: 12px; text-align: center; font-weight: 500; color: #ff6b6b;">${r.missed}</td>
+            <td style="padding: 12px; text-align: right; font-weight: 500;">${r.missedAfterHint}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
     // Division misses: every attempt is in divisionHistory
     const divBody = document.getElementById('divisionMissesBody');
     const divStats = {};
@@ -4549,6 +4886,13 @@ const app = {
     document.getElementById('divisionAnswer').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         self.submitDivision();
+      }
+    });
+
+    // Factor Pairs answer input
+    document.getElementById('fpAnswer').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        self.submitFactorPair();
       }
     });
   },
